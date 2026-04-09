@@ -8,7 +8,7 @@ public record DtMensaje(
         Long conversacionId,
         Long emisorId,
         String contenido,
-        String tipoMensaje,
+        TipoMensaje tipoMensaje,
         String urlAdjunto,
         Boolean leido,
         LocalDateTime fechaEnvio

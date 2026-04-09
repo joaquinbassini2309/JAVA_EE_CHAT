@@ -26,7 +26,7 @@ public class Mensaje {
     private String contenido;
 
     @Column(name = "tipo_mensaje", length = 20)
-    private String tipoMensaje = "TEXT";
+    private TipoMensaje = "TEXTO";
 
     @Column(name = "url_adjunto", length = 255)
     private String urlAdjunto;

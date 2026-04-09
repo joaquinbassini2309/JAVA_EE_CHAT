@@ -1,13 +1,14 @@
 package chat.Datatype;
 
-import com.example.chat.model.Participante;
+import chat.clases.Participante;
+import chat.clases.RolParticipante;
 import java.time.LocalDateTime;
 
 public record DtParticipante(
         Long id,
         Long conversacionId,
         Long usuarioId,
-        String rol,
+        RolParticipante rol,
         LocalDateTime fechaUnion
 ) {
     public static DtParticipante from(Participante p) {

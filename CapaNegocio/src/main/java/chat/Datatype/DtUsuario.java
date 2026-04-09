@@ -1,11 +1,14 @@
-// java
 package chat.Datatype;
 
+import chat.clases.EstadoUsuario;
+import chat.clases.Usuario;
 import java.time.LocalDateTime;
 
 public final class DtUsuario {
 
-    private DtUsuario() { /* utilidad - no instanciar */ }
+    private DtUsuario() {
+        // utilidad - no instanciar
+    }
 
     // DTO para crear usuario (registro)
     public static class CrearUsuarioDTO {
@@ -37,12 +40,19 @@ public final class DtUsuario {
         private String username;
         private String email;
         private String fotoUrl;
-        private String estado;
+        private EstadoUsuario estado;
         private LocalDateTime fechaRegistro;
 
         public UsuarioResponseDTO() {}
 
-        public UsuarioResponseDTO(Long id, String username, String email, String fotoUrl, String estado, LocalDateTime fechaRegistro) {
+        public UsuarioResponseDTO(
+                Long id,
+                String username,
+                String email,
+                String fotoUrl,
+                EstadoUsuario estado,
+                LocalDateTime fechaRegistro
+        ) {
             this.id = id;
             this.username = username;
             this.email = email;
@@ -52,7 +62,7 @@ public final class DtUsuario {
         }
 
         // constructor desde entidad (nulo-safe)
-        public static UsuarioResponseDTO fromEntity(chat.clases.Usuario usuario) {
+        public static UsuarioResponseDTO fromEntity(Usuario usuario) {
             if (usuario == null) return null;
             UsuarioResponseDTO dto = new UsuarioResponseDTO();
             dto.id = usuario.getId();
@@ -76,8 +86,11 @@ public final class DtUsuario {
         public String getFotoUrl() { return fotoUrl; }
         public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
 
-        public String getEstado() { return estado; }
-        public void setEstado(String estado) { this.estado = estado; }
+        public EstadoUsuario getEstado() { return estado; }
+        public void setEstado(EstadoUsuario estado) { this.estado = estado; }
+
+        // Compatibilidad temporal para capas que aún envían String
+        public void setEstado(String estado) { this.estado = parseEstado(estado); }
 
         public LocalDateTime getFechaRegistro() { return fechaRegistro; }
         public void setFechaRegistro(LocalDateTime fechaRegistro) { this.fechaRegistro = fechaRegistro; }
@@ -86,11 +99,11 @@ public final class DtUsuario {
     // DTO para actualizar perfil
     public static class ActualizarUsuarioDTO {
         private String fotoUrl;
-        private String estado;
+        private EstadoUsuario estado;
 
         public ActualizarUsuarioDTO() {}
 
-        public ActualizarUsuarioDTO(String fotoUrl, String estado) {
+        public ActualizarUsuarioDTO(String fotoUrl, EstadoUsuario estado) {
             this.fotoUrl = fotoUrl;
             this.estado = estado;
         }
@@ -98,8 +111,11 @@ public final class DtUsuario {
         public String getFotoUrl() { return fotoUrl; }
         public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
 
-        public String getEstado() { return estado; }
-        public void setEstado(String estado) { this.estado = estado; }
+        public EstadoUsuario getEstado() { return estado; }
+        public void setEstado(EstadoUsuario estado) { this.estado = estado; }
+
+        // Compatibilidad temporal para capas que aún envían String
+        public void setEstado(String estado) { this.estado = parseEstado(estado); }
     }
 
     // DTO para login
@@ -138,5 +154,10 @@ public final class DtUsuario {
 
         public UsuarioResponseDTO getUsuario() { return usuario; }
         public void setUsuario(UsuarioResponseDTO usuario) { this.usuario = usuario; }
+    }
+
+    private static EstadoUsuario parseEstado(String estado) {
+        if (estado == null || estado.isBlank()) return null;
+        return EstadoUsuario.valueOf(estado.trim().toUpperCase());
     }
 }

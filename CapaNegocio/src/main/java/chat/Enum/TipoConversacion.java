@@ -1,4 +1,4 @@
-package chat.enums;
+package chat.Enums;
 
 public enum TipoConversacion {
     PRIVADA("privada"),
