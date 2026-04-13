@@ -44,7 +44,7 @@ public class ConversacionResource {
 
     @POST
     public Response createConversacion(DtConversacion dto, @Context SecurityContext securityContext) {
-        // TODO: crear conversación mediante la capa de negocio
+        //crear conversación mediante la capa de negocio
         Long userId = getAuthenticatedUserId(securityContext);
 
         if (userId == null) {
