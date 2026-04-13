@@ -1,25 +1,35 @@
 package chat.Sistema;
 
+import chat.Enums.EventoTipo;
+import chat.Enums.RolParticipante;
+import chat.Enums.TipoConversacion;
+import chat.Enums.TipoMensaje;
+import chat.Factory.ConversacionFactory;
+import chat.Factory.MensajeFactory;
+import chat.Factory.ParticipanteFactory;
+import chat.Factory.UsuarioFactory;
 import chat.Manejadores.ManejadorConversacion;
 import chat.Manejadores.ManejadorMensaje;
 import chat.Manejadores.ManejadorParticipante;
 import chat.Manejadores.ManejadorUsuario;
+import chat.Observer.ChatObservable;
+import chat.Observer.ChatObserver;
+import chat.Observer.EventoChat;
 import com.example.chat.model.Conversacion;
 import com.example.chat.model.Mensaje;
 import com.example.chat.model.Participante;
 import com.example.chat.model.Usuario;
+import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
-import jakarta.persistence.EntityManagerFactory;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Sistema implements ISistema {
 
     private static final Sistema INSTANCE = new Sistema();
 
-    private final List<ISistema.Observador> observadores = new CopyOnWriteArrayList<>();
+    private final ChatObservable observable = new ChatObservable();
     private EntityManagerFactory emf;
 
     // manejadores concretos
@@ -72,7 +82,7 @@ public class Sistema implements ISistema {
     @Override
     public Usuario crearUsuario(String username, String email, String passwordHash) {
         Usuario u = usuarioHandler().crearUsuario(username, email, passwordHash);
-        notificar(new ISistema.Evento(ISistema.EventoTipo.USUARIO_CREADO, u));
+        observable.notificar(new EventoChat(EventoTipo.USUARIO_CREADO, u));
         return u;
     }
 
@@ -82,9 +92,9 @@ public class Sistema implements ISistema {
     }
 
     @Override
-    public Conversacion crearConversacion(String nombre, boolean esGrupo) {
-        Conversacion c = conversacionHandler().crearConversacion(nombre, esGrupo);
-        notificar(new ISistema.Evento(ISistema.EventoTipo.CONVERSACION_CREADA, c));
+    public Conversacion crearConversacion(String nombre, TipoConversacion tipo) {
+        Conversacion c = conversacionHandler().crearConversacion(nombre, tipo);
+        observable.notificar(new EventoChat(EventoTipo.CONVERSACION_CREADA, c));
         return c;
     }
 
@@ -94,9 +104,9 @@ public class Sistema implements ISistema {
     }
 
     @Override
-    public Participante agregarParticipante(Long conversacionId, Long usuarioId, String rol) {
+    public Participante agregarParticipante(Long conversacionId, Long usuarioId, RolParticipante rol) {
         Participante p = participanteHandler().agregarParticipante(conversacionId, usuarioId, rol);
-        notificar(new ISistema.Evento(ISistema.EventoTipo.PARTICIPANTE_AGREGADO, p));
+        observable.notificar(new EventoChat(EventoTipo.PARTICIPANTE_AGREGADO, p));
         return p;
     }
 
@@ -104,14 +114,14 @@ public class Sistema implements ISistema {
     public void removerParticipante(Long conversacionId, Long usuarioId) {
         List<Participante> removed = participanteHandler().removerParticipante(conversacionId, usuarioId);
         for (Participante p : removed) {
-            notificar(new ISistema.Evento(ISistema.EventoTipo.PARTICIPANTE_ELIMINADO, p));
+            observable.notificar(new EventoChat(EventoTipo.PARTICIPANTE_ELIMINADO, p));
         }
     }
 
     @Override
-    public Mensaje enviarMensaje(Long conversacionId, Long emisorId, String contenido, String tipoMensaje, String urlAdjunto) {
+    public Mensaje enviarMensaje(Long conversacionId, Long emisorId, String contenido, TipoMensaje tipoMensaje, String urlAdjunto) {
         Mensaje m = mensajeHandler().enviarMensaje(conversacionId, emisorId, contenido, tipoMensaje, urlAdjunto);
-        notificar(new ISistema.Evento(ISistema.EventoTipo.MENSAJE_ENVIADO, m));
+        observable.notificar(new EventoChat(EventoTipo.MENSAJE_ENVIADO, m));
         return m;
     }
 
@@ -126,18 +136,12 @@ public class Sistema implements ISistema {
     }
 
     @Override
-    public void registrarObservador(ISistema.Observador o) {
-        if (o != null) observadores.add(o);
+    public void registrarObservador(ChatObserver observer) {
+        observable.registrarObservador(observer);
     }
 
     @Override
-    public void eliminarObservador(ISistema.Observador o) {
-        observadores.remove(o);
-    }
-
-    private void notificar(ISistema.Evento evento) {
-        for (ISistema.Observador o : observadores) {
-            try { o.onEvento(evento); } catch (Exception ignored) { }
-        }
+    public void eliminarObservador(ChatObserver observer) {
+        observable.eliminarObservador(observer);
     }
 }
