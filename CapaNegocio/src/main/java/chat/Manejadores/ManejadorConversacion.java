@@ -1,5 +1,6 @@
 package chat.Manejadores;
 
+import chat.Enums.TipoConversacion;
 import com.example.chat.model.Conversacion;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -19,14 +20,14 @@ public class ManejadorConversacion {
 
     private EntityManager em() { return emf.createEntityManager(); }
 
-    public Conversacion crearConversacion(String nombre, boolean esGrupo) {
+    public Conversacion crearConversacion(String nombre, TipoConversacion tipo) {
         EntityManager em = em();
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
             Conversacion c = new Conversacion();
             c.setNombre(nombre);
-            c.setEsGrupo(esGrupo);
+            c.setTipo(tipo == null ? TipoConversacion.PRIVADA : tipo);
             em.persist(c);
             tx.commit();
             return c;

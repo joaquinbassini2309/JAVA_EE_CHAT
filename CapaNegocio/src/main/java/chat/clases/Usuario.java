@@ -1,6 +1,7 @@
 // java
 package chat.clases;
 
+import chat.Enums.EstadoUsuario;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -25,8 +26,9 @@ public class Usuario {
     @Column(name = "foto_url", length = 255)
     private String fotoUrl;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "estado", length = 20)
-    private String estado = "offline";
+    private EstadoUsuario estado = EstadoUsuario.OFFLINE;
 
     @Column(name = "fecha_registro")
     private LocalDateTime fechaRegistro;

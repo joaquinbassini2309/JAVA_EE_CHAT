@@ -1,5 +1,6 @@
 package chat.Datatype;
 
+import chat.Enums.TipoConversacion;
 import com.example.chat.model.Conversacion;
 import com.example.chat.model.Participante;
 import java.time.LocalDateTime;
@@ -9,7 +10,7 @@ import java.util.stream.Collectors;
 public record DtConversacion(
         Long id,
         String nombre,
-        Boolean esGrupo,
+        TipoConversacion tipo,
         LocalDateTime fechaCreacion,
         List<Long> participanteIds
 ) {
@@ -21,6 +22,6 @@ public record DtConversacion(
                         .filter(u -> u != null)
                         .map(u -> u.getId())
                         .collect(Collectors.toList());
-        return new DtConversacion(c.getId(), c.getNombre(), c.getEsGrupo(), c.getFechaCreacion(), ids);
+        return new DtConversacion(c.getId(), c.getNombre(), c.getTipo(), c.getFechaCreacion(), ids);
     }
 }

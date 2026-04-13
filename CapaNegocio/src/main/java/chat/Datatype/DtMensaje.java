@@ -1,5 +1,6 @@
 package chat.Datatype;
 
+import chat.Enums.TipoMensaje;
 import com.example.chat.model.Mensaje;
 import java.time.LocalDateTime;
 

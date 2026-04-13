@@ -1,6 +1,7 @@
 // java
 package chat.clases;
 
+import chat.Enums.TipoConversacion;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -16,8 +17,9 @@ public class Conversacion {
     @Column(name = "nombre", length = 100)
     private String nombre;
 
-    @Column(name = "es_grupo")
-    private Boolean esGrupo = false;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo", length = 20)
+    private TipoConversacion tipo = TipoConversacion.PRIVADA;
 
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;

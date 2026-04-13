@@ -1,7 +1,7 @@
 package chat.Datatype;
 
+import chat.Enums.RolParticipante;
 import chat.clases.Participante;
-import chat.clases.RolParticipante;
 import java.time.LocalDateTime;
 
 public record DtParticipante(

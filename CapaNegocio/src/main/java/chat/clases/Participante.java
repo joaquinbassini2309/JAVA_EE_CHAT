@@ -1,6 +1,7 @@
 // java
 package chat.clases;
 
+import chat.Enums.RolParticipante;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -22,8 +23,9 @@ public class Participante {
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "rol", length = 20)
-    private String rol = "miembro";
+    private RolParticipante rol = RolParticipante.MIEMBRO;
 
     @Column(name = "fecha_union")
     private LocalDateTime fechaUnion;
@@ -43,8 +45,8 @@ public class Participante {
     public Usuario getUsuario() { return usuario; }
     public void setUsuario(Usuario usuario) { this.usuario = usuario; }
 
-    public String getRol() { return rol; }
-    public void setRol(String rol) { this.rol = rol; }
+    public RolParticipante getRol() { return rol; }
+    public void setRol(RolParticipante rol) { this.rol = rol; }
 
     public LocalDateTime getFechaUnion() { return fechaUnion; }
     public void setFechaUnion(LocalDateTime fechaUnion) { this.fechaUnion = fechaUnion; }

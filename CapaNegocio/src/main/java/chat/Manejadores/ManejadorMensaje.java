@@ -1,5 +1,6 @@
 package chat.Manejadores;
 
+import chat.Enums.TipoMensaje;
 import com.example.chat.model.Conversacion;
 import com.example.chat.model.Mensaje;
 import com.example.chat.model.Usuario;
@@ -19,7 +20,7 @@ public class ManejadorMensaje {
 
     private EntityManager em() { return emf.createEntityManager(); }
 
-    public Mensaje enviarMensaje(Long conversacionId, Long emisorId, String contenido, String tipoMensaje, String urlAdjunto) {
+    public Mensaje enviarMensaje(Long conversacionId, Long emisorId, String contenido, TipoMensaje tipoMensaje, String urlAdjunto) {
         EntityManager em = em();
         EntityTransaction tx = em.getTransaction();
         try {
@@ -31,7 +32,7 @@ public class ManejadorMensaje {
             m.setConversacion(c);
             m.setEmisor(u);
             m.setContenido(contenido);
-            m.setTipoMensaje(tipoMensaje == null ? "TEXT" : tipoMensaje);
+            m.setTipoMensaje(tipoMensaje == null ? TipoMensaje.TEXTO : tipoMensaje);
             m.setUrlAdjunto(urlAdjunto);
             em.persist(m);
             tx.commit();

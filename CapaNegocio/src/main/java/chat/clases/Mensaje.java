@@ -1,6 +1,7 @@
 // java
 package chat.clases;
 
+import chat.Enums.TipoMensaje;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -25,8 +26,9 @@ public class Mensaje {
     @Column(name = "contenido", nullable = false)
     private String contenido;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "tipo_mensaje", length = 20)
-    private TipoMensaje = "TEXTO";
+    private TipoMensaje tipoMensaje = TipoMensaje.TEXTO;
 
     @Column(name = "url_adjunto", length = 255)
     private String urlAdjunto;

@@ -1,5 +1,6 @@
 package chat.Manejadores;
 
+import chat.Enums.RolParticipante;
 import com.example.chat.model.Conversacion;
 import com.example.chat.model.Participante;
 import com.example.chat.model.Usuario;
@@ -22,7 +23,7 @@ public class ManejadorParticipante {
 
     private EntityManager em() { return emf.createEntityManager(); }
 
-    public Participante agregarParticipante(Long conversacionId, Long usuarioId, String rol) {
+    public Participante agregarParticipante(Long conversacionId, Long usuarioId, RolParticipante rol) {
         EntityManager em = em();
         EntityTransaction tx = em.getTransaction();
         try {
@@ -33,7 +34,7 @@ public class ManejadorParticipante {
             Participante p = new Participante();
             p.setConversacion(c);
             p.setUsuario(u);
-            p.setRol(rol == null ? "miembro" : rol);
+            p.setRol(rol == null ? RolParticipante.MIEMBRO : rol);
             em.persist(p);
             tx.commit();
             return p;
