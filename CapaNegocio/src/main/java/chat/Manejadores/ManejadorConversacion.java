@@ -60,4 +60,23 @@ public class ManejadorConversacion {
             em.close();
         }
     }
+
+    public Optional<Conversacion> buscarChatPrivadoEntre(Long usuario1Id, Long usuario2Id) {
+        EntityManager em = em();
+        try {
+            TypedQuery<Conversacion> q = em.createQuery(
+                    "SELECT c FROM Conversacion c " +
+                    "WHERE c.tipo = :tipo " +
+                    "AND EXISTS (SELECT p1 FROM Participante p1 WHERE p1.conversacion = c AND p1.usuario.id = :u1) " +
+                    "AND EXISTS (SELECT p2 FROM Participante p2 WHERE p2.conversacion = c AND p2.usuario.id = :u2) " +
+                    "AND (SELECT COUNT(p) FROM Participante p WHERE p.conversacion = c) = 2",
+                    Conversacion.class);
+            q.setParameter("tipo", TipoConversacion.PRIVADA);
+            q.setParameter("u1", usuario1Id);
+            q.setParameter("u2", usuario2Id);
+            return q.getResultList().stream().findFirst();
+        } finally {
+            em.close();
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package chat.Sistema;
 
+import chat.Enums.EstadoUsuario;
 import chat.Enums.EventoTipo;
 import chat.Enums.RolParticipante;
 import chat.Enums.TipoConversacion;
@@ -22,6 +23,7 @@ import com.example.chat.model.Usuario;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,8 +81,12 @@ public class Sistema implements ISistema {
     @Override
     public ManejadorMensaje mensajeHandler() { return mensajeHandler; }
 
+    // ========== IMPLEMENTACIÓN: GESTIÓN DE USUARIOS ==========
+
     @Override
-    public Usuario crearUsuario(String username, String email, String passwordHash) {
+    public Usuario registrarUsuario(String username, String email, String password) {
+        // TODO: Implementar hash de password (BCrypt)
+        String passwordHash = password; // Temporal - hashear en producción
         Usuario u = usuarioHandler().crearUsuario(username, email, passwordHash);
         observable.notificar(new EventoChat(EventoTipo.USUARIO_CREADO, u));
         return u;
@@ -92,10 +98,84 @@ public class Sistema implements ISistema {
     }
 
     @Override
-    public Conversacion crearConversacion(String nombre, TipoConversacion tipo) {
-        Conversacion c = conversacionHandler().crearConversacion(nombre, tipo);
-        observable.notificar(new EventoChat(EventoTipo.CONVERSACION_CREADA, c));
-        return c;
+    public Optional<Usuario> buscarUsuarioPorUsername(String username) {
+        return usuarioHandler().buscarUsuarioPorUsername(username);
+    }
+
+    @Override
+    public void actualizarEstadoUsuario(Long usuarioId, EstadoUsuario estado) {
+        usuarioHandler().actualizarEstado(usuarioId, estado);
+    }
+
+    // ========== IMPLEMENTACIÓN: CONVERSACIONES ==========
+
+    @Override
+    public Conversacion iniciarChatPrivado(Long usuario1Id, Long usuario2Id) {
+        if (usuario1Id.equals(usuario2Id)) {
+            throw new IllegalArgumentException("No se puede crear un chat privado con uno mismo");
+        }
+
+        // Validar que ambos usuarios existen
+        Usuario u1 = buscarUsuarioPorId(usuario1Id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario 1 no encontrado"));
+        Usuario u2 = buscarUsuarioPorId(usuario2Id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario 2 no encontrado"));
+
+        // Verificar si ya existe un chat privado entre estos usuarios
+        Optional<Conversacion> chatExistente = conversacionHandler().buscarChatPrivadoEntre(usuario1Id, usuario2Id);
+        if (chatExistente.isPresent()) {
+            return chatExistente.get();
+        }
+
+        // Crear conversación privada
+        String nombreChat = u1.getUsername() + " - " + u2.getUsername();
+        Conversacion conversacion = conversacionHandler().crearConversacion(nombreChat, TipoConversacion.PRIVADA);
+
+        // Agregar ambos usuarios como participantes
+        participanteHandler().agregarParticipante(conversacion.getId(), usuario1Id, RolParticipante.MIEMBRO);
+        participanteHandler().agregarParticipante(conversacion.getId(), usuario2Id, RolParticipante.MIEMBRO);
+
+        observable.notificar(new EventoChat(EventoTipo.CONVERSACION_CREADA, conversacion));
+        return conversacion;
+    }
+
+    @Override
+    public Conversacion crearGrupo(String nombre, Long creadorId, List<Long> miembrosIds) {
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("El nombre del grupo no puede estar vacío");
+        }
+
+        // Validar que el creador existe
+        Usuario creador = buscarUsuarioPorId(creadorId)
+                .orElseThrow(() -> new IllegalArgumentException("Creador no encontrado"));
+
+        // Crear grupo
+        Conversacion grupo = conversacionHandler().crearConversacion(nombre, TipoConversacion.GRUPO);
+
+        // Agregar al creador como ADMIN
+        participanteHandler().agregarParticipante(grupo.getId(), creadorId, RolParticipante.ADMIN);
+
+        // Agregar miembros como MIEMBRO
+        if (miembrosIds != null) {
+            for (Long miembroId : miembrosIds) {
+                if (!miembroId.equals(creadorId)) { // Evitar duplicar al creador
+                    try {
+                        participanteHandler().agregarParticipante(grupo.getId(), miembroId, RolParticipante.MIEMBRO);
+                    } catch (Exception e) {
+                        // Log y continuar con el siguiente
+                        System.err.println("No se pudo agregar miembro " + miembroId + ": " + e.getMessage());
+                    }
+                }
+            }
+        }
+
+        observable.notificar(new EventoChat(EventoTipo.CONVERSACION_CREADA, grupo));
+        return grupo;
+    }
+
+    @Override
+    public List<Conversacion> obtenerConversacionesDeUsuario(Long usuarioId) {
+        return conversacionHandler().obtenerConversacionesDeUsuario(usuarioId);
     }
 
     @Override
@@ -104,35 +184,152 @@ public class Sistema implements ISistema {
     }
 
     @Override
-    public Participante agregarParticipante(Long conversacionId, Long usuarioId, RolParticipante rol) {
-        Participante p = participanteHandler().agregarParticipante(conversacionId, usuarioId, rol);
+    public boolean usuarioEstaEnConversacion(Long usuarioId, Long conversacionId) {
+        return participanteHandler().existeParticipante(conversacionId, usuarioId);
+    }
+
+    // ========== IMPLEMENTACIÓN: PARTICIPANTES ==========
+
+    @Override
+    public Participante agregarMiembroAGrupo(Long grupoId, Long usuarioId, Long adminId) {
+        // Validar que es un grupo
+        Conversacion grupo = buscarConversacionPorId(grupoId)
+                .orElseThrow(() -> new IllegalArgumentException("Grupo no encontrado"));
+        
+        if (grupo.getTipo() != TipoConversacion.GRUPO) {
+            throw new IllegalArgumentException("Solo se pueden agregar miembros a grupos");
+        }
+
+        // Validar que quien agrega es admin
+        Participante admin = participanteHandler().buscarParticipante(grupoId, adminId)
+                .orElseThrow(() -> new IllegalArgumentException("Admin no es parte del grupo"));
+        
+        if (admin.getRol() != RolParticipante.ADMIN && admin.getRol() != RolParticipante.MODERADOR) {
+            throw new IllegalArgumentException("Solo admins o moderadores pueden agregar miembros");
+        }
+
+        // Validar que el usuario no esté ya en el grupo
+        if (usuarioEstaEnConversacion(usuarioId, grupoId)) {
+            throw new IllegalArgumentException("El usuario ya es miembro del grupo");
+        }
+
+        // Agregar participante
+        Participante p = participanteHandler().agregarParticipante(grupoId, usuarioId, RolParticipante.MIEMBRO);
         observable.notificar(new EventoChat(EventoTipo.PARTICIPANTE_AGREGADO, p));
         return p;
     }
 
     @Override
-    public void removerParticipante(Long conversacionId, Long usuarioId) {
-        List<Participante> removed = participanteHandler().removerParticipante(conversacionId, usuarioId);
-        for (Participante p : removed) {
+    public void removerMiembroDeGrupo(Long grupoId, Long usuarioId, Long adminId) {
+        // Validar permisos del admin
+        Participante admin = participanteHandler().buscarParticipante(grupoId, adminId)
+                .orElseThrow(() -> new IllegalArgumentException("Admin no es parte del grupo"));
+        
+        if (admin.getRol() != RolParticipante.ADMIN && admin.getRol() != RolParticipante.MODERADOR) {
+            throw new IllegalArgumentException("Solo admins o moderadores pueden remover miembros");
+        }
+
+        // No permitir que el admin se remueva a sí mismo si es el único admin
+        if (adminId.equals(usuarioId)) {
+            long cantidadAdmins = participanteHandler().contarAdmins(grupoId);
+            if (cantidadAdmins <= 1) {
+                throw new IllegalArgumentException("No se puede remover el único admin del grupo");
+            }
+        }
+
+        List<Participante> removidos = participanteHandler().removerParticipante(grupoId, usuarioId);
+        for (Participante p : removidos) {
             observable.notificar(new EventoChat(EventoTipo.PARTICIPANTE_ELIMINADO, p));
         }
     }
 
     @Override
-    public Mensaje enviarMensaje(Long conversacionId, Long emisorId, String contenido, TipoMensaje tipoMensaje, String urlAdjunto) {
-        Mensaje m = mensajeHandler().enviarMensaje(conversacionId, emisorId, contenido, tipoMensaje, urlAdjunto);
+    public void abandonarGrupo(Long grupoId, Long usuarioId) {
+        // Validar que el usuario está en el grupo
+        if (!usuarioEstaEnConversacion(usuarioId, grupoId)) {
+            throw new IllegalArgumentException("El usuario no es miembro del grupo");
+        }
+
+        // Si es admin, validar que no sea el único
+        Participante participante = participanteHandler().buscarParticipante(grupoId, usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Participante no encontrado"));
+        
+        if (participante.getRol() == RolParticipante.ADMIN) {
+            long cantidadAdmins = participanteHandler().contarAdmins(grupoId);
+            if (cantidadAdmins <= 1) {
+                throw new IllegalArgumentException("Debe asignar otro admin antes de abandonar el grupo");
+            }
+        }
+
+        List<Participante> removidos = participanteHandler().removerParticipante(grupoId, usuarioId);
+        for (Participante p : removidos) {
+            observable.notificar(new EventoChat(EventoTipo.PARTICIPANTE_ELIMINADO, p));
+        }
+    }
+
+    @Override
+    public void cambiarRolParticipante(Long grupoId, Long usuarioId, RolParticipante nuevoRol, Long adminId) {
+        // Validar permisos del admin
+        Participante admin = participanteHandler().buscarParticipante(grupoId, adminId)
+                .orElseThrow(() -> new IllegalArgumentException("Admin no es parte del grupo"));
+        
+        if (admin.getRol() != RolParticipante.ADMIN) {
+            throw new IllegalArgumentException("Solo admins pueden cambiar roles");
+        }
+
+        // Cambiar rol
+        participanteHandler().actualizarRol(grupoId, usuarioId, nuevoRol);
+    }
+
+    // ========== IMPLEMENTACIÓN: MENSAJERÍA ==========
+
+    @Override
+    public Mensaje enviarMensajeTexto(Long conversacionId, Long emisorId, String contenido) {
+        return enviarMensajeConAdjunto(conversacionId, emisorId, contenido, TipoMensaje.TEXTO, null);
+    }
+
+    @Override
+    public Mensaje enviarMensajeConAdjunto(Long conversacionId, Long emisorId, String contenido,
+                                            TipoMensaje tipo, String urlAdjunto) {
+        // Validar que el usuario pertenece a la conversación
+        if (!usuarioEstaEnConversacion(emisorId, conversacionId)) {
+            throw new IllegalArgumentException("El usuario no pertenece a esta conversación");
+        }
+
+        // Validar que la conversación existe
+        buscarConversacionPorId(conversacionId)
+                .orElseThrow(() -> new IllegalArgumentException("Conversación no encontrada"));
+
+        // Enviar mensaje
+        Mensaje m = mensajeHandler().enviarMensaje(conversacionId, emisorId, contenido, tipo, urlAdjunto);
         observable.notificar(new EventoChat(EventoTipo.MENSAJE_ENVIADO, m));
         return m;
     }
 
     @Override
-    public void marcarMensajeLeido(Long mensajeId) {
+    public List<Mensaje> obtenerMensajesDeConversacion(Long conversacionId, Long usuarioId, int limite) {
+        // Validar que el usuario pertenece a la conversación
+        if (!usuarioEstaEnConversacion(usuarioId, conversacionId)) {
+            throw new IllegalArgumentException("No tienes acceso a esta conversación");
+        }
+
+        return mensajeHandler().obtenerMensajes(conversacionId, limite);
+    }
+
+    @Override
+    public void marcarMensajeComoLeido(Long mensajeId, Long usuarioId) {
+        // TODO: Validar que el mensaje pertenece a una conversación donde el usuario participa
         mensajeHandler().marcarMensajeLeido(mensajeId);
     }
 
     @Override
-    public List<Conversacion> obtenerConversacionesDeUsuario(Long usuarioId) {
-        return conversacionHandler().obtenerConversacionesDeUsuario(usuarioId);
+    public void marcarConversacionComoLeida(Long conversacionId, Long usuarioId) {
+        // Validar que el usuario pertenece a la conversación
+        if (!usuarioEstaEnConversacion(usuarioId, conversacionId)) {
+            throw new IllegalArgumentException("No tienes acceso a esta conversación");
+        }
+
+        mensajeHandler().marcarTodosComoLeidos(conversacionId, usuarioId);
     }
 
     @Override

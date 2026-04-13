@@ -83,4 +83,69 @@ public class ManejadorParticipante {
             em.close();
         }
     }
+
+    public boolean existeParticipante(Long conversacionId, Long usuarioId) {
+        EntityManager em = em();
+        try {
+            TypedQuery<Long> q = em.createQuery(
+                    "SELECT COUNT(p) FROM Participante p WHERE p.conversacion.id = :cid AND p.usuario.id = :uid",
+                    Long.class);
+            q.setParameter("cid", conversacionId);
+            q.setParameter("uid", usuarioId);
+            return q.getSingleResult() > 0;
+        } finally {
+            em.close();
+        }
+    }
+
+    public Optional<Participante> buscarParticipante(Long conversacionId, Long usuarioId) {
+        EntityManager em = em();
+        try {
+            TypedQuery<Participante> q = em.createQuery(
+                    "SELECT p FROM Participante p WHERE p.conversacion.id = :cid AND p.usuario.id = :uid",
+                    Participante.class);
+            q.setParameter("cid", conversacionId);
+            q.setParameter("uid", usuarioId);
+            return q.getResultList().stream().findFirst();
+        } finally {
+            em.close();
+        }
+    }
+
+    public long contarAdmins(Long conversacionId) {
+        EntityManager em = em();
+        try {
+            TypedQuery<Long> q = em.createQuery(
+                    "SELECT COUNT(p) FROM Participante p WHERE p.conversacion.id = :cid AND p.rol = :rol",
+                    Long.class);
+            q.setParameter("cid", conversacionId);
+            q.setParameter("rol", RolParticipante.ADMIN);
+            return q.getSingleResult();
+        } finally {
+            em.close();
+        }
+    }
+
+    public void actualizarRol(Long conversacionId, Long usuarioId, RolParticipante nuevoRol) {
+        EntityManager em = em();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            TypedQuery<Participante> q = em.createQuery(
+                    "SELECT p FROM Participante p WHERE p.conversacion.id = :cid AND p.usuario.id = :uid",
+                    Participante.class);
+            q.setParameter("cid", conversacionId);
+            q.setParameter("uid", usuarioId);
+            Participante p = q.getResultList().stream().findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Participante no encontrado"));
+            p.setRol(nuevoRol);
+            em.merge(p);
+            tx.commit();
+        } catch (RuntimeException ex) {
+            if (tx.isActive()) tx.rollback();
+            throw ex;
+        } finally {
+            em.close();
+        }
+    }
 }

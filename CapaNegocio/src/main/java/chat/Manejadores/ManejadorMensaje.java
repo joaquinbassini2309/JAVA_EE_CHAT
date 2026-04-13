@@ -7,7 +7,9 @@ import com.example.chat.model.Usuario;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.TypedQuery;
 
+import java.util.List;
 import java.util.Optional;
 
 public class ManejadorMensaje {
@@ -68,6 +70,41 @@ public class ManejadorMensaje {
         EntityManager em = em();
         try {
             return Optional.ofNullable(em.find(Mensaje.class, id));
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<Mensaje> obtenerMensajes(Long conversacionId, int limite) {
+        EntityManager em = em();
+        try {
+            TypedQuery<Mensaje> q = em.createQuery(
+                    "SELECT m FROM Mensaje m WHERE m.conversacion.id = :cid ORDER BY m.fechaEnvio DESC",
+                    Mensaje.class);
+            q.setParameter("cid", conversacionId);
+            q.setMaxResults(limite > 0 ? limite : 50);
+            return q.getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public void marcarTodosComoLeidos(Long conversacionId, Long usuarioId) {
+        EntityManager em = em();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            // Marcar como leídos todos los mensajes de la conversación que NO fueron enviados por el usuario
+            em.createQuery(
+                    "UPDATE Mensaje m SET m.leido = true " +
+                    "WHERE m.conversacion.id = :cid AND m.emisor.id != :uid AND m.leido = false")
+                    .setParameter("cid", conversacionId)
+                    .setParameter("uid", usuarioId)
+                    .executeUpdate();
+            tx.commit();
+        } catch (RuntimeException ex) {
+            if (tx.isActive()) tx.rollback();
+            throw ex;
         } finally {
             em.close();
         }
