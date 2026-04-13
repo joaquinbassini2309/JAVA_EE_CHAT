@@ -1,0 +1,1 @@
+// Datatypes para errores
