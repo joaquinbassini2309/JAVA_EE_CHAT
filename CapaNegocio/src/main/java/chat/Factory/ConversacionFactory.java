@@ -1,6 +1,6 @@
 package chat.Factory;
 
-import chat.Enums.TipoConversacion;
+import chat.Enum.TipoConversacion;
 import chat.clases.Conversacion;
 
 public class ConversacionFactory {

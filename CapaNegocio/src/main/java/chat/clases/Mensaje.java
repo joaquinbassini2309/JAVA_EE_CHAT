@@ -1,7 +1,7 @@
 // java
 package chat.clases;
 
-import chat.Enums.TipoMensaje;
+import chat.Enum.TipoMensaje;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -44,5 +44,28 @@ public class Mensaje {
         if (fechaEnvio == null) fechaEnvio = LocalDateTime.now();
     }
 
-    // getters y setters
+    // Configuración completa de Getters y Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Conversacion getConversacion() { return conversacion; }
+    public void setConversacion(Conversacion conversacion) { this.conversacion = conversacion; }
+
+    public Usuario getEmisor() { return emisor; }
+    public void setEmisor(Usuario emisor) { this.emisor = emisor; }
+
+    public String getContenido() { return contenido; }
+    public void setContenido(String contenido) { this.contenido = contenido; }
+
+    public TipoMensaje getTipoMensaje() { return tipoMensaje; }
+    public void setTipoMensaje(TipoMensaje tipoMensaje) { this.tipoMensaje = tipoMensaje; }
+
+    public String getUrlAdjunto() { return urlAdjunto; }
+    public void setUrlAdjunto(String urlAdjunto) { this.urlAdjunto = urlAdjunto; }
+
+    public Boolean getLeido() { return leido; }
+    public void setLeido(Boolean leido) { this.leido = leido; }
+
+    public LocalDateTime getFechaEnvio() { return fechaEnvio; }
+    public void setFechaEnvio(LocalDateTime fechaEnvio) { this.fechaEnvio = fechaEnvio; }
 }

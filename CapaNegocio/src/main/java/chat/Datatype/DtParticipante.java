@@ -1,6 +1,6 @@
 package chat.Datatype;
 
-import chat.Enums.RolParticipante;
+import chat.Enum.RolParticipante;
 import chat.clases.Participante;
 import java.time.LocalDateTime;
 

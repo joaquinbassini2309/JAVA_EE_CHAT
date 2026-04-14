@@ -1,4 +1,4 @@
-package chat.Enums;
+package chat.Enum;
 
 public enum EventoTipo {
         USUARIO_CREADO,

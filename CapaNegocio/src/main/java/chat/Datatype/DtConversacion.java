@@ -1,8 +1,8 @@
 package chat.Datatype;
 
-import chat.Enums.TipoConversacion;
-import com.example.chat.model.Conversacion;
-import com.example.chat.model.Participante;
+import chat.Enum.TipoConversacion;
+import chat.clases.Conversacion;
+import chat.clases.Participante;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;

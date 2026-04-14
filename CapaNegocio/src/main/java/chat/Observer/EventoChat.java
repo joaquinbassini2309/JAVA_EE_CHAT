@@ -1,6 +1,6 @@
 package chat.Observer;
 
-import chat.Enums.EventoTipo;
+import chat.Enum.EventoTipo;
 
 public class EventoChat {
     private final EventoTipo tipo;

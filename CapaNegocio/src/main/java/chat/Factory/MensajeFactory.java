@@ -1,6 +1,6 @@
 package chat.Factory;
 
-import chat.Enums.TipoMensaje;
+import chat.Enum.TipoMensaje;
 import chat.clases.Conversacion;
 import chat.clases.Mensaje;
 import chat.clases.Usuario;

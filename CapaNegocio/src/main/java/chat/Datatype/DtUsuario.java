@@ -1,6 +1,6 @@
 package chat.Datatype;
 
-import chat.Enums.EstadoUsuario;
+import chat.Enum.EstadoUsuario;
 import chat.clases.Usuario;
 import java.time.LocalDateTime;
 

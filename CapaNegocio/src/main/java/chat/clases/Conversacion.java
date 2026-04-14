@@ -1,7 +1,7 @@
 // java
 package chat.clases;
 
-import chat.Enums.TipoConversacion;
+import chat.Enum.TipoConversacion;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -35,6 +35,22 @@ public class Conversacion {
         if (fechaCreacion == null) fechaCreacion = LocalDateTime.now();
     }
 
-    // getters y setters
-    // (omitir aquí por brevedad; generar en IDE)
+    // Configuración completa de Getters y Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+
+    public TipoConversacion getTipo() { return tipo; }
+    public void setTipo(TipoConversacion tipo) { this.tipo = tipo; }
+
+    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
+    public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+
+    public Set<Participante> getParticipantes() { return participantes; }
+    public void setParticipantes(Set<Participante> participantes) { this.participantes = participantes; }
+
+    public Set<Mensaje> getMensajes() { return mensajes; }
+    public void setMensajes(Set<Mensaje> mensajes) { this.mensajes = mensajes; }
 }

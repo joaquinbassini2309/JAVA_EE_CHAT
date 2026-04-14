@@ -1,7 +1,7 @@
 package chat.Manejadores;
 
-import chat.Enums.EstadoUsuario;
-import com.example.chat.model.Usuario;
+import chat.Enum.EstadoUsuario;
+import chat.clases.Usuario;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
@@ -43,6 +43,19 @@ public class ManejadorUsuario {
         EntityManager em = em();
         try {
             return Optional.ofNullable(em.find(Usuario.class, id));
+        } finally {
+            em.close();
+        }
+    }
+
+    public Optional<Usuario> buscarUsuarioPorEmail(String email) {
+        EntityManager em = em();
+        try {
+            TypedQuery<Usuario> q = em.createQuery(
+                    "SELECT u FROM Usuario u WHERE u.email = :email",
+                    Usuario.class);
+            q.setParameter("email", email);
+            return q.getResultList().stream().findFirst();
         } finally {
             em.close();
         }

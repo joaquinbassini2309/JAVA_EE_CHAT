@@ -1,7 +1,7 @@
 package chat.Manejadores;
 
-import chat.Enums.TipoConversacion;
-import com.example.chat.model.Conversacion;
+import chat.Enum.TipoConversacion;
+import chat.clases.Conversacion;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;

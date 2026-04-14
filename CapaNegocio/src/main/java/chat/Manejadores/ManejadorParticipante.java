@@ -1,9 +1,9 @@
 package chat.Manejadores;
 
-import chat.Enums.RolParticipante;
-import com.example.chat.model.Conversacion;
-import com.example.chat.model.Participante;
-import com.example.chat.model.Usuario;
+import chat.Enum.RolParticipante;
+import chat.clases.Conversacion;
+import chat.clases.Participante;
+import chat.clases.Usuario;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;

@@ -1,7 +1,7 @@
 // java
 package chat.clases;
 
-import chat.Enums.EstadoUsuario;
+import chat.Enum.EstadoUsuario;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -44,6 +44,31 @@ public class Usuario {
         if (fechaRegistro == null) fechaRegistro = LocalDateTime.now();
     }
 
-    // getters y setters
-    // (omitir aquí por brevedad; generar en IDE)
+    // Configuración completa de Getters y Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+
+    public String getFotoUrl() { return fotoUrl; }
+    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+
+    public EstadoUsuario getEstado() { return estado; }
+    public void setEstado(EstadoUsuario estado) { this.estado = estado; }
+
+    public LocalDateTime getFechaRegistro() { return fechaRegistro; }
+    public void setFechaRegistro(LocalDateTime fechaRegistro) { this.fechaRegistro = fechaRegistro; }
+
+    public Set<Participante> getParticipaciones() { return participaciones; }
+    public void setParticipaciones(Set<Participante> participaciones) { this.participaciones = participaciones; }
+
+    public Set<Mensaje> getMensajesEnviados() { return mensajesEnviados; }
+    public void setMensajesEnviados(Set<Mensaje> mensajesEnviados) { this.mensajesEnviados = mensajesEnviados; }
 }

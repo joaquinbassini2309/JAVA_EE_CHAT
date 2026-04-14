@@ -1,17 +1,17 @@
 package chat.Sistema;
 
-import chat.Enums.RolParticipante;
-import chat.Enums.TipoConversacion;
-import chat.Enums.TipoMensaje;
+import chat.Enum.RolParticipante;
+import chat.Enum.TipoConversacion;
+import chat.Enum.TipoMensaje;
 import chat.Manejadores.ManejadorConversacion;
 import chat.Manejadores.ManejadorMensaje;
 import chat.Manejadores.ManejadorParticipante;
 import chat.Manejadores.ManejadorUsuario;
 import chat.Observer.ChatObserver;
-import com.example.chat.model.Conversacion;
-import com.example.chat.model.Mensaje;
-import com.example.chat.model.Participante;
-import com.example.chat.model.Usuario;
+import chat.clases.Conversacion;
+import chat.clases.Mensaje;
+import chat.clases.Participante;
+import chat.clases.Usuario;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,7 +40,7 @@ public interface ISistema {
     Optional<Usuario> buscarUsuarioPorUsername(String username);
 
     //Actualiza el estado de conexión del usuario
-    void actualizarEstadoUsuario(Long usuarioId, chat.Enums.EstadoUsuario estado);
+    void actualizarEstadoUsuario(Long usuarioId, chat.Enum.EstadoUsuario estado);
 
     // ========== CASOS DE USO: CONVERSACIONES ==========
     

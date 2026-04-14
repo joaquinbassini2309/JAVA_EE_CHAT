@@ -1,7 +1,7 @@
 // java
 package chat.clases;
 
-import chat.Enums.RolParticipante;
+import chat.Enum.RolParticipante;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Objects;

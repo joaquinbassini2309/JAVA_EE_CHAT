@@ -1,7 +1,7 @@
 package chat.Datatype;
 
-import chat.Enums.TipoMensaje;
-import com.example.chat.model.Mensaje;
+import chat.Enum.TipoMensaje;
+import chat.clases.Mensaje;
 import java.time.LocalDateTime;
 
 public record DtMensaje(

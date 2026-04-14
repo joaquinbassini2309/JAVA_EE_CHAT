@@ -1,6 +1,6 @@
 package chat.Factory;
 
-import chat.Enums.RolParticipante;
+import chat.Enum.RolParticipante;
 import chat.clases.Conversacion;
 import chat.clases.Participante;
 import chat.clases.Usuario;

@@ -1,10 +1,10 @@
 package chat.Sistema;
 
-import chat.Enums.EstadoUsuario;
-import chat.Enums.EventoTipo;
-import chat.Enums.RolParticipante;
-import chat.Enums.TipoConversacion;
-import chat.Enums.TipoMensaje;
+import chat.Enum.EstadoUsuario;
+import chat.Enum.EventoTipo;
+import chat.Enum.RolParticipante;
+import chat.Enum.TipoConversacion;
+import chat.Enum.TipoMensaje;
 import chat.Factory.ConversacionFactory;
 import chat.Factory.MensajeFactory;
 import chat.Factory.ParticipanteFactory;
@@ -16,10 +16,10 @@ import chat.Manejadores.ManejadorUsuario;
 import chat.Observer.ChatObservable;
 import chat.Observer.ChatObserver;
 import chat.Observer.EventoChat;
-import com.example.chat.model.Conversacion;
-import com.example.chat.model.Mensaje;
-import com.example.chat.model.Participante;
-import com.example.chat.model.Usuario;
+import chat.clases.Conversacion;
+import chat.clases.Mensaje;
+import chat.clases.Participante;
+import chat.clases.Usuario;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
@@ -85,8 +85,14 @@ public class Sistema implements ISistema {
 
     @Override
     public Usuario registrarUsuario(String username, String email, String password) {
-        // TODO: Implementar hash de password (BCrypt)
-        String passwordHash = password; // Temporal - hashear en producción
+        // Validar que el correo no esté en uso
+        if (usuarioHandler().buscarUsuarioPorEmail(email).isPresent()) {
+            throw new IllegalArgumentException("El correo electrónico ya se encuentra registrado");
+        }
+
+        // Hashear password con BCrypt
+        String passwordHash = org.mindrot.jbcrypt.BCrypt.hashpw(password, org.mindrot.jbcrypt.BCrypt.gensalt());
+        
         Usuario u = usuarioHandler().crearUsuario(username, email, passwordHash);
         observable.notificar(new EventoChat(EventoTipo.USUARIO_CREADO, u));
         return u;

@@ -1,6 +1,6 @@
 package chat.Factory;
 
-import chat.Enums.EstadoUsuario;
+import chat.Enum.EstadoUsuario;
 import chat.clases.Usuario;
 
 public class UsuarioFactory {
