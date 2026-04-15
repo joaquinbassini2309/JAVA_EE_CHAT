@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="3.1"
+             xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_1.xsd">
+
+    <persistence-unit name="chatPU" transaction-type="RESOURCE_LOCAL">
+        <!-- Puedes especificar org.hibernate.jpa.HibernatePersistenceProvider si usas Hibernate provider en Pom -->
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        
+        <!-- Entidades mapeadas explícitamente (Opcional pero buena práctica) -->
+        <class>chat.clases.Usuario</class>
+        <class>chat.clases.Conversacion</class>
+        <class>chat.clases.Mensaje</class>
+        <class>chat.clases.Participante</class>
+
+        <properties>
+            <!-- Conexión a Base de Datos PostgreSQL -->
+            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver" />
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/chat" />
+            <property name="jakarta.persistence.jdbc.user" value="postgres" />
+            <property name="jakarta.persistence.jdbc.password" value="postgres" />
+
+            <!-- Hibernate Properties (Dialecto para Postgres) -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.show_sql" value="true" />
+            <property name="hibernate.format_sql" value="true" />
+            <property name="hibernate.hbm2ddl.auto" value="update" /> <!-- Actualizará el schema para las entidades -->
+        </properties>
+    </persistence-unit>
+</persistence>
