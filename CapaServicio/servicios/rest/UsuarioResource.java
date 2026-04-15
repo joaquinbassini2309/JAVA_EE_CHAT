@@ -3,6 +3,7 @@ package chat.servicios.rest;
 import chat.Datatype.DtUsuario;
 import chat.Sistema.ISistema;
 import chat.clases.Usuario;
+import chat.servicios.exceptions.ErrorResponse;
 import chat.servicios.seguridad.AuthService;
 import chat.servicios.seguridad.JWTUtil;
 import jakarta.inject.Inject;
@@ -42,24 +43,24 @@ public class UsuarioResource {
     public Response login(DtUsuario.LoginDTO loginDto) {
         if (loginDto == null || loginDto.getUsername() == null || loginDto.getUsername().isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail("Username is required")).build();
+                    .entity(new ErrorResponse(400, "Username is required")).build();
         }
 
         if (loginDto.getPassword() == null || loginDto.getPassword().isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail("Password is required")).build();
+                    .entity(new ErrorResponse(400, "Password is required")).build();
         }
 
         Optional<Usuario> usuarioOpt = sistema.buscarUsuarioPorUsername(loginDto.getUsername());
         if (usuarioOpt.isEmpty()) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorDetail("Invalid credentials")).build();
+                    .entity(new ErrorResponse(401, "Invalid credentials")).build();
         }
 
         Usuario usuario = usuarioOpt.get();
         if (!BCrypt.checkpw(loginDto.getPassword(), usuario.getPasswordHash())) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorDetail("Invalid credentials")).build();
+                    .entity(new ErrorResponse(401, "Invalid credentials")).build();
         }
 
         String token = generateToken(usuario);
@@ -74,7 +75,7 @@ public class UsuarioResource {
     public Response register(DtUsuario.CrearUsuarioDTO crearDto) {
         if (crearDto == null) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail("Request body is required")).build();
+                    .entity(new ErrorResponse(400, "Request body is required")).build();
         }
 
         String username = crearDto.getUsername();
@@ -83,17 +84,17 @@ public class UsuarioResource {
 
         if (username == null || username.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail("Nombre de usuario requerido")).build();
+                    .entity(new ErrorResponse(400, "Username is required")).build();
         }
 
         if (email == null || email.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail("Se necesita email")).build();
+                    .entity(new ErrorResponse(400, "Email is required")).build();
         }
 
         if (password == null || password.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail("Se necesita contraseña")).build();
+                    .entity(new ErrorResponse(400, "Password is required")).build();
         }
 
         try {
@@ -105,10 +106,10 @@ public class UsuarioResource {
             return Response.created(location).entity(usuarioDto).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail(e.getMessage())).build();
+                    .entity(new ErrorResponse(400, "Validation error", e.getMessage())).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorDetail("Error registering user")).build();
+                    .entity(new ErrorResponse(500, "Error registering user", e.getMessage())).build();
         }
     }
 
@@ -118,13 +119,13 @@ public class UsuarioResource {
         Long usuarioId = authService.getAuthenticatedUserId(securityContext);
         if (usuarioId == null) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorDetail("Authentication required")).build();
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
         }
 
         Optional<Usuario> usuarioOpt = sistema.buscarUsuarioPorId(usuarioId);
         if (usuarioOpt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(new ErrorDetail("User not found")).build();
+                    .entity(new ErrorResponse(404, "User not found")).build();
         }
 
         if (actualizarDto != null) {
@@ -141,16 +142,5 @@ public class UsuarioResource {
 
     private String generateToken(Usuario usuario) {
         return jwtUtil.generarToken(usuario.getId(), usuario.getUsername());
-    }
-
-    public static class ErrorDetail {
-        public String message;
-
-        public ErrorDetail(String message) {
-            this.message = message;
-        }
-
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
     }
 }

@@ -4,6 +4,7 @@ import chat.Datatype.DtMensaje;
 import chat.Enum.TipoMensaje;
 import chat.Sistema.ISistema;
 import chat.clases.Mensaje;
+import chat.servicios.exceptions.ErrorResponse;
 import chat.servicios.seguridad.AuthService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -47,23 +48,23 @@ public class MensajeResource {
         Long usuarioId = authService.getAuthenticatedUserId(securityContext);
         if (usuarioId == null) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorDetail("Authentication required")).build();
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
         }
 
         if (mensajeDto == null || mensajeDto.getConversacionId() == null) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail("conversacionId is required")).build();
+                    .entity(new ErrorResponse(400, "conversacionId is required")).build();
         }
 
         if (mensajeDto.getContenido() == null || mensajeDto.getContenido().isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail("contenido is required")).build();
+                    .entity(new ErrorResponse(400, "contenido is required")).build();
         }
 
         // Validar que el usuario está en la conversación
         if (!sistema.usuarioEstaEnConversacion(usuarioId, mensajeDto.getConversacionId())) {
             return Response.status(Response.Status.FORBIDDEN)
-                    .entity(new ErrorDetail("You don't have access to this conversation")).build();
+                    .entity(new ErrorResponse(403, "You don't have access to this conversation")).build();
         }
 
         try {
@@ -83,10 +84,10 @@ public class MensajeResource {
 
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail(e.getMessage())).build();
+                    .entity(new ErrorResponse(400, "Validation error", e.getMessage())).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorDetail("Error sending message")).build();
+                    .entity(new ErrorResponse(500, "Error sending message", e.getMessage())).build();
         }
     }
 
@@ -99,14 +100,14 @@ public class MensajeResource {
     public Response getMensaje(@PathParam("id") Long id) {
         if (id == null || id <= 0) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail("Invalid message ID")).build();
+                    .entity(new ErrorResponse(400, "Invalid message ID")).build();
         }
 
         Optional<Mensaje> mensajeOpt = sistema.mensajeHandler().buscarPorId(id);
         
         if (mensajeOpt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(new ErrorDetail("Message not found")).build();
+                    .entity(new ErrorResponse(404, "Message not found")).build();
         }
 
         DtMensaje respuesta = DtMensaje.from(mensajeOpt.get());
@@ -129,18 +130,18 @@ public class MensajeResource {
         Long usuarioId = authService.getAuthenticatedUserId(securityContext);
         if (usuarioId == null) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorDetail("Authentication required")).build();
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
         }
 
         if (conversacionId == null || conversacionId <= 0) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail("Invalid conversation ID")).build();
+                    .entity(new ErrorResponse(400, "Invalid conversation ID")).build();
         }
 
         // Validar que el usuario está en la conversación
         if (!sistema.usuarioEstaEnConversacion(usuarioId, conversacionId)) {
             return Response.status(Response.Status.FORBIDDEN)
-                    .entity(new ErrorDetail("You don't have access to this conversation")).build();
+                    .entity(new ErrorResponse(403, "You don't have access to this conversation")).build();
         }
 
         try {
@@ -154,7 +155,7 @@ public class MensajeResource {
 
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail(e.getMessage())).build();
+                    .entity(new ErrorResponse(400, "Validation error", e.getMessage())).build();
         }
     }
 
@@ -168,21 +169,21 @@ public class MensajeResource {
         Long usuarioId = authService.getAuthenticatedUserId(securityContext);
         if (usuarioId == null) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorDetail("Authentication required")).build();
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
         }
 
         if (mensajeId == null || mensajeId <= 0) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail("Invalid message ID")).build();
+                    .entity(new ErrorResponse(400, "Invalid message ID")).build();
         }
 
         try {
             sistema.marcarMensajeComoLeido(mensajeId, usuarioId);
-            return Response.ok(new SuccessDetail("Message marked as read")).build();
+            return Response.ok().build();
 
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorDetail("Error marking message as read")).build();
+                    .entity(new ErrorResponse(500, "Error marking message as read", e.getMessage())).build();
         }
     }
 
@@ -196,27 +197,27 @@ public class MensajeResource {
         Long usuarioId = authService.getAuthenticatedUserId(securityContext);
         if (usuarioId == null) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorDetail("Authentication required")).build();
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
         }
 
         if (conversacionId == null || conversacionId <= 0) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorDetail("Invalid conversation ID")).build();
+                    .entity(new ErrorResponse(400, "Invalid conversation ID")).build();
         }
 
         // Validar que el usuario está en la conversación
         if (!sistema.usuarioEstaEnConversacion(usuarioId, conversacionId)) {
             return Response.status(Response.Status.FORBIDDEN)
-                    .entity(new ErrorDetail("You don't have access to this conversation")).build();
+                    .entity(new ErrorResponse(403, "You don't have access to this conversation")).build();
         }
 
         try {
             sistema.marcarConversacionComoLeida(conversacionId, usuarioId);
-            return Response.ok(new SuccessDetail("Conversation marked as read")).build();
+            return Response.ok().build();
 
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorDetail("Error marking conversation as read")).build();
+                    .entity(new ErrorResponse(500, "Error marking conversation as read", e.getMessage())).build();
         }
     }
 
@@ -249,27 +250,5 @@ public class MensajeResource {
 
         public String getUrlAdjunto() { return urlAdjunto; }
         public void setUrlAdjunto(String urlAdjunto) { this.urlAdjunto = urlAdjunto; }
-    }
-
-    public static class ErrorDetail {
-        public String message;
-
-        public ErrorDetail(String message) {
-            this.message = message;
-        }
-
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-    }
-
-    public static class SuccessDetail {
-        public String message;
-
-        public SuccessDetail(String message) {
-            this.message = message;
-        }
-
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
     }
 }
