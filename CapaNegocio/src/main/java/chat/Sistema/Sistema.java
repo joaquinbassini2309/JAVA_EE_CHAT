@@ -366,4 +366,15 @@ public class Sistema implements ISistema {
     public void eliminarObservador(ChatObserver observer) {
         observable.eliminarObservador(observer);
     }
+
+    @Override
+    public String encriptarMensaje(String contenido) {
+        // Implementación simple con Base64; idealmente usar AES
+        return java.util.Base64.getEncoder().encodeToString(contenido.getBytes());
+    }
+
+    @Override
+    public String desencriptarMensaje(String contenidoEncriptado) {
+        return new String(java.util.Base64.getDecoder().decode(contenidoEncriptado));
+    }
 }

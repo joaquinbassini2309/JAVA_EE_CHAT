@@ -130,4 +130,8 @@ public interface ISistema {
     // Observadores
     void registrarObservador(ChatObserver observer);
     void eliminarObservador(ChatObserver observer);
+
+    String encriptarMensaje(String contenido);
+    String desencriptarMensaje(String contenidoEncriptado);
+
 }
