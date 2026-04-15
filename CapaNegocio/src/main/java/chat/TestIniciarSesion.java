@@ -43,7 +43,7 @@ public class TestIniciarSesion {
                 try {
                     Usuario usuarioLogueado = sistema.iniciarSesion(email, password);
                     System.out.println("\nÉXITO: ¡Bienvenido " + usuarioLogueado.getUsername() + "!");
-                    System.out.println("Estado actual de la sesión: " + usuarioLogueado.getEstado());
+                    System.out.println("Estado de presencia: " + usuarioLogueado.getEstado());
                     sesionIniciada = true; // Salimos del bucle
                 } catch (IllegalArgumentException e) {
                     System.err.println("\nERROR: " + e.getMessage());

@@ -104,9 +104,9 @@ public class Sistema implements ISistema {
         Usuario usuario = usuarioHandler().buscarUsuarioPorEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Credenciales incorrectas"));
 
-        // Verificar que el usuario no esté borrado/inactivo (OFFLINE en este contexto)
-        if (usuario.getEstado() == EstadoUsuario.OFFLINE) {
-            throw new IllegalArgumentException("El usuario ha sido eliminado o se encuentra inactivo");
+        // Verificar que el usuario no esté borrado/inactivo (mediante el atributo activo)
+        if (usuario.isActivo() != null && !usuario.isActivo()) {
+            throw new IllegalArgumentException("El usuario esta eliminado, pongase en contacto con un administrador.");
         }
 
         // Verificar la contraseña proporcionada contra el hash almacenado
@@ -114,7 +114,19 @@ public class Sistema implements ISistema {
             throw new IllegalArgumentException("Credenciales incorrectas");
         }
 
+        // Generar sesión activa (cambiando el estado de presencia a ONLINE)
+        actualizarEstadoUsuario(usuario.getId(), EstadoUsuario.ONLINE);
+
         return usuario;
+    }
+
+    @Override
+    public void cerrarSesion(String email) {
+        Usuario usuario = usuarioHandler().buscarUsuarioPorEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado, no se puede cerrar sesión."));
+        
+        // Aquí el sistema simula invalidar token/sesión asignando el estado OFFLINE
+        actualizarEstadoUsuario(usuario.getId(), EstadoUsuario.OFFLINE);
     }
 
     @Override
