@@ -2,8 +2,8 @@
 
 ## 🎯 El Comando
 
-```batch
-.\Scripts\run-setup.bat
+```powershell
+.\Scripts\setup-wildfly.ps1
 ```
 
 **¡Eso es todo!** El script automatiza todo:
@@ -58,8 +58,8 @@ curl -X POST http://localhost:8080/chat-empresarial/api/v1/usuarios/login \
 
 Para controlar WildFly en cualquier momento:
 
-```bash
-.\Scripts\manage-wildfly.bat
+```powershell
+.\Scripts\manage-wildfly.ps1
 ```
 
 Opciones:
@@ -73,8 +73,8 @@ Opciones:
 
 ## 🧹 Desinstalar
 
-```bash
-.\Scripts\cleanup.bat
+```powershell
+.\Scripts\cleanup.ps1
 ```
 
 ---

@@ -16,7 +16,7 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
-
+C:\Users\Usuario\IdeaProjects\JAVA_EE_CHAT\Scripts\run-setup.bat
 REM Solicitar contraseña de PostgreSQL
 set /p POSTGRES_PASS="Ingresa contraseña de PostgreSQL (default: postgres): "
 if "%POSTGRES_PASS%"=="" set POSTGRES_PASS=postgres

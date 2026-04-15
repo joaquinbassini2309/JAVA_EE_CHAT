@@ -63,33 +63,41 @@ psql --version
 
 ---
 
-## 🎯 Forma Más Fácil: Usar run-setup.bat
+## 🎯 Forma Más Fácil: PowerShell
 
-### En Windows:
+### En Windows (PowerShell):
 
-```bash
-# Opción 1: Doble click en run-setup.bat
-# (Desde el explorador de archivos)
+```powershell
+# Opción 1: Con contraseña por defecto (postgres)
+.\Scripts\setup-wildfly.ps1
 
-# Opción 2: Desde terminal (Command Prompt o PowerShell)
-.\Scripts\run-setup.bat
+# Opción 2: Con tu contraseña de PostgreSQL
+.\Scripts\setup-wildfly.ps1 -PostgresPassword "tu_contraseña"
+
+# Opción 3: Con parámetros personalizados
+.\Scripts\setup-wildfly.ps1 `
+    -PostgresPassword "tu_password" `
+    -WildFlyVersion "32.0.1.Final" `
+    -WildFlyDir "C:\wildfly-32.0.1.Final" `
+    -ProjectRoot "C:\Users\Usuario\IdeaProjects\JAVA_EE_CHAT"
 ```
 
 **Esto:**
-1. ✅ Descarga WildFly 32.0.1.Final
-2. ✅ Extrae en C:\wildfly-32.0.1.Final
-3. ✅ Inicia WildFly automáticamente
-4. ✅ Crea data source ChatDS en WildFly
-5. ✅ Crea base de datos chat_db en PostgreSQL
-6. ✅ Compila la aplicación (mvn clean package)
-7. ✅ Despliega el WAR en WildFly
-8. ✅ Muestra URLs de acceso
+1. ✅ Valida requisitos (Java, Maven, PostgreSQL)
+2. ✅ Descarga WildFly 32.0.1.Final
+3. ✅ Extrae en C:\wildfly-32.0.1.Final
+4. ✅ Inicia WildFly automáticamente
+5. ✅ Crea data source ChatDS en WildFly
+6. ✅ Crea base de datos chat_db en PostgreSQL
+7. ✅ Compila la aplicación (mvn clean package)
+8. ✅ Despliega el WAR en WildFly
+9. ✅ Muestra URLs de acceso
 
 ---
 
-## 🎮 Script de Utilidades: manage-wildfly.bat
+## 🎮 Script de Utilidades: PowerShell
 
-Después de ejecutar `run-setup.bat`, usa este script para:
+Después de ejecutar `setup-wildfly.ps1`, usa:
 
 ```bash
 # Abrir menú interactivo
@@ -127,37 +135,33 @@ Después de ejecutar `run-setup.bat`, usa este script para:
 ### O ejecutar directamente desde PowerShell:
 
 ```powershell
-# Ver estado
-.\Scripts\manage-wildfly.ps1 -Action status
+# Menú interactivo (recomendado)
+.\Scripts\manage-wildfly.ps1
 
-# Iniciar WildFly
-.\Scripts\manage-wildfly.ps1 -Action start
-
-# Detener WildFly
-.\Scripts\manage-wildfly.ps1 -Action stop
-
-# Ver logs
-.\Scripts\manage-wildfly.ps1 -Action logs
-
-# Redeploy
-.\Scripts\manage-wildfly.ps1 -Action redeploy
-
-# Probar API
-.\Scripts\manage-wildfly.ps1 -Action test
-
-# Menú interactivo
-.\Scripts\manage-wildfly.ps1 -Action menu
+# O acciones directas sin menú
+.\Scripts\manage-wildfly.ps1 -Action status      # Ver estado
+.\Scripts\manage-wildfly.ps1 -Action start       # Iniciar
+.\Scripts\manage-wildfly.ps1 -Action stop        # Detener
+.\Scripts\manage-wildfly.ps1 -Action logs        # Ver logs
+.\Scripts\manage-wildfly.ps1 -Action redeploy    # Redeploy
+.\Scripts\manage-wildfly.ps1 -Action test        # Probar API
+.\Scripts\manage-wildfly.ps1 -Action cli         # Abrir CLI
 ```
 
 ---
 
-## 🧹 Script de Limpieza: cleanup.bat
+## 🧹 Script de Limpieza: PowerShell
 
 Para desinstalar WildFly y limpiar archivos:
 
-```bash
-# Abre el script de limpieza
-.\Scripts\cleanup.bat
+```powershell
+# Desinstalar todo
+.\Scripts\cleanup.ps1
+
+# O con parámetros personalizados
+.\Scripts\cleanup.ps1 `
+    -WildFlyDir "C:\wildfly-32.0.1.Final" `
+    -ProjectRoot "C:\Users\Usuario\IdeaProjects\JAVA_EE_CHAT"
 ```
 
 **Elimina:**

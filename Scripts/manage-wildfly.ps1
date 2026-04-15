@@ -22,19 +22,19 @@ function Check-WildFlyStatus {
     
     try {
         $response = Invoke-WebRequest -Uri "http://localhost:9990/console" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
-        Write-Success "✓ WildFly está CORRIENDO"
+        Write-Success "[OK] WildFly esta CORRIENDO"
         Write-Success "   Admin Console: http://localhost:9990/console"
-        Write-Success "   Aplicación: http://localhost:8080/chat-empresarial/"
+        Write-Success "   Aplicacion: http://localhost:8080/chat-empresarial/"
         
         # Verificar si la aplicación está desplegada
         try {
             $appResponse = Invoke-WebRequest -Uri "http://localhost:8080/chat-empresarial/" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
-            Write-Success "✓ Aplicación DESPLEGADA"
+            Write-Success "[OK] Aplicacion DESPLEGADA"
         } catch {
-            Write-Warning-Custom "⚠ Aplicación no responde"
+            Write-Warning-Custom "[!] Aplicacion no responde"
         }
     } catch {
-        Write-Error-Custom "✗ WildFly NO está corriendo"
+        Write-Error-Custom "[!] WildFly NO esta corriendo"
         Write-Info "   Inicia con: & '$WildFlyDir\bin\standalone.bat'"
     }
 }
@@ -47,29 +47,31 @@ function Start-WildFly {
     
     $wildflyCli = "$WildFlyDir\bin\standalone.bat"
     if (-not (Test-Path $wildflyCli)) {
-        Write-Error-Custom "✗ standalone.bat no encontrado en $WildFlyDir"
+        Write-Error-Custom "[!] standalone.bat no encontrado en $WildFlyDir"
         return
     }
     
     # Verificar si ya está corriendo
     $process = Get-Process java -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -match "wildfly" }
     if ($process) {
-        Write-Warning-Custom "⚠ WildFly ya está corriendo (PID: $($process.Id))"
+        Write-Warning-Custom "[!] WildFly ya esta corriendo (PID: $($process.Id))"
         return
     }
     
-    Write-Info "Iniciando en segundo plano..."
-    $process = Start-Process -FilePath $wildflyCli -WindowStyle Hidden -PassThru
-    Write-Success "✓ WildFly iniciado (PID: $($process.Id))"
-    Write-Info "Esperando a que esté listo..."
+    Write-Info "Iniciando en segundo plano con argumentos de bind..."
+    $process = Start-Process -FilePath $wildflyCli -WindowStyle Hidden -PassThru `
+        -ArgumentList "-Djboss.bind.address=0.0.0.0", `
+                      "-Djboss.bind.address.management=0.0.0.0"
+    Write-Success "[OK] WildFly iniciado (PID: $($process.Id))"
+    Write-Info "Esperando a que este listo (hasta 60s)..."
     
-    # Esperar
-    $maxAttempts = 30
+    # Esperar con timeout mas largo
+    $maxAttempts = 60
     $attempt = 0
     while ($attempt -lt $maxAttempts) {
         try {
             $response = Invoke-WebRequest -Uri "http://localhost:9990/console" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
-            Write-Success "✓ WildFly listo en http://localhost:9990/console"
+            Write-Success "[OK] WildFly listo en http://localhost:9990/console"
             return
         } catch {
             $attempt++
@@ -77,7 +79,9 @@ function Start-WildFly {
             Start-Sleep -Seconds 1
         }
     }
-    Write-Warning-Custom "`n⚠ WildFly puede no estar completamente listo"
+    Write-Warning-Custom ""
+    Write-Warning-Custom "[!] WildFly puede no estar completamente listo despues de 60s"
+    Write-Info "Verifica manualmente en: http://localhost:9990/console"
 }
 
 # ========================================
@@ -91,9 +95,9 @@ function Stop-WildFly {
         $pid = $process.Id
         Stop-Process -Id $pid -Force
         Start-Sleep -Seconds 2
-        Write-Success "✓ WildFly detenido (PID: $pid)"
+        Write-Success "[OK] WildFly detenido (PID: $pid)"
     } else {
-        Write-Info "WildFly no está corriendo"
+        Write-Info "WildFly no esta corriendo"
     }
 }
 
@@ -105,7 +109,7 @@ function Open-WildFlyCLI {
     
     $cliPath = "$WildFlyDir\bin\jboss-cli.bat"
     if (-not (Test-Path $cliPath)) {
-        Write-Error-Custom "✗ jboss-cli.bat no encontrado"
+        Write-Error-Custom "[!] jboss-cli.bat no encontrado"
         return
     }
     
@@ -113,33 +117,26 @@ function Open-WildFlyCLI {
     & $cliPath --connect
 }
 
-# ========================================
-# FUNCIÓN: Ver Logs en Tiempo Real
-# ========================================
 function Watch-Logs {
     Write-Info "Mostrando logs en tiempo real..."
     Write-Info "(Presiona Ctrl+C para detener)"
     
     $logFile = "$WildFlyDir\standalone\log\server.log"
     if (-not (Test-Path $logFile)) {
-        Write-Error-Custom "✗ Archivo de log no encontrado: $logFile"
+        Write-Error-Custom "[!] Archivo de log no encontrado: $logFile"
         return
     }
     
-    # Windows no tiene 'tail -f', usamos Get-Content -Wait (PowerShell 3.0+)
     Get-Content -Path $logFile -Wait -Tail 50
 }
 
-# ========================================
-# FUNCIÓN: Redeploy de la Aplicación
-# ========================================
 function Redeploy-App {
-    Write-Info "Recompilando y desplegando aplicación..."
+    Write-Info "Recompilando y desplegando aplicacion..."
     
     $projectRoot = "C:\Users\Usuario\IdeaProjects\JAVA_EE_CHAT"
     
     if (-not (Test-Path "$projectRoot\pom.xml")) {
-        Write-Error-Custom "✗ pom.xml no encontrado en $projectRoot"
+        Write-Error-Custom "[!] pom.xml no encontrado en $projectRoot"
         return
     }
     
@@ -149,12 +146,12 @@ function Redeploy-App {
     & mvn clean package 2>&1 | Tee-Object -Variable mavenOutput
     
     if ($LASTEXITCODE -ne 0) {
-        Write-Error-Custom "✗ Error en compilación"
+        Write-Error-Custom "[!] Error en compilacion"
         Pop-Location
         return
     }
     
-    Write-Success "✓ Compilación exitosa"
+    Write-Success "[OK] Compilacion exitosa"
     
     $warFile = "$projectRoot\target\chat-empresarial.war"
     $deploymentsDir = "$WildFlyDir\standalone\deployments"
@@ -162,7 +159,7 @@ function Redeploy-App {
     if (Test-Path $warFile) {
         Write-Info "Desplegando WAR..."
         Copy-Item $warFile -Destination $deploymentsDir -Force
-        Write-Success "✓ WAR desplegado"
+        Write-Success "[OK] WAR desplegado"
         
         Write-Info "Esperando despliegue (hasta 20s)..."
         Start-Sleep -Seconds 3
@@ -172,7 +169,7 @@ function Redeploy-App {
         while ($attempt -lt $maxAttempts) {
             try {
                 $response = Invoke-WebRequest -Uri "http://localhost:8080/chat-empresarial/" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
-                Write-Success "✓ Aplicación disponible en http://localhost:8080/chat-empresarial/"
+                Write-Success "[OK] Aplicacion disponible en http://localhost:8080/chat-empresarial/"
                 Pop-Location
                 return
             } catch {
@@ -187,15 +184,13 @@ function Redeploy-App {
     Pop-Location
 }
 
-# ========================================
-# FUNCIÓN: Probar API
-# ========================================
 function Test-API {
     Write-Info "Probando endpoints de la API..."
     
     $baseUrl = "http://localhost:8080/chat-empresarial/api/v1"
     
-    Write-Info "`n1. Probando login..."
+    Write-Info ""
+    Write-Info "1. Probando login..."
     try {
         $response = Invoke-RestMethod -Uri "$baseUrl/usuarios/login" `
             -Method POST `
@@ -203,10 +198,10 @@ function Test-API {
             -Body '{"username":"admin","password":"admin123"}' `
             -ErrorAction SilentlyContinue
         
-        Write-Success "✓ Login endpoint respondió"
+        Write-Success "[OK] Login endpoint respondio"
         Write-Info "   Respuesta: $($response | ConvertTo-Json)"
     } catch {
-        Write-Warning-Custom "⚠ Login endpoint no respondió"
+        Write-Warning-Custom "[!] Login endpoint no respondio"
     }
 }
 
@@ -215,7 +210,8 @@ function Test-API {
 # ========================================
 function Show-Menu {
     while ($true) {
-        Write-Info "`n=================================="
+        Write-Info ""
+        Write-Info "=================================="
         Write-Info "     UTILIDADES DE WILDFLY"
         Write-Info "=================================="
         Write-Host "1. Ver estado de WildFly"
@@ -223,12 +219,12 @@ function Show-Menu {
         Write-Host "3. Detener WildFly"
         Write-Host "4. Abrir CLI de WildFly"
         Write-Host "5. Ver logs en tiempo real"
-        Write-Host "6. Redeploy de aplicación"
+        Write-Host "6. Redeploy de aplicacion"
         Write-Host "7. Probar API"
         Write-Host "8. Salir"
         Write-Host ""
         
-        $choice = Read-Host "Selecciona una opción (1-8)"
+        $choice = Read-Host "Selecciona una opcion (1-8)"
         
         switch ($choice) {
             "1" { Check-WildFlyStatus; Read-Host "Presiona Enter para continuar" }
@@ -242,7 +238,7 @@ function Show-Menu {
                 Write-Success "Saliendo..."
                 exit 0
             }
-            default { Write-Error-Custom "Opción inválida" }
+            default { Write-Error-Custom "Opcion invalida" }
         }
     }
 }
@@ -262,9 +258,9 @@ if ($Action -eq "menu") {
         "redeploy" { Redeploy-App }
         "test" { Test-API }
         default {
-            Write-Error-Custom "Acción desconocida: $Action"
-            Write-Info "Usos válidos:"
-            Write-Info "  .\manage-wildfly.ps1 menu      - Menú interactivo"
+            Write-Error-Custom "Accion desconocida: $Action"
+            Write-Info "Usos validos:"
+            Write-Info "  .\manage-wildfly.ps1 menu      - Menu interactivo"
             Write-Info "  .\manage-wildfly.ps1 status    - Ver estado"
             Write-Info "  .\manage-wildfly.ps1 start     - Iniciar"
             Write-Info "  .\manage-wildfly.ps1 stop      - Detener"
