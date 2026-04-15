@@ -48,6 +48,14 @@
     </dependencies>
 
     <build>
+        <sourceDirectory>CapaNegocio/src/main/java</sourceDirectory>
+        <testSourceDirectory>CapaNegocio/src/test/java</testSourceDirectory>
+        <resources>
+            <resource>
+                <directory>CapaNegocio/src/main/resources</directory>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -55,6 +63,15 @@
                 <configuration>
                     <source>21</source>
                     <target>21</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <!-- Permite empaquetar un WAR sin necesidad del archivo WEB-INF/web.xml antiguo -->
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
             </plugin>
         </plugins>

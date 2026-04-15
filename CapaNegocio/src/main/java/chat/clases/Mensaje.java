@@ -22,8 +22,7 @@ public class Mensaje {
     @JoinColumn(name = "id_emisor", nullable = false)
     private Usuario emisor;
 
-    @Lob
-    @Column(name = "contenido", nullable = false)
+    @Column(name = "contenido", columnDefinition = "TEXT", nullable = false)
     private String contenido;
 
     @Enumerated(EnumType.STRING)

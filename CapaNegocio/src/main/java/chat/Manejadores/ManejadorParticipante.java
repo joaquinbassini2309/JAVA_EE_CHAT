@@ -148,4 +148,17 @@ public class ManejadorParticipante {
             em.close();
         }
     }
+
+    public Object buscarParticipantesPorConversacion(Long id) {
+        EntityManager em = em();
+        try {
+            TypedQuery<Participante> q = em.createQuery(
+                    "SELECT p FROM Participante p WHERE p.conversacion.id = :cid",
+                    Participante.class);
+            q.setParameter("cid", id);
+            return q.getResultList();
+        } finally {
+            em.close();
+        }
+    }
 }
