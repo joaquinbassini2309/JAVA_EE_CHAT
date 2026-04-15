@@ -104,8 +104,8 @@ public class Sistema implements ISistema {
         Usuario usuario = usuarioHandler().buscarUsuarioPorEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Credenciales incorrectas"));
 
-        // Verificar que el usuario no esté borrado/inactivo (OFFLINE en este contexto)
-        if (usuario.getEstado() == EstadoUsuario.OFFLINE) {
+        // Verificar que el usuario no esté borrado/inactivo (mediante el atributo activo)
+        if (usuario.isActivo() != null && !usuario.isActivo()) {
             throw new IllegalArgumentException("El usuario ha sido eliminado o se encuentra inactivo");
         }
 
@@ -113,6 +113,9 @@ public class Sistema implements ISistema {
         if (!org.mindrot.jbcrypt.BCrypt.checkpw(password, usuario.getPasswordHash())) {
             throw new IllegalArgumentException("Credenciales incorrectas");
         }
+
+        // Generar sesión activa (cambiando el estado de presencia a ONLINE)
+        actualizarEstadoUsuario(usuario.getId(), EstadoUsuario.ONLINE);
 
         return usuario;
     }

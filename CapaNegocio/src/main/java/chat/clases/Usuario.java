@@ -28,7 +28,10 @@ public class Usuario {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", length = 20)
-    private EstadoUsuario estado = EstadoUsuario.ONLINE;
+    private EstadoUsuario estado = EstadoUsuario.OFFLINE;
+
+    @Column(name = "activo")
+    private Boolean activo = true;
 
     @Column(name = "fecha_registro")
     private LocalDateTime fechaRegistro;
@@ -62,6 +65,9 @@ public class Usuario {
 
     public EstadoUsuario getEstado() { return estado; }
     public void setEstado(EstadoUsuario estado) { this.estado = estado; }
+
+    public Boolean isActivo() { return activo; }
+    public void setActivo(Boolean activo) { this.activo = activo; }
 
     public LocalDateTime getFechaRegistro() { return fechaRegistro; }
     public void setFechaRegistro(LocalDateTime fechaRegistro) { this.fechaRegistro = fechaRegistro; }

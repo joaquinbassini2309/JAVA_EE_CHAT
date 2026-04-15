@@ -2,9 +2,7 @@
 -- Script de Inicialización de Base de Datos para Chat JAVA EE (PostgreSQL)
 -- ==============================================================================
 
--- 1. Limpieza inicial. 
--- El comando CASCADE elimina las dependencias de integridad referencial.
--- Esto asegura que al importar este archivo no existan conflictos de duplicidad.
+-- 1. Limpieza inicial
 DROP TABLE IF EXISTS mensajes CASCADE;
 DROP TABLE IF EXISTS participantes CASCADE;
 DROP TABLE IF EXISTS conversaciones CASCADE;
@@ -15,13 +13,13 @@ DROP TABLE IF EXISTS usuarios CASCADE;
 -- ==============================================================================
 
 CREATE TABLE usuarios (
-    -- SERIAL genera autoincrementos en Postgres equivalentes al GenerationType.IDENTITY
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     foto_url VARCHAR(255),
     estado VARCHAR(20) DEFAULT 'OFFLINE',
+    activo BOOLEAN DEFAULT TRUE, 
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -40,7 +38,6 @@ CREATE TABLE participantes (
     fecha_union TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_participantes_conversacion FOREIGN KEY (id_conversacion) REFERENCES conversaciones(id) ON DELETE CASCADE,
     CONSTRAINT fk_participantes_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE,
-    -- Impide que un usuario se una dos veces al mismo grupo
     CONSTRAINT uk_participantes_conv_user UNIQUE (id_conversacion, id_usuario)
 );
 
@@ -57,39 +54,35 @@ CREATE TABLE mensajes (
     CONSTRAINT fk_mensajes_emisor FOREIGN KEY (id_emisor) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
--- Índices definidos en el JPA para optimizar búsquedas masivas de mensajes
 CREATE INDEX idx_mensajes_conversacion ON mensajes(id_conversacion);
 
 -- ==============================================================================
 -- 3. Inserción de Datos Simulados (DML)
 -- ==============================================================================
 
--- a) Usuarios. Nota: La password hasheada aquí es para la clave "password123".
-INSERT INTO usuarios (username, email, password_hash, estado, fecha_registro) VALUES
-('admin_master', 'admin@example.com', '$2a$10$wN10Cuvx2c72v7MhVp/Fdu1TItZk0QkXqJXZBw.Q99H0YxI4/nN6m', 'ONLINE', CURRENT_TIMESTAMP),
-('juanperez', 'juan@example.com', '$2a$10$wN10Cuvx2c72v7MhVp/Fdu1TItZk0QkXqJXZBw.Q99H0YxI4/nN6m', 'OFFLINE', CURRENT_TIMESTAMP),
-('maria_dev', 'maria@example.com', '$2a$10$wN10Cuvx2c72v7MhVp/Fdu1TItZk0QkXqJXZBw.Q99H0YxI4/nN6m', 'ONLINE', CURRENT_TIMESTAMP);
+-- a) Usuarios
+-- Aprovechamos los DEFAULT para 'activo' y 'fecha_registro'
+INSERT INTO usuarios (username, email, password_hash, estado) VALUES
+('admin_master', 'admin@example.com', '$2a$10$wN10Cuvx2c72v7MhVp/Fdu1TItZk0QkXqJXZBw.Q99H0YxI4/nN6m', 'ONLINE'),
+('juanperez', 'juan@example.com', '$2a$10$wN10Cuvx2c72v7MhVp/Fdu1TItZk0QkXqJXZBw.Q99H0YxI4/nN6m', 'OFFLINE'),
+('maria_dev', 'maria@example.com', '$2a$10$wN10Cuvx2c72v7MhVp/Fdu1TItZk0QkXqJXZBw.Q99H0YxI4/nN6m', 'ONLINE');
 
--- b) Conversaciones (Un Grupo y un Chat Privado)
-INSERT INTO conversaciones (nombre, tipo, fecha_creacion) VALUES
-('Soporte General', 'GRUPO', CURRENT_TIMESTAMP),
-('Juan - Admin', 'PRIVADA', CURRENT_TIMESTAMP);
+-- b) Conversaciones
+INSERT INTO conversaciones (nombre, tipo) VALUES
+('Soporte General', 'GRUPO'),
+('Juan - Admin', 'PRIVADA');
 
 -- c) Participantes
-INSERT INTO participantes (id_conversacion, id_usuario, rol, fecha_union) VALUES
--- Miembros del Grupo 'Soporte General' (Admin + Juan + Maria)
-(1, 1, 'ADMIN', CURRENT_TIMESTAMP),
-(1, 2, 'MIEMBRO', CURRENT_TIMESTAMP),
-(1, 3, 'MIEMBRO', CURRENT_TIMESTAMP),
--- Miembros del chat privado entre Juan y el Admin
-(2, 2, 'MIEMBRO', CURRENT_TIMESTAMP),
-(2, 1, 'MIEMBRO', CURRENT_TIMESTAMP);
+INSERT INTO participantes (id_conversacion, id_usuario, rol) VALUES
+(1, 1, 'ADMIN'),
+(1, 2, 'MIEMBRO'),
+(1, 3, 'MIEMBRO'),
+(2, 2, 'MIEMBRO'),
+(2, 1, 'MIEMBRO');
 
 -- d) Mensajes
-INSERT INTO mensajes (id_conversacion, id_emisor, contenido, tipo_mensaje, leido, fecha_envio) VALUES
--- Actividad en el Grupo de Soporte
-(1, 1, '¡Bienvenidos al grupo de soporte general!', 'TEXTO', FALSE, CURRENT_TIMESTAMP),
-(1, 2, '¡Gracias admin, listo para ayudar!', 'TEXTO', FALSE, CURRENT_TIMESTAMP),
--- Actividad en el privado
-(2, 2, 'Hola admin, te enviaba este mensaje confidencial en privado.', 'TEXTO', TRUE, CURRENT_TIMESTAMP),
-(2, 1, 'Recibido Juan. Todo en perfecto orden.', 'TEXTO', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO mensajes (id_conversacion, id_emisor, contenido, leido) VALUES
+(1, 1, '¡Bienvenidos al grupo de soporte general!', FALSE),
+(1, 2, '¡Gracias admin, listo para ayudar!', FALSE),
+(2, 2, 'Hola admin, te enviaba este mensaje confidencial en privado.', TRUE),
+(2, 1, 'Recibido Juan. Todo en perfecto orden.', FALSE);
