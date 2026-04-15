@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence 
+             https://jakarta.ee/xml/ns/persistence/persistence_3_1.xsd"
+             version="3.1">
+
+    <!-- Unidad de persistencia para la aplicación de chat -->
+    <persistence-unit name="chatPU" transaction-type="JTA">
+        
+        <!-- Data Source JTA configurado en WildFly -->
+        <!-- Debes crear este data source en WildFly CLI o Admin Console -->
+        <jta-data-source>java:/ChatDS</jta-data-source>
+        
+        <!-- Clases de entidad (JPA Entity Beans) -->
+        <class>chat.clases.Usuario</class>
+        <class>chat.clases.Conversacion</class>
+        <class>chat.clases.Participante</class>
+        <class>chat.clases.Mensaje</class>
+
+        <!-- Propiedades de Hibernate -->
+        <properties>
+            <!-- Dialecto de PostgreSQL -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQL10Dialect"/>
+            
+            <!-- Estrategia de creación de esquema:
+                 create: Crea tablas nuevas (borra si existen)
+                 update: Actualiza esquema sin perder datos (RECOMENDADO para producción)
+                 validate: Solo valida sin hacer cambios
+                 create-drop: Crea al iniciar, elimina al cerrar (SOLO DESARROLLO)
+            -->
+            <property name="hibernate.hbm2ddl.auto" value="create"/>
+            
+            <!-- Mostrar SQL generado (cambiar a true para debug) -->
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="true"/>
+            
+            <!-- Configuración de pool de conexiones -->
+            <property name="hibernate.jdbc.batch_size" value="20"/>
+            <property name="hibernate.jdbc.fetch_size" value="50"/>
+            
+            <!-- Estrategia de nombres para columnas y tablas -->
+            <property name="hibernate.physical_naming_strategy" 
+                     value="org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl"/>
+            <property name="hibernate.implicit_naming_strategy" 
+                     value="org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl"/>
+            
+            <!-- Configuración de generación de IDs -->
+            <property name="hibernate.id.new_generator_mappings" value="true"/>
+        </properties>
+    </persistence-unit>
+
+</persistence>

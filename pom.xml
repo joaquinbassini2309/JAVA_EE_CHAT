@@ -8,54 +8,88 @@
     <artifactId>chat-empresarial</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>war</packaging>
+    <name>chat-empresarial</name>
+    <description>Aplicación de chat empresarial con Jakarta EE</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jakarta.persistence.version>3.1.0</jakarta.persistence.version>
+        <jakarta.ws.rs.version>3.1.0</jakarta.ws.rs.version>
+        <jakarta.enterprise.version>4.0.1</jakarta.enterprise.version>
+        <wildfly.maven.plugin.version>4.2.2.Final</wildfly.maven.plugin.version>
     </properties>
 
     <dependencies>
-        <!-- API only; WildFly proporciona la implementación -->
+        <!-- Jakarta EE APIs (provided by WildFly) -->
         <dependency>
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
             <version>${jakarta.persistence.version}</version>
-        <!--     <scope>provided</scope>-->
-      </dependency>
+            <scope>provided</scope>
+        </dependency>
 
-      <!-- jBcrypt para encriptación de contraseñas -->
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>${jakarta.ws.rs.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
+            <version>${jakarta.enterprise.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>2.1.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Application dependencies -->
         <dependency>
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
 
-        <!-- JWT (java-jwt de Auth0) -->
         <dependency>
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
             <version>4.4.0</version>
         </dependency>
 
-        <!-- PostgreSQL Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.2</version>
         </dependency>
 
-        <!-- Hibernate Core (Provider de persistencia) -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>6.4.4.Final</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Logging (optional, WildFly has JBoss Logging) -->
+        <dependency>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging</artifactId>
+            <version>3.5.3.Final</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
     <build>
+        <finalName>chat-empresarial</finalName>
         <plugins>
+            <!-- Java Compiler Plugin -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
@@ -64,6 +98,60 @@
                     <target>21</target>
                 </configuration>
             </plugin>
+
+            <!-- WAR Plugin -->
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <archive>
+                        <manifest>
+                            <addClassPath>true</addClassPath>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <!-- WildFly Maven Plugin para deploy automático -->
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <version>${wildfly.maven.plugin.version}</version>
+                <configuration>
+                    <!-- Configuración por defecto -->
+                    <!-- <hostname>localhost</hostname> -->
+                    <!-- <port>9990</port> -->
+                    <!-- <username>admin</username> -->
+                    <!-- <password>admin</password> -->
+                </configuration>
+            </plugin>
+
+            <!-- Surefire Plugin para tests -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <skipTests>false</skipTests>
+                </configuration>
+            </plugin>
+
+            <!-- Shade Plugin (opcional: para empaquetar dependencias si es necesario) -->
+            <!-- Descomenta si necesitas crear un fat jar
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
         </plugins>
     </build>
 </project>
