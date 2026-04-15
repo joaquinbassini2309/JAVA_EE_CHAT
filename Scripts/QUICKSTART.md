@@ -92,7 +92,7 @@ Opciones:
 
 - **[INDEX.md](INDEX.md)** - Índice completo de scripts
 - **[README.md](README.md)** - Documentación detallada
-- **[../WILDFLY_SETUP.md](../WILDFLY_SETUP.md)** - Configuración manual de WildFly
+- **[../WILDFLY_SETUP.md](WILDFLY_SETUP.md)** - Configuración manual de WildFly
 
 ---
 
