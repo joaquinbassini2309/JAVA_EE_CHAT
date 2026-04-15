@@ -1,8 +1,10 @@
 package chat.servicios.rest;
 
-import chat.DtMensaje;
+import chat.Datatype.DtMensaje;
+import chat.Enum.TipoMensaje;
 import chat.Sistema.ISistema;
-
+import chat.clases.Mensaje;
+import chat.servicios.seguridad.AuthService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -10,8 +12,15 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Path("/api/v1/mensajes")
 @Produces(MediaType.APPLICATION_JSON)
@@ -21,16 +30,246 @@ public class MensajeResource {
     @Inject
     private ISistema sistema;
 
+    @Inject
+    private AuthService authService;
+
+    @Context
+    private SecurityContext securityContext;
+
+    /**
+     * POST /api/v1/mensajes
+     * Envía un mensaje a una conversación
+     * 
+     * Body: { conversacionId, contenido, tipoMensaje?, urlAdjunto? }
+     */
     @POST
-    public Response sendMessage(DtMensaje mensaje) {
-        // TODO: validar JWT, crear mensaje y notificar via WebSocket si procede
-        return Response.status(Response.Status.NOT_IMPLEMENTED).entity("TODO: sendMessage").build();
+    public Response sendMessage(EnviarMensajeDTO mensajeDto) {
+        Long usuarioId = authService.getAuthenticatedUserId(securityContext);
+        if (usuarioId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorDetail("Authentication required")).build();
+        }
+
+        if (mensajeDto == null || mensajeDto.getConversacionId() == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorDetail("conversacionId is required")).build();
+        }
+
+        if (mensajeDto.getContenido() == null || mensajeDto.getContenido().isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorDetail("contenido is required")).build();
+        }
+
+        // Validar que el usuario está en la conversación
+        if (!sistema.usuarioEstaEnConversacion(usuarioId, mensajeDto.getConversacionId())) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(new ErrorDetail("You don't have access to this conversation")).build();
+        }
+
+        try {
+            TipoMensaje tipo = mensajeDto.getTipoMensaje() != null ? 
+                    mensajeDto.getTipoMensaje() : TipoMensaje.TEXTO;
+
+            Mensaje mensaje = sistema.enviarMensajeConAdjunto(
+                    mensajeDto.getConversacionId(),
+                    usuarioId,
+                    mensajeDto.getContenido(),
+                    tipo,
+                    mensajeDto.getUrlAdjunto()
+            );
+
+            DtMensaje respuesta = DtMensaje.from(mensaje);
+            return Response.status(Response.Status.CREATED).entity(respuesta).build();
+
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorDetail(e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorDetail("Error sending message")).build();
+        }
     }
 
+    /**
+     * GET /api/v1/mensajes/{id}
+     * Obtiene un mensaje por ID
+     */
     @GET
     @Path("/{id}")
     public Response getMensaje(@PathParam("id") Long id) {
-        // TODO: devolver mensaje por id
-        return Response.status(Response.Status.NOT_IMPLEMENTED).entity("TODO: getMensaje").build();
+        if (id == null || id <= 0) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorDetail("Invalid message ID")).build();
+        }
+
+        Optional<Mensaje> mensajeOpt = sistema.mensajeHandler().buscarPorId(id);
+        
+        if (mensajeOpt.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorDetail("Message not found")).build();
+        }
+
+        DtMensaje respuesta = DtMensaje.from(mensajeOpt.get());
+        return Response.ok(respuesta).build();
+    }
+
+    /**
+     * GET /api/v1/mensajes/conversacion/{conversacionId}
+     * Obtiene el historial de mensajes de una conversación
+     * 
+     * Query params:
+     *   - limite (default: 50)
+     */
+    @GET
+    @Path("/conversacion/{conversacionId}")
+    public Response getMensajesDeConversacion(
+            @PathParam("conversacionId") Long conversacionId,
+            @QueryParam("limite") Integer limite) {
+
+        Long usuarioId = authService.getAuthenticatedUserId(securityContext);
+        if (usuarioId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorDetail("Authentication required")).build();
+        }
+
+        if (conversacionId == null || conversacionId <= 0) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorDetail("Invalid conversation ID")).build();
+        }
+
+        // Validar que el usuario está en la conversación
+        if (!sistema.usuarioEstaEnConversacion(usuarioId, conversacionId)) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(new ErrorDetail("You don't have access to this conversation")).build();
+        }
+
+        try {
+            int lim = limite != null && limite > 0 ? limite : 50;
+            List<Mensaje> mensajes = sistema.obtenerMensajesDeConversacion(conversacionId, usuarioId, lim);
+            List<DtMensaje> respuesta = mensajes.stream()
+                    .map(DtMensaje::from)
+                    .collect(Collectors.toList());
+
+            return Response.ok(respuesta).build();
+
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorDetail(e.getMessage())).build();
+        }
+    }
+
+    /**
+     * POST /api/v1/mensajes/{id}/leido
+     * Marca un mensaje como leído
+     */
+    @POST
+    @Path("/{id}/leido")
+    public Response marcarMensajeLeido(@PathParam("id") Long mensajeId) {
+        Long usuarioId = authService.getAuthenticatedUserId(securityContext);
+        if (usuarioId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorDetail("Authentication required")).build();
+        }
+
+        if (mensajeId == null || mensajeId <= 0) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorDetail("Invalid message ID")).build();
+        }
+
+        try {
+            sistema.marcarMensajeComoLeido(mensajeId, usuarioId);
+            return Response.ok(new SuccessDetail("Message marked as read")).build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorDetail("Error marking message as read")).build();
+        }
+    }
+
+    /**
+     * POST /api/v1/mensajes/conversacion/{conversacionId}/leidos
+     * Marca todos los mensajes de una conversación como leídos
+     */
+    @POST
+    @Path("/conversacion/{conversacionId}/leidos")
+    public Response marcarConversacionLeida(@PathParam("conversacionId") Long conversacionId) {
+        Long usuarioId = authService.getAuthenticatedUserId(securityContext);
+        if (usuarioId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorDetail("Authentication required")).build();
+        }
+
+        if (conversacionId == null || conversacionId <= 0) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorDetail("Invalid conversation ID")).build();
+        }
+
+        // Validar que el usuario está en la conversación
+        if (!sistema.usuarioEstaEnConversacion(usuarioId, conversacionId)) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(new ErrorDetail("You don't have access to this conversation")).build();
+        }
+
+        try {
+            sistema.marcarConversacionComoLeida(conversacionId, usuarioId);
+            return Response.ok(new SuccessDetail("Conversation marked as read")).build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorDetail("Error marking conversation as read")).build();
+        }
+    }
+
+    /**
+     * DTO para enviar mensajes
+     */
+    public static class EnviarMensajeDTO {
+        private Long conversacionId;
+        private String contenido;
+        private TipoMensaje tipoMensaje;
+        private String urlAdjunto;
+
+        public EnviarMensajeDTO() {}
+
+        public EnviarMensajeDTO(Long conversacionId, String contenido, TipoMensaje tipoMensaje, String urlAdjunto) {
+            this.conversacionId = conversacionId;
+            this.contenido = contenido;
+            this.tipoMensaje = tipoMensaje;
+            this.urlAdjunto = urlAdjunto;
+        }
+
+        public Long getConversacionId() { return conversacionId; }
+        public void setConversacionId(Long conversacionId) { this.conversacionId = conversacionId; }
+
+        public String getContenido() { return contenido; }
+        public void setContenido(String contenido) { this.contenido = contenido; }
+
+        public TipoMensaje getTipoMensaje() { return tipoMensaje; }
+        public void setTipoMensaje(TipoMensaje tipoMensaje) { this.tipoMensaje = tipoMensaje; }
+
+        public String getUrlAdjunto() { return urlAdjunto; }
+        public void setUrlAdjunto(String urlAdjunto) { this.urlAdjunto = urlAdjunto; }
+    }
+
+    public static class ErrorDetail {
+        public String message;
+
+        public ErrorDetail(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+    }
+
+    public static class SuccessDetail {
+        public String message;
+
+        public SuccessDetail(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
     }
 }

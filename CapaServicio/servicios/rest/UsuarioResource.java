@@ -4,6 +4,7 @@ import chat.Datatype.DtUsuario;
 import chat.Sistema.ISistema;
 import chat.clases.Usuario;
 import chat.servicios.seguridad.AuthService;
+import chat.servicios.seguridad.JWTUtil;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -17,7 +18,6 @@ import jakarta.ws.rs.core.SecurityContext;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.net.URI;
-import java.util.Base64;
 import java.util.Optional;
 
 @Path("/api/v1/usuarios")
@@ -30,6 +30,9 @@ public class UsuarioResource {
 
     @Inject
     private AuthService authService;
+
+    @Inject
+    private JWTUtil jwtUtil;
 
     @Context
     private SecurityContext securityContext;
@@ -137,8 +140,7 @@ public class UsuarioResource {
     }
 
     private String generateToken(Usuario usuario) {
-        String payload = usuario.getId() + ":" + usuario.getUsername();
-        return Base64.getEncoder().encodeToString(payload.getBytes());
+        return jwtUtil.generarToken(usuario.getId(), usuario.getUsername());
     }
 
     public static class ErrorDetail {
