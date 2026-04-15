@@ -36,6 +36,9 @@ public interface ISistema {
     //Inicia sesión un usuario dado su correo electrónico y contraseña
     Usuario iniciarSesion(String email, String password);
     
+    //Cierra la sesión de un usuario dado su correo electrónico
+    void cerrarSesion(String email);
+    
     //Busca un usuario por ID
     Optional<Usuario> buscarUsuarioPorId(Long id);
     

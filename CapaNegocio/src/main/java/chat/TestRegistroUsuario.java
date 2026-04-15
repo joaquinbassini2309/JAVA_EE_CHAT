@@ -37,8 +37,7 @@ public class TestRegistroUsuario {
                     System.out.println("Username: " + nuevoUsuario.getUsername());
                     System.out.println("Email: " + nuevoUsuario.getEmail());
                     System.out.println("Contraseña (Hash): " + nuevoUsuario.getPasswordHash());
-                    System.out.println("Activo: " + nuevoUsuario.isActivo() + " (Indica que el usuario NO está borrado)");
-                    System.out.println("Estado Inicial: " + nuevoUsuario.getEstado());
+                    System.out.println("Estado Inicial de presencia: " + nuevoUsuario.getEstado());
                     registrado = true; // Salimos del bucle
                 } catch (IllegalArgumentException e) {
                     System.err.println("\nERROR: " + e.getMessage());

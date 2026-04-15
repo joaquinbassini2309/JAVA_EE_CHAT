@@ -43,7 +43,6 @@ public class TestIniciarSesion {
                 try {
                     Usuario usuarioLogueado = sistema.iniciarSesion(email, password);
                     System.out.println("\nÉXITO: ¡Bienvenido " + usuarioLogueado.getUsername() + "!");
-                    System.out.println("Activo: " + usuarioLogueado.isActivo() + " (Indica que el usuario NO está borrado)");
                     System.out.println("Estado de presencia: " + usuarioLogueado.getEstado());
                     sesionIniciada = true; // Salimos del bucle
                 } catch (IllegalArgumentException e) {
