@@ -33,6 +33,9 @@ public interface ISistema {
     //Registra un nuevo usuario en el sistema
     Usuario registrarUsuario(String username, String email, String password);
     
+    //Inicia sesión un usuario dado su correo electrónico y contraseña
+    Usuario iniciarSesion(String email, String password);
+    
     //Busca un usuario por ID
     Optional<Usuario> buscarUsuarioPorId(Long id);
     

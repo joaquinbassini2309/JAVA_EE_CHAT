@@ -99,6 +99,25 @@ public class Sistema implements ISistema {
     }
 
     @Override
+    public Usuario iniciarSesion(String email, String password) {
+        // Buscar el usuario por email
+        Usuario usuario = usuarioHandler().buscarUsuarioPorEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Credenciales incorrectas"));
+
+        // Verificar que el usuario no esté borrado/inactivo (OFFLINE en este contexto)
+        if (usuario.getEstado() == EstadoUsuario.OFFLINE) {
+            throw new IllegalArgumentException("El usuario ha sido eliminado o se encuentra inactivo");
+        }
+
+        // Verificar la contraseña proporcionada contra el hash almacenado
+        if (!org.mindrot.jbcrypt.BCrypt.checkpw(password, usuario.getPasswordHash())) {
+            throw new IllegalArgumentException("Credenciales incorrectas");
+        }
+
+        return usuario;
+    }
+
+    @Override
     public Optional<Usuario> buscarUsuarioPorId(Long id) {
         return usuarioHandler().buscarUsuarioPorId(id);
     }

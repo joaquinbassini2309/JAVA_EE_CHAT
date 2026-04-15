@@ -28,7 +28,7 @@ public class Usuario {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", length = 20)
-    private EstadoUsuario estado = EstadoUsuario.OFFLINE;
+    private EstadoUsuario estado = EstadoUsuario.ONLINE;
 
     @Column(name = "fecha_registro")
     private LocalDateTime fechaRegistro;
