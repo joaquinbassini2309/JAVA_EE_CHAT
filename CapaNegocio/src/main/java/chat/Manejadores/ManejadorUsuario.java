@@ -92,4 +92,28 @@ public class ManejadorUsuario {
             em.close();
         }
     }
+
+    public void actualizarPerfil(Long usuarioId, String fotoUrl, EstadoUsuario estado) {
+        EntityManager em = em();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            Usuario u = em.find(Usuario.class, usuarioId);
+            if (u != null) {
+                if (fotoUrl != null && !fotoUrl.isBlank()) {
+                    u.setFotoUrl(fotoUrl);
+                }
+                if (estado != null) {
+                    u.setEstado(estado);
+                }
+                em.merge(u);
+            }
+            tx.commit();
+        } catch (RuntimeException ex) {
+            if (tx.isActive()) tx.rollback();
+            throw ex;
+        } finally {
+            em.close();
+        }
+    }
 }
