@@ -1,0 +1,159 @@
+================================================================================
+                    SCRIPTS DE AUTOMATIZACIÓN - CÓMO USAR
+================================================================================
+
+📍 UBICACIÓN: C:\Users\Usuario\IdeaProjects\JAVA_EE_CHAT\Scripts\
+
+================================================================================
+                         OPCIÓN 1: MÁS FÁCIL (RECOMENDADO)
+================================================================================
+
+1. Abre esta carpeta en el explorador: Scripts/
+
+2. DOBLE CLICK en: run-setup.bat
+
+3. Espera a que termine (~10 minutos)
+
+4. ¡Listo! Accede a http://localhost:8080/chat-empresarial/
+
+================================================================================
+                         OPCIÓN 2: DESDE TERMINAL
+================================================================================
+
+1. Abre PowerShell o Command Prompt
+
+2. Navega a la carpeta del proyecto:
+   cd C:\Users\Usuario\IdeaProjects\JAVA_EE_CHAT
+
+3. Ejecuta:
+   .\Scripts\run-setup.bat
+
+4. Ingresa contraseña de PostgreSQL (por defecto: "postgres")
+
+5. ¡Listo!
+
+================================================================================
+                            DESPUÉS DEL SETUP
+================================================================================
+
+PARA CONTROLAR WILDFLY:
+  1. Ejecuta: .\Scripts\manage-wildfly.bat
+  2. Selecciona una opción del menú
+
+OPCIONES DEL MENÚ:
+  1. Ver estado         - ¿Está WildFly corriendo?
+  2. Iniciar            - Inicia WildFly
+  3. Detener            - Detiene WildFly
+  4. CLI                - Acceso a jboss-cli avanzado
+  5. Logs               - Ver logs en tiempo real
+  6. Redeploy           - Recompila y redeploya (útil después de cambios)
+  7. Probar API         - Prueba endpoints
+  8. Salir              - Cierra el menú
+
+================================================================================
+                              DESPLEGAR CAMBIOS
+================================================================================
+
+Si modificas código:
+
+1. Ejecuta: .\Scripts\manage-wildfly.bat
+2. Selecciona: 6 (Redeploy)
+3. Espera ~30 segundos
+4. ¡Cambios en vivo!
+
+================================================================================
+                           DESINSTALAR TODO
+================================================================================
+
+Para eliminar WildFly y archivos compilados:
+
+1. Ejecuta: .\Scripts\cleanup.bat
+2. Confirma escribiendo: ELIMINAR
+3. ¡Limpio!
+
+NOTA: No elimina PostgreSQL ni código fuente
+
+================================================================================
+                              URLS IMPORTANTES
+================================================================================
+
+Admin Console:    http://localhost:9990/console
+Aplicación:       http://localhost:8080/chat-empresarial/
+Base de Datos:    localhost:5432 (PostgreSQL)
+
+================================================================================
+                           REQUISITOS PREVIOS
+================================================================================
+
+ANTES de ejecutar los scripts, verifica que tienes:
+
+✓ Java 21+
+  Comando: java -version
+
+✓ Maven 3.9+
+  Comando: mvn -version
+
+✓ PostgreSQL 12+
+  Comando: psql --version
+
+Si no tienes alguno, instálalo antes.
+
+================================================================================
+                            TROUBLESHOOTING
+================================================================================
+
+❌ "Java no encontrado"
+   → Instala Java 21+
+   → Agrega a variables de entorno (PATH)
+
+❌ "Maven no encontrado"
+   → Instala Maven 3.9+
+   → Agrega a variables de entorno (PATH)
+
+❌ "PostgreSQL no encontrado"
+   → Instala PostgreSQL 12+
+   → Agrega a variables de entorno (PATH)
+
+❌ "Puerto 8080 en uso"
+   → Otro WildFly está corriendo
+   → Ejecuta: .\Scripts\manage-wildfly.bat → Opción 3 (Detener)
+
+❌ "Data source not found"
+   → Ejecuta: .\Scripts\manage-wildfly.bat → Opción 4 (CLI)
+   → Ejecuta los comandos de data source
+
+❌ "Compilation failed"
+   → Ver logs: .\Scripts\manage-wildfly.bat → Opción 5 (Logs)
+
+================================================================================
+                         DOCUMENTACIÓN COMPLETA
+================================================================================
+
+Lee estos archivos para más detalles:
+
+📄 QUICKSTART.md  - Setup en 30 segundos
+📄 INDEX.md       - Índice de todos los scripts
+📄 README.md      - Documentación completa
+📄 HOW-TO-USE.txt - Este archivo
+
+================================================================================
+                              RESUMEN RÁPIDO
+================================================================================
+
+SETUP INICIAL:
+  .\Scripts\run-setup.bat
+
+DESPUÉS DE CAMBIOS DE CÓDIGO:
+  .\Scripts\manage-wildfly.bat → Opción 6 (Redeploy)
+
+CONTROLAR WILDFLY:
+  .\Scripts\manage-wildfly.bat
+
+DESINSTALAR:
+  .\Scripts\cleanup.bat
+
+================================================================================
+
+¡Listo para desplegar! 🚀
+
+Para empezar: doble click en run-setup.bat

@@ -144,6 +144,11 @@ public class Sistema implements ISistema {
         usuarioHandler().actualizarEstado(usuarioId, estado);
     }
 
+    @Override
+    public void actualizarPerfilUsuario(Long usuarioId, String fotoUrl, EstadoUsuario estado) {
+        usuarioHandler().actualizarPerfil(usuarioId, fotoUrl, estado);
+    }
+
     // ========== IMPLEMENTACIÓN: CONVERSACIONES ==========
 
     @Override

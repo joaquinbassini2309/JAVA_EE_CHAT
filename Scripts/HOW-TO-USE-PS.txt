@@ -1,0 +1,193 @@
+================================================================================
+                    SCRIPTS DE AUTOMATIZACIÓN - CÓMO USAR
+================================================================================
+
+📍 UBICACIÓN: C:\Users\Usuario\IdeaProjects\JAVA_EE_CHAT\Scripts\
+
+================================================================================
+                    OPCIÓN 1: MÁS FÁCIL - SOLO POWERSHELL
+================================================================================
+
+1. Abre PowerShell (Windows + X, luego "A" para Admin)
+
+2. Navega a la carpeta del proyecto:
+   cd C:\Users\Usuario\IdeaProjects\JAVA_EE_CHAT
+
+3. Ejecuta:
+   .\Scripts\setup-wildfly.ps1
+
+4. Ingresa contraseña de PostgreSQL cuando se pida
+
+5. ¡Listo! Espera ~10 minutos
+
+6. Accede a http://localhost:8080/chat-empresarial/
+
+================================================================================
+                      OPCIÓN 2: CON CONTRASEÑA RÁPIDA
+================================================================================
+
+Si quieres evitar que te pida la contraseña:
+
+   .\Scripts\setup-wildfly.ps1 -PostgresPassword "postgres"
+
+================================================================================
+                         DESPUÉS DEL SETUP
+================================================================================
+
+PARA CONTROLAR WILDFLY:
+  .\Scripts\manage-wildfly.ps1
+
+OPCIONES DEL MENÚ:
+  1. Ver estado         - ¿Está WildFly corriendo?
+  2. Iniciar            - Inicia WildFly
+  3. Detener            - Detiene WildFly
+  4. CLI                - Acceso a jboss-cli avanzado
+  5. Logs               - Ver logs en tiempo real
+  6. Redeploy           - Recompila y redeploya (útil después de cambios)
+  7. Probar API         - Prueba endpoints
+  8. Salir              - Cierra el menú
+
+================================================================================
+                    O EJECUTAR ACCIONES DIRECTAS SIN MENÚ
+================================================================================
+
+Ver estado:
+  .\Scripts\manage-wildfly.ps1 -Action status
+
+Iniciar WildFly:
+  .\Scripts\manage-wildfly.ps1 -Action start
+
+Detener WildFly:
+  .\Scripts\manage-wildfly.ps1 -Action stop
+
+Ver logs:
+  .\Scripts\manage-wildfly.ps1 -Action logs
+
+Redeploy de la app:
+  .\Scripts\manage-wildfly.ps1 -Action redeploy
+
+Probar API:
+  .\Scripts\manage-wildfly.ps1 -Action test
+
+Abrir CLI de WildFly:
+  .\Scripts\manage-wildfly.ps1 -Action cli
+
+================================================================================
+                          DESPLEGAR CAMBIOS
+================================================================================
+
+Si modificas código:
+
+1. Ejecuta: .\Scripts\manage-wildfly.ps1 -Action redeploy
+
+2. O abre el menú:
+   .\Scripts\manage-wildfly.ps1
+   Selecciona: 6 (Redeploy)
+
+3. Espera ~30 segundos
+
+4. ¡Cambios en vivo!
+
+================================================================================
+                           DESINSTALAR TODO
+================================================================================
+
+Para eliminar WildFly y archivos compilados:
+
+1. Ejecuta: .\Scripts\cleanup.ps1
+
+2. Confirma escribiendo: ELIMINAR
+
+3. ¡Limpio!
+
+NOTA: No elimina PostgreSQL ni código fuente
+
+================================================================================
+                              URLS IMPORTANTES
+================================================================================
+
+Admin Console:    http://localhost:9990/console
+Aplicación:       http://localhost:8080/chat-empresarial/
+Base de Datos:    localhost:5432 (PostgreSQL)
+
+================================================================================
+                           REQUISITOS PREVIOS
+================================================================================
+
+ANTES de ejecutar los scripts, verifica que tienes:
+
+✓ Java 21+
+  Comando: java -version
+
+✓ Maven 3.9+
+  Comando: mvn -version
+
+✓ PostgreSQL 12+
+  Comando: psql --version
+
+Si no tienes alguno, instálalo antes.
+
+================================================================================
+                            TROUBLESHOOTING
+================================================================================
+
+❌ "Java no encontrado"
+   → Instala Java 21+
+   → Agrega a variables de entorno (PATH)
+
+❌ "Maven no encontrado"
+   → Instala Maven 3.9+
+   → Agrega a variables de entorno (PATH)
+
+❌ "PostgreSQL no encontrado"
+   → Instala PostgreSQL 12+
+   → Agrega a variables de entorno (PATH)
+
+❌ "Puerto 8080 en uso"
+   → Otro WildFly está corriendo
+   → Ejecuta: .\Scripts\manage-wildfly.ps1 -Action stop
+
+❌ "Data source not found"
+   → Ejecuta: .\Scripts\manage-wildfly.ps1 -Action cli
+   → Ejecuta los comandos de data source
+
+❌ "Compilation failed"
+   → Ver logs: .\Scripts\manage-wildfly.ps1 -Action logs
+
+❌ "ExecutionPolicy"
+   → Si no puedes ejecutar scripts, ejecuta como Admin:
+   → Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
+
+================================================================================
+                         DOCUMENTACIÓN COMPLETA
+================================================================================
+
+Lee estos archivos para más detalles:
+
+📄 QUICKSTART.md  - Setup en 30 segundos
+📄 INDEX.md       - Índice de todos los scripts
+📄 README.md      - Documentación completa
+📄 HOW-TO-USE.txt - Este archivo
+
+================================================================================
+                              RESUMEN RÁPIDO
+================================================================================
+
+SETUP INICIAL:
+  .\Scripts\setup-wildfly.ps1
+
+DESPUÉS DE CAMBIOS DE CÓDIGO:
+  .\Scripts\manage-wildfly.ps1 -Action redeploy
+
+CONTROLAR WILDFLY (MENÚ):
+  .\Scripts\manage-wildfly.ps1
+
+DESINSTALAR:
+  .\Scripts\cleanup.ps1
+
+================================================================================
+
+¡Listo para desplegar! 🚀
+
+Para empezar: 
+  .\Scripts\setup-wildfly.ps1
