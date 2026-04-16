@@ -7,9 +7,14 @@
     <groupId>com.example</groupId>
     <artifactId>chat-empresarial</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>war</packaging>
-    <name>chat-empresarial</name>
-    <description>Aplicación de chat empresarial con Jakarta EE</description>
+    <packaging>pom</packaging>
+    <name>Chat Empresarial - Proyecto Padre</name>
+    <description>Aplicación de chat empresarial con Jakarta EE (Proyecto Multi-módulo)</description>
+
+    <modules>
+        <module>CapaNegocio</module>
+        <module>CapaServicio</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
