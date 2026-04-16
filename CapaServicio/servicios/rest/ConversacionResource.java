@@ -2,6 +2,8 @@ package chat.servicios.rest;
 
 import chat.DtConversacion;
 import chat.Sistema.ISistema;
+import chat.servicios.exceptions.ErrorResponse;
+import chat.servicios.seguridad.AuthService;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -26,13 +28,16 @@ public class ConversacionResource {
     @Inject
     private ISistema sistema;
 
+    @Inject
+    private AuthService authService;
+
     @GET
     public Response listConversaciones(@Context SecurityContext securityContext) {
-        //obtener conversaciones del usuario autenticado
-        Long userId = getAuthenticatedUserId(securityContext);
+        Long userId = authService.getAuthenticatedUserId(securityContext);
 
         if (userId == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("No autorizado").build();
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
         }
 
         List<chat.clases.Conversacion> convs = sistema.obtenerConversacionesDeUsuario(userId);
@@ -44,19 +49,25 @@ public class ConversacionResource {
 
     @POST
     public Response createConversacion(DtConversacion dto, @Context SecurityContext securityContext) {
-        //crear conversación mediante la capa de negocio
-        Long userId = getAuthenticatedUserId(securityContext);
+        Long userId = authService.getAuthenticatedUserId(securityContext);
 
         if (userId == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("No autorizado").build();
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
         }
 
-        //Conversacion privada: Se espera exactamente 1 participante adicional
+        if (dto == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(400, "Request body is required")).build();
+        }
+
+        // Conversacion privada: Se espera exactamente 1 participante adicional
         if (dto.tipo() == chat.Enums.TipoConversacion.PRIVADA) {
             List<Long> participantes = dto.participanteIds();
 
             if (participantes == null || participantes.size() != 1) {
-                return Response.status(Response.Status.BAD_REQUEST).entity("Para chat privado proporcione 1 participante").build();
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new ErrorResponse(400, "For private chat provide exactly 1 participant")).build();
             }
             Long otroId = participantes.get(0);
             chat.clases.Conversacion creada = sistema.IniciarChatPrivado(userId, otroId);
@@ -65,7 +76,7 @@ public class ConversacionResource {
         }
 
         // Conversacion Grupo
-        List<Long> miembros = dto.participanteIds() == null ? List.of() : dto.participantesIds();
+        List<Long> miembros = dto.participanteIds() == null ? List.of() : dto.participanteIds();
         chat.clases.Conversacion creada = sistema.crearGrupo(dto.nombre(), userId, miembros);
         DtConversacion res = DtConversacion.from(creada);
 
@@ -76,25 +87,26 @@ public class ConversacionResource {
     @Path("/{id}")
     public Response getConversacion(@PathParam("id") Long id,
                                     @Context SecurityContext securityContext) {
-        Long userId = getAuthenticatedUserId(securityContext);
+        Long userId = authService.getAuthenticatedUserId(securityContext);
 
         if (userId == null) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity("No autorizado").build();
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
         }
 
         if (!sistema.usuarioEstaEnConversacion(userId, id)) {
             return Response.status(Response.Status.FORBIDDEN)
-                    .entity("Acceso denegado a la conversación").build();
+                    .entity(new ErrorResponse(403, "Access denied to conversation")).build();
         }
 
         Optional<chat.model.Conversacion> opt = sistema.buscarConversacionPorId(id);
 
         if (opt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Conversación no encontrada").build();
+                    .entity(new ErrorResponse(404, "Conversation not found")).build();
         }
 
         DtConversacion dto = DtConversacion.from(opt.get());
         return Response.ok(dto).build();
     }
+}
