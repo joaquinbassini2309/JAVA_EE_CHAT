@@ -6,3 +6,11 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+
+# Maven
+target/
+*.class
+
+# Archivos de sistema/compilación
+*.war
+*.ear
