@@ -21,6 +21,20 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vuetify': ['vuetify']
+        }
+      }
+    }
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: '@import "@/assets/estilos.scss";'
+      }
+    }
   }
 })
