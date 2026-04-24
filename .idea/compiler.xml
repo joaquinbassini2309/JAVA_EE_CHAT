@@ -9,5 +9,9 @@
         <module name="chat-empresarial" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="chat-empresarial-negocio" target="21" />
+      <module name="chat-empresarial-servicios" target="21" />
+    </bytecodeTargetLevel>
   </component>
 </project>
