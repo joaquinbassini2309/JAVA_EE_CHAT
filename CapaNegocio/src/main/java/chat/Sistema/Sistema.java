@@ -5,10 +5,6 @@ import chat.Enum.EventoTipo;
 import chat.Enum.RolParticipante;
 import chat.Enum.TipoConversacion;
 import chat.Enum.TipoMensaje;
-import chat.Factory.ConversacionFactory;
-import chat.Factory.MensajeFactory;
-import chat.Factory.ParticipanteFactory;
-import chat.Factory.UsuarioFactory;
 import chat.Manejadores.ManejadorConversacion;
 import chat.Manejadores.ManejadorMensaje;
 import chat.Manejadores.ManejadorParticipante;
@@ -20,54 +16,31 @@ import chat.clases.Conversacion;
 import chat.clases.Mensaje;
 import chat.clases.Participante;
 import chat.clases.Usuario;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@ApplicationScoped
 public class Sistema implements ISistema {
 
-    private static final Sistema INSTANCE = new Sistema();
-
     private final ChatObservable observable = new ChatObservable();
-    private EntityManagerFactory emf;
 
-    // manejadores concretos
+    @Inject
     private ManejadorUsuario usuarioHandler;
+
+    @Inject
     private ManejadorConversacion conversacionHandler;
+
+    @Inject
     private ManejadorParticipante participanteHandler;
+
+    @Inject
     private ManejadorMensaje mensajeHandler;
 
-    private Sistema() { /* singleton */ }
-
-    public static Sistema getInstance() {
-        return INSTANCE;
-    }
-
-    @Override
-    public void iniciar() {
-        if (emf == null) {
-            emf = Persistence.createEntityManagerFactory("chatPU");
-            usuarioHandler = new ManejadorUsuario(emf);
-            conversacionHandler = new ManejadorConversacion(emf);
-            participanteHandler = new ManejadorParticipante(emf);
-            mensajeHandler = new ManejadorMensaje(emf);
-        }
-    }
-
-    @Override
-    public void cerrar() {
-        if (emf != null && emf.isOpen()) {
-            emf.close();
-            emf = null;
-        }
-        usuarioHandler = null;
-        conversacionHandler = null;
-        participanteHandler = null;
-        mensajeHandler = null;
-    }
+    @Inject
+    private ISistema sistema;
 
     @Override
     public ManejadorUsuario usuarioHandler() { return usuarioHandler; }

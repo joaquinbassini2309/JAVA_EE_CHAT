@@ -18,9 +18,9 @@ import java.util.Optional;
 
 public interface ISistema {
 
-    // Inicio / lifecycle
-    void iniciar();
-    void cerrar();
+    // Inicio / lifecycle (compatibilidad con invocaciones antiguas)
+    default void iniciar() {}
+    default void cerrar() {}
 
     // Exposición de manejadores concretos
     ManejadorUsuario usuarioHandler();
