@@ -1,4 +1,4 @@
-package chat.servicios.rest;
+package rest;
 
 import chat.Datatype.DtUsuario;
 import chat.Sistema.ISistema;
@@ -41,9 +41,9 @@ public class UsuarioResource {
     @POST
     @Path("/login")
     public Response login(DtUsuario.LoginDTO loginDto) {
-        if (loginDto == null || loginDto.getUsername() == null || loginDto.getUsername().isBlank()) {
+        if (loginDto == null || loginDto.getEmail() == null || loginDto.getEmail().isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorResponse(400, "Username is required")).build();
+                    .entity(new ErrorResponse(400, "Email is required")).build();
         }
 
         if (loginDto.getPassword() == null || loginDto.getPassword().isBlank()) {
@@ -51,23 +51,16 @@ public class UsuarioResource {
                     .entity(new ErrorResponse(400, "Password is required")).build();
         }
 
-        Optional<Usuario> usuarioOpt = sistema.buscarUsuarioPorUsername(loginDto.getUsername());
-        if (usuarioOpt.isEmpty()) {
-            return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorResponse(401, "Invalid credentials")).build();
-        }
-
-        Usuario usuario = usuarioOpt.get();
-        if (!BCrypt.checkpw(loginDto.getPassword(), usuario.getPasswordHash())) {
-            return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorResponse(401, "Invalid credentials")).build();
-        }
-
-        String token = generateToken(usuario);
-        DtUsuario.UsuarioResponseDTO usuarioDto = DtUsuario.UsuarioResponseDTO.fromEntity(usuario);
-        DtUsuario.AuthResponseDTO authResponse = new DtUsuario.AuthResponseDTO(token, usuarioDto);
-
-        return Response.ok(authResponse).build();
+        return sistema.buscarUsuarioPorEmail(loginDto.getEmail())
+                .filter(usuario -> BCrypt.checkpw(loginDto.getPassword(), usuario.getPasswordHash()))
+                .map(usuario -> {
+                    String token = generateToken(usuario);
+                    DtUsuario.UsuarioResponseDTO usuarioDto = DtUsuario.UsuarioResponseDTO.fromEntity(usuario);
+                    DtUsuario.AuthResponseDTO authResponse = new DtUsuario.AuthResponseDTO(token, usuarioDto);
+                    return Response.ok(authResponse).build();
+                })
+                .orElse(Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(new ErrorResponse(401, "Invalid credentials")).build());
     }
 
     @POST
@@ -122,22 +115,22 @@ public class UsuarioResource {
                     .entity(new ErrorResponse(401, "Authentication required")).build();
         }
 
-        Optional<Usuario> usuarioOpt = sistema.buscarUsuarioPorId(usuarioId);
-        if (usuarioOpt.isEmpty()) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity(new ErrorResponse(404, "User not found")).build();
-        }
+        // Primero, verificar que el usuario existe.
+        return sistema.buscarUsuarioPorId(usuarioId).map(usuario -> {
+            // Si hay datos para actualizar, se actualizan.
+            if (actualizarDto != null) {
+                sistema.actualizarPerfilUsuario(usuarioId, actualizarDto.getFotoUrl(), actualizarDto.getEstado());
+            }
 
-        if (actualizarDto != null) {
-            sistema.actualizarPerfilUsuario(usuarioId, actualizarDto.getFotoUrl(), actualizarDto.getEstado());
-            
-            // Obtener usuario actualizado
-            usuarioOpt = sistema.buscarUsuarioPorId(usuarioId);
-        }
+            // Se obtiene el usuario (potencialmente actualizado) y se devuelve.
+            Usuario usuarioActualizado = sistema.buscarUsuarioPorId(usuarioId)
+                    .orElseThrow(() -> new IllegalStateException("User disappeared during update")); // No debería ocurrir
 
-        Usuario usuario = usuarioOpt.get();
-        DtUsuario.UsuarioResponseDTO usuarioDto = DtUsuario.UsuarioResponseDTO.fromEntity(usuario);
-        return Response.ok(usuarioDto).build();
+            DtUsuario.UsuarioResponseDTO usuarioDto = DtUsuario.UsuarioResponseDTO.fromEntity(usuarioActualizado);
+            return Response.ok(usuarioDto).build();
+
+        }).orElse(Response.status(Response.Status.NOT_FOUND)
+                .entity(new ErrorResponse(404, "User not found")).build());
     }
 
     private String generateToken(Usuario usuario) {

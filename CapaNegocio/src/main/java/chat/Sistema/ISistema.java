@@ -45,6 +45,9 @@ public interface ISistema {
     //Busca un usuario por username
     Optional<Usuario> buscarUsuarioPorUsername(String username);
 
+    //Busca un usuario por email
+    Optional<Usuario> buscarUsuarioPorEmail(String email);
+
     //Actualiza el estado de conexión del usuario
     void actualizarEstadoUsuario(Long usuarioId, chat.Enum.EstadoUsuario estado);
 

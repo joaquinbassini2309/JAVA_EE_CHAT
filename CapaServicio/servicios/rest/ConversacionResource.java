@@ -1,6 +1,6 @@
-package chat.servicios.rest;
+package rest;
 
-import chat.DtConversacion;
+import chat.Datatype.DtConversacion;
 import chat.Sistema.ISistema;
 import chat.servicios.exceptions.ErrorResponse;
 import chat.servicios.seguridad.AuthService;
@@ -62,22 +62,22 @@ public class ConversacionResource {
         }
 
         // Conversacion privada: Se espera exactamente 1 participante adicional
-        if (dto.tipo() == chat.Enums.TipoConversacion.PRIVADA) {
-            List<Long> participantes = dto.participanteIds();
+        if (dto.getTipo() == chat.Enum.TipoConversacion.PRIVADA) {
+            List<Long> participantes = dto.getParticipanteIds();
 
             if (participantes == null || participantes.size() != 1) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity(new ErrorResponse(400, "For private chat provide exactly 1 participant")).build();
             }
-            Long otroId = participantes.get(0);
-            chat.clases.Conversacion creada = sistema.IniciarChatPrivado(userId, otroId);
+            Long otroId = participantes.getFirst();
+            chat.clases.Conversacion creada = sistema.iniciarChatPrivado(userId, otroId);
             DtConversacion res = DtConversacion.from(creada);
             return Response.status(Response.Status.CREATED).entity(res).build();
         }
 
         // Conversacion Grupo
-        List<Long> miembros = dto.participanteIds() == null ? List.of() : dto.participanteIds();
-        chat.clases.Conversacion creada = sistema.crearGrupo(dto.nombre(), userId, miembros);
+        List<Long> miembros = dto.getParticipanteIds() == null ? List.of() : dto.getParticipanteIds();
+        chat.clases.Conversacion creada = sistema.crearGrupo(dto.getNombre(), userId, miembros);
         DtConversacion res = DtConversacion.from(creada);
 
         return Response.status(Response.Status.CREATED).entity(res).build();
@@ -99,7 +99,7 @@ public class ConversacionResource {
                     .entity(new ErrorResponse(403, "Access denied to conversation")).build();
         }
 
-        Optional<chat.model.Conversacion> opt = sistema.buscarConversacionPorId(id);
+        Optional<chat.clases.Conversacion> opt = sistema.buscarConversacionPorId(id);
 
         if (opt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND)

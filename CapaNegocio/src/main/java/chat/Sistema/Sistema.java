@@ -140,6 +140,11 @@ public class Sistema implements ISistema {
     }
 
     @Override
+    public Optional<Usuario> buscarUsuarioPorEmail(String email) {
+        return usuarioHandler().buscarUsuarioPorEmail(email);
+    }
+
+    @Override
     public void actualizarEstadoUsuario(Long usuarioId, EstadoUsuario estado) {
         usuarioHandler().actualizarEstado(usuarioId, estado);
     }

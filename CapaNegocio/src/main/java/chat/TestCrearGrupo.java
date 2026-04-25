@@ -65,19 +65,19 @@ public class TestCrearGrupo {
             DtConversacion grupo1 = DtConversacion.from(grupo1Obj);
 
             System.out.println("✓ Grupo creado exitosamente:");
-            System.out.println("  - ID: " + grupo1.id());
-            System.out.println("  - Nombre: " + grupo1.nombre());
-            System.out.println("  - Tipo: " + grupo1.tipo());
-            System.out.println("  - Fecha Creación: " + grupo1.fechaCreacion());
-            System.out.println("  - Participantes: " + grupo1.participanteIds().size());
+            System.out.println("  - ID: " + grupo1.getId());
+            System.out.println("  - Nombre: " + grupo1.getNombre());
+            System.out.println("  - Tipo: " + grupo1.getTipo());
+            System.out.println("  - Fecha Creación: " + grupo1.getFechaCreacion());
+            System.out.println("  - Participantes: " + grupo1.getParticipanteIds().size());
 
             // =====================================================
             // Escenario 2: Verificar que los miembros están en el grupo
             // =====================================================
             System.out.println("\n--- Escenario 2: Verificar Participantes ---");
-            boolean creadorEnGrupo = sistema.usuarioEstaEnConversacion(creador.getId(), grupo1.id());
-            boolean usuario1EnGrupo = sistema.usuarioEstaEnConversacion(usuario1.getId(), grupo1.id());
-            boolean usuario2EnGrupo = sistema.usuarioEstaEnConversacion(usuario2.getId(), grupo1.id());
+            boolean creadorEnGrupo = sistema.usuarioEstaEnConversacion(creador.getId(), grupo1.getId());
+            boolean usuario1EnGrupo = sistema.usuarioEstaEnConversacion(usuario1.getId(), grupo1.getId());
+            boolean usuario2EnGrupo = sistema.usuarioEstaEnConversacion(usuario2.getId(), grupo1.getId());
 
             System.out.println("✓ Creador en grupo: " + creadorEnGrupo);
             System.out.println("✓ Usuario 1 en grupo: " + usuario1EnGrupo);
@@ -103,15 +103,15 @@ public class TestCrearGrupo {
             DtConversacion grupo2 = DtConversacion.from(grupo2Obj);
 
             System.out.println("✓ Grupo creado exitosamente:");
-            System.out.println("  - ID: " + grupo2.id());
-            System.out.println("  - Nombre: " + grupo2.nombre());
-            System.out.println("  - Participantes Totales: " + grupo2.participanteIds().size());
+            System.out.println("  - ID: " + grupo2.getId());
+            System.out.println("  - Nombre: " + grupo2.getNombre());
+            System.out.println("  - Participantes Totales: " + grupo2.getParticipanteIds().size());
 
             // =====================================================
             // Escenario 4: Verificar roles de participantes
             // =====================================================
             System.out.println("\n--- Escenario 4: Verificar Roles de Participantes ---");
-            var participantesObj = sistema.participanteHandler().buscarParticipantesPorConversacion(grupo1.id());
+            var participantesObj = sistema.participanteHandler().buscarParticipantesPorConversacion(grupo1.getId());
             List<DtParticipante> participantes = ((List<?>) participantesObj).stream()
                     .map(p -> DtParticipante.from((chat.clases.Participante) p))
                     .toList();
@@ -178,9 +178,9 @@ public class TestCrearGrupo {
             DtConversacion grupo3 = DtConversacion.from(grupo3Obj);
 
             System.out.println("✓ Grupo creado (solo creador):");
-            System.out.println("  - Nombre: " + grupo3.nombre());
-            System.out.println("  - Participantes: " + grupo3.participanteIds().size());
-            System.out.println("  - Solo el creador está: " + grupo3.participanteIds().contains(creador.getId()));
+            System.out.println("  - Nombre: " + grupo3.getNombre());
+            System.out.println("  - Participantes: " + grupo3.getParticipanteIds().size());
+            System.out.println("  - Solo el creador está: " + grupo3.getParticipanteIds().contains(creador.getId()));
 
             // =====================================================
             // Escenario 10: Validación - Sin Duplicar Creador
@@ -194,9 +194,9 @@ public class TestCrearGrupo {
 
             System.out.println("✓ Grupo creado con intento de duplicar creador:");
             System.out.println("  - Participantes solicitados (incluye creador): " + miembrosConDuplicado.size());
-            System.out.println("  - Participantes reales en grupo: " + grupo4.participanteIds().size());
+            System.out.println("  - Participantes reales en grupo: " + grupo4.getParticipanteIds().size());
             System.out.println("  - Creador solo una vez: " +
-                    (grupo4.participanteIds().stream().filter(id -> id.equals(creador.getId())).count() == 1));
+                    (grupo4.getParticipanteIds().stream().filter(id -> id.equals(creador.getId())).count() == 1));
 
             // =====================================================
             // Escenario 11: Verificar que Usuarios Ven el Grupo
@@ -205,12 +205,12 @@ public class TestCrearGrupo {
             List<Conversacion> conversacionesUser1Obj = sistema.obtenerConversacionesDeUsuario(usuario1.getId());
             List<DtConversacion> gruposUser1 = conversacionesUser1Obj.stream()
                     .map(DtConversacion::from)
-                    .filter(c -> c.nombre().equals(nombreGrupo1) || c.nombre().equals(nombreGrupo2))
+                    .filter(c -> c.getNombre().equals(nombreGrupo1) || c.getNombre().equals(nombreGrupo2))
                     .toList();
 
             System.out.println("Usuario 1 puede ver " + gruposUser1.size() + " grupos creados:");
             for (DtConversacion c : gruposUser1) {
-                System.out.println("  - " + c.nombre());
+                System.out.println("  - " + c.getNombre());
             }
 
             // =====================================================

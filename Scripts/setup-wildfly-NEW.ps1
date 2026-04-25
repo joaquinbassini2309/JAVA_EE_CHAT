@@ -11,16 +11,46 @@
 #Requires -RunAsAdministrator
 
 param(
-    [string]$PostgresPassword = $(Read-Host "Ingresa contraseña de PostgreSQL" -AsSecureString | ConvertFrom-SecureString -AsPlainText),
+    [string]$PostgresPassword,
     [string]$WildFlyVersion = "32.0.1.Final",
     [string]$WildFlyDir = "C:\wildfly-$WildFlyVersion",
-    [string]$ProjectRoot = "C:\Users\Usuario\IdeaProjects\JAVA_EE_CHAT"
+    [string]$ProjectRoot = "C:\Users\Usuario\IdeaProjects\JAVA_EE_CHAT",
+    [string]$PostgresDriverVersion = "42.7.2"
 )
 
+# --- Funciones de Utilidad ---
 function Write-Success { Write-Host $args -ForegroundColor Green }
 function Write-Error-Custom { Write-Host $args -ForegroundColor Red }
 function Write-Info { Write-Host $args -ForegroundColor Cyan }
 function Write-Warning-Custom { Write-Host $args -ForegroundColor Yellow }
+
+# --- Manejo de Contraseña ---
+if (-not $PostgresPassword) {
+    $securePassword = Read-Host "Ingresa contraseña de PostgreSQL" -AsSecureString
+    $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
+    $PostgresPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+    [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+}
+
+# --- Descarga del Driver de PostgreSQL ---
+$driverJar = "postgresql-$PostgresDriverVersion.jar"
+$driverUrl = "https://jdbc.postgresql.org/download/$driverJar"
+$driverPath = "$env:TEMP\$driverJar"
+
+if (-not (Test-Path $driverPath)) {
+    Write-Info "Descargando driver de PostgreSQL..."
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri $driverUrl -OutFile $driverPath -UseBasicParsing
+        Write-Success "[OK] Driver descargado en $driverPath"
+    } catch {
+        Write-Error-Custom "[!] Error descargando el driver de PostgreSQL: $_"
+        exit 1
+    }
+} else {
+    Write-Info "Driver de PostgreSQL ya existe en $env:TEMP"
+}
+
 
 Write-Info "======================================"
 Write-Info "Validando requisitos..."
@@ -92,14 +122,14 @@ Write-Info "Configurando PostgreSQL..."
 Write-Info "======================================"
 
 try {
-    $dbExists = psql -U postgres -t -c "SELECT 1 FROM pg_database WHERE datname = 'chat_db'" 2>$null
+    $dbExists = psql -U postgres -t -c "SELECT 1 FROM pg_database WHERE datname = 'chat'" 2>$null
     
     if (-not $dbExists) {
-        Write-Info "Creando base de datos chat_db..."
-        psql -U postgres -c "CREATE DATABASE chat_db;" 2>$null
-        Write-Success "[OK] Base de datos chat_db creada"
+        Write-Info "Creando base de datos chat..."
+        psql -U postgres -c "CREATE DATABASE chat;" 2>$null
+        Write-Success "[OK] Base de datos chat creada"
     } else {
-        Write-Info "Base de datos chat_db ya existe"
+        Write-Info "Base de datos chat ya existe"
     }
 } catch {
     Write-Warning-Custom "[!] Error al crear BD PostgreSQL: $_"
@@ -149,12 +179,20 @@ if ($ready) {
 }
 
 Write-Info "======================================"
-Write-Info "Configurando Data Source en WildFly..."
+Write-Info "Instalando Driver y Configurando Data Source en WildFly..."
 Write-Info "======================================"
 
 $cliCommands = @"
-/subsystem=datasources/data-source=ChatDS:add(jndi-name=java:/ChatDS,driver-name=postgresql,connection-url=jdbc:postgresql://localhost:5432/chat_db,user-name=postgres,password=$PostgresPassword,min-pool-size=10,max-pool-size=30)
+# Desplegar el driver JDBC de PostgreSQL
+deploy $driverPath
+
+# Crear el Data Source
+/subsystem=datasources/data-source=ChatDS:add(jndi-name=java:/ChatDS,driver-name=postgresql,connection-url=jdbc:postgresql://localhost:5432/chat,user-name=postgres,password=$PostgresPassword,min-pool-size=10,max-pool-size=30)
+
+# Probar la conexión
 /subsystem=datasources/data-source=ChatDS:test-connection-in-pool()
+
+# Recargar la configuración
 reload
 exit
 "@
@@ -191,7 +229,7 @@ Pop-Location
 if ($LASTEXITCODE -eq 0) {
     Write-Success "[OK] Compilacion completada exitosamente"
     
-    $warFile = "$ProjectRoot\target\chat-empresarial.war"
+    $warFile = "$ProjectRoot\CapaServicio\target\chat-empresarial.war"
     if (Test-Path $warFile) {
         Write-Success "[OK] WAR generado: $warFile"
     }
@@ -206,7 +244,7 @@ Write-Info "Desplegando aplicacion en WildFly..."
 Write-Info "======================================"
 
 $deploymentsDir = "$WildFlyDir\standalone\deployments"
-$warFile = "$ProjectRoot\target\chat-empresarial.war"
+$warFile = "$ProjectRoot\CapaServicio\target\chat-empresarial.war"
 
 if (Test-Path $warFile) {
     Write-Info "Copiando WAR a deployments..."
@@ -222,7 +260,7 @@ if (Test-Path $warFile) {
     
     while ($attempt -lt $maxAttempts -and -not $deployed) {
         try {
-            $response = Invoke-WebRequest -Uri "http://localhost:8080/chat-empresarial/" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
+            $response = Invoke-WebRequest -Uri "http://localhost:8080/chat-empresarial/InicioSesion.html" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
             $deployed = $true
         } catch {
             $attempt++
@@ -249,21 +287,23 @@ Write-Info "======================================"
 Write-Success ""
 Write-Success "[OK] WildFly esta corriendo"
 Write-Success "[OK] Data Source ChatDS configurado"
-Write-Success "[OK] Base de datos chat_db creada"
+Write-Success "[OK] Base de datos chat creada"
 Write-Success "[OK] Aplicacion compilada y desplegada"
 
 Write-Info ""
 Write-Info "URLS IMPORTANTES:"
 Write-Info "   Admin Console: http://localhost:9990/console"
-Write-Info "   Aplicacion: http://localhost:8080/chat-empresarial/"
+Write-Info "   Aplicacion: http://localhost:8080/chat-empresarial/InicioSesion.html"
 Write-Info "   API Login: POST http://localhost:8080/chat-empresarial/api/v1/usuarios/login"
 
 Write-Info ""
 Write-Info "PROXIMOS PASOS:"
 Write-Warning-Custom "   1. Verifica que WildFly este corriendo en http://localhost:9990/console"
 Write-Warning-Custom "   2. Asegurate que PostgreSQL este corriendo"
-Write-Warning-Custom "   3. Prueba los endpoints de la API"
+Write-Warning-Custom "   3. Prueba el inicio de sesion en la URL de la aplicacion"
 Write-Warning-Custom "   4. Para detener WildFly: Stop-Process -Id $($process.Id)"
+
+Start-Process "http://localhost:8080/chat-empresarial/InicioSesion.html"
 
 Write-Info ""
 Write-Info "======================================"

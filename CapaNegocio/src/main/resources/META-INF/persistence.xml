@@ -11,13 +11,13 @@
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         
         <!-- Data Source JTA configurado en WildFly -->
-        <!-- Debes crear este data source en WildFly CLI:
+        <!-- El script de setup configura este data source para apuntar a la BD 'chat'
              /subsystem=datasources/data-source=ChatDS:add(
                  jndi-name=java:/ChatDS,
                  driver-name=postgresql,
-                 connection-url=jdbc:postgresql://localhost:5432/chat_db,
+                 connection-url=jdbc:postgresql://localhost:5432/chat,
                  user-name=postgres,
-                 password=postgres)
+                 password=tu_password)
         -->
         <jta-data-source>java:/ChatDS</jta-data-source>
         
@@ -29,7 +29,7 @@
 
         <properties>
             <!-- Dialecto de Hibernate para PostgreSQL -->
-            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQL10Dialect"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             
             <!-- SQL Logging (cambiar a false en producción) -->
             <property name="hibernate.show_sql" value="false"/>

@@ -1,4 +1,4 @@
-package chat.servicios.rest;
+package rest;
 
 import chat.Datatype.DtMensaje;
 import chat.Enum.TipoMensaje;
