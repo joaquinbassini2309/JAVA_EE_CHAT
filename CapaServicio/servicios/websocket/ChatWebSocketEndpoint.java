@@ -1,10 +1,11 @@
-package chat.servicios.websocket;
+package websocket;
 
 import chat.Datatype.DtMensaje;
 import chat.Enum.EstadoUsuario;
 import chat.Sistema.ISistema;
 import chat.clases.Mensaje;
 import chat.servicios.seguridad.AuthService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -20,7 +21,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Estados de conexión: Cuando un usuario se conecta por WebSocket, actualiza su EstadoUsuario a ONLINE
  */
 @ApplicationScoped
-@ServerEndpoint(value = "/api/v1/websocket/conversacion/{conversacionId}/usuario/{usuarioId}", configurator = ChatWebSocketConfigurator.class)
+@ServerEndpoint(value = "/api/v1/websocket/conversacion/{conversacionId}/usuario/{usuarioId}", configurator = websocket.ChatWebSocketConfigurator.class)
 public class ChatWebSocketEndpoint {
 
     @Inject
@@ -47,7 +47,7 @@ public class ChatWebSocketEndpoint {
     private static final Map<String, Set<Session>> sesionesActivas = new ConcurrentHashMap<>();
 
     @OnOpen
-    public void alAbrirConexion(Session sesion, EndpointConfig configuracion,
+    public void alAbrirConexion(Session sesion,
                                 @PathParam("conversacionId") Long idConversacion,
                                 @PathParam("usuarioId") Long idUsuario) {
         try {
@@ -146,7 +146,7 @@ public class ChatWebSocketEndpoint {
     }
 
     @OnError
-    public void alOcurrirError(Session sesion, Throwable excepcion) {
+    public void alOcurrirError(Throwable excepcion) {
         System.err.println("Error en WebSocket: " + excepcion.getMessage());
         excepcion.printStackTrace();
     }
@@ -156,17 +156,7 @@ public class ChatWebSocketEndpoint {
      */
     private void difundirMensaje(Long idConversacion, DtMensaje mensaje) throws IOException {
         String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta("mensaje", mensaje));
-        
-        for (Map.Entry<String, Set<Session>> entrada : sesionesActivas.entrySet()) {
-            String[] partes = entrada.getKey().split(":");
-            if (Long.parseLong(partes[0]).equals(idConversacion)) {
-                for (Session sesion : entrada.getValue()) {
-                    if (sesion.isOpen()) {
-                        sesion.getAsyncRemote().sendText(datosJson);
-                    }
-                }
-            }
-        }
+        difundir(idConversacion, datosJson);
     }
 
     /**
@@ -183,18 +173,25 @@ public class ChatWebSocketEndpoint {
                     notificacion
             ));
 
-            for (Map.Entry<String, Set<Session>> entrada : sesionesActivas.entrySet()) {
-                String[] partes = entrada.getKey().split(":");
-                if (Long.parseLong(partes[0]).equals(idConversacion)) {
-                    for (Session sesion : entrada.getValue()) {
-                        if (sesion.isOpen()) {
-                            sesion.getAsyncRemote().sendText(datosJson);
-                        }
+            difundir(idConversacion, datosJson);
+        } catch (JsonProcessingException e) {
+            System.err.println("Error al notificar conexión/desconexión: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Envía datos a todos los usuarios de una conversación
+     */
+    private void difundir(Long idConversacion, String datosJson) {
+        for (Map.Entry<String, Set<Session>> entrada : sesionesActivas.entrySet()) {
+            String[] partes = entrada.getKey().split(":");
+            if (Long.parseLong(partes[0]) == idConversacion) {
+                for (Session sesion : entrada.getValue()) {
+                    if (sesion.isOpen()) {
+                        sesion.getAsyncRemote().sendText(datosJson);
                     }
                 }
             }
-        } catch (Exception e) {
-            System.err.println("Error al notificar conexión/desconexión: " + e.getMessage());
         }
     }
 
@@ -219,7 +216,7 @@ public class ChatWebSocketEndpoint {
         return sesionesActivas.entrySet().stream()
                 .anyMatch(entrada -> {
                     String[] partes = entrada.getKey().split(":");
-                    return partes.length == 2 && Long.parseLong(partes[1]).equals(idUsuario) && !entrada.getValue().isEmpty();
+                    return partes.length == 2 && Long.parseLong(partes[1]) == idUsuario && !entrada.getValue().isEmpty();
                 });
     }
 
@@ -254,8 +251,8 @@ public class ChatWebSocketEndpoint {
      * DTO para enviar respuestas al cliente
      */
     public static class MensajeWebSocketRespuesta {
-        private String tipo;
-        private Object datos;
+        private final String tipo;
+        private final Object datos;
 
         public MensajeWebSocketRespuesta(String tipo, Object datos) {
             this.tipo = tipo;
