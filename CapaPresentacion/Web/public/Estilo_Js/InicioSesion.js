@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.getElementById('password').value;
 
         try {
-            const response = await fetch('/api/v1/usuarios/login', {
+            const response = await fetch('/chat-empresarial/api/v1/usuarios/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

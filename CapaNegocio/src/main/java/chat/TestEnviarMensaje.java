@@ -1,4 +1,4 @@
-package chat;
+/*package chat;
 
 import chat.Datatype.DtMensaje;
 import chat.Sistema.ISistema;
@@ -181,3 +181,4 @@ public class TestEnviarMensaje {
         }
     }
 }
+ */

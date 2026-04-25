@@ -3,8 +3,8 @@ package rest;
 import chat.Datatype.DtConversacion;
 import chat.Datatype.DtMensaje;
 import chat.Sistema.ISistema;
-import chat.servicios.exceptions.ErrorResponse;
-import chat.servicios.seguridad.AuthService;
+import exceptions.ErrorResponse;
+import seguridad.AuthService;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;

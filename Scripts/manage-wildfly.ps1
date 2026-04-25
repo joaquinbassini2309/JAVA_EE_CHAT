@@ -213,7 +213,7 @@ function Redeploy-App {
     Push-Location $projectRoot
     
     Write-Info "Compilando con Maven..."
-    & mvn clean package 2>&1 | Tee-Object -Variable mavenOutput
+    & mvn clean install 2>&1 | Tee-Object -Variable mavenOutput
     
     if ($LASTEXITCODE -ne 0) {
         Write-Error-Custom "[!] Error en la compilación de Maven."

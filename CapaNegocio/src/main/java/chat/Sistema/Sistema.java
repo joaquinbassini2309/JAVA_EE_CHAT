@@ -145,6 +145,11 @@ public class Sistema implements ISistema {
     }
 
     @Override
+    public List<Usuario> listarUsuarios() {
+        return usuarioHandler().listarUsuarios();
+    }
+
+    @Override
     public void actualizarEstadoUsuario(Long usuarioId, EstadoUsuario estado) {
         usuarioHandler().actualizarEstado(usuarioId, estado);
     }

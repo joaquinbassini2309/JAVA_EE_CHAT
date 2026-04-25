@@ -1,33 +1,29 @@
-html,
-body {
+/* --- Reset y Configuración Global --- */
+html, body, #app {
   height: 100%;
   margin: 0;
+  overflow: hidden; /* Prevenir scroll en el body */
 }
 
-#app {
-  height: 100%;
-}
-
-/* Referencia mockup: “Page Headings 14” — títulos de cabecera ~14px */
+/* --- Clases de Utilidad --- */
 .heading-14 {
-  font-size: 14px !important;
+  font-size: 14px;
   font-weight: 500;
   line-height: 1.3;
   letter-spacing: 0.01em;
   color: rgb(var(--v-theme-accent));
 }
 
-/* Referencia mockup: “Buttons 11” — botones compactos ~11px */
 .btn-11 {
-  font-size: 11px !important;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: none;
-  min-height: 36px !important;
 }
 
+/* --- Estructura Principal de la App --- */
 .chat-app-root {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -45,7 +41,7 @@ body {
   flex-direction: column;
   min-height: 0;
   width: 100%;
-  max-width: 100% !important;
+  max-width: 100%;
 }
 
 .chat-shell {
@@ -67,8 +63,8 @@ body {
   align-items: stretch;
 }
 
+/* --- Barra Lateral (Conversaciones) --- */
 .sidebar-col {
-  border-inline-end: 1px solid rgba(var(--v-theme-accent), 0.25);
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -80,6 +76,7 @@ body {
   overflow-y: auto;
 }
 
+/* --- Panel Principal (Chat Activo) --- */
 .chat-col {
   min-height: 0;
   display: flex;
@@ -93,12 +90,20 @@ body {
   background: rgba(179, 235, 242, 0.35);
 }
 
+.messages-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .bubble {
   border-radius: 14px;
   padding: 10px 14px;
   max-width: 78%;
   font-size: 14px;
   line-height: 1.45;
+  white-space: pre-wrap; /* Para respetar saltos de línea */
+  word-wrap: break-word; /* Para romper palabras largas */
 }
 
 .bubble-them {
@@ -114,12 +119,6 @@ body {
   align-self: flex-end;
 }
 
-.messages-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 .input-bar {
   display: flex;
   flex-wrap: wrap;
@@ -132,7 +131,7 @@ body {
   min-width: 180px;
 }
 
-/* Cabecera perfil: banner + franja en color primary del tema */
+/* --- Componentes de Perfil (Reutilizables) --- */
 .profile-header {
   position: relative;
   border-radius: 12px;
@@ -163,7 +162,6 @@ body {
   min-height: 88px;
 }
 
-/* Cabecera del chat: solo nombre y subtítulo (sin fila de acciones) */
 .profile-lower--chat {
   min-height: 72px;
   padding-bottom: 14px;
@@ -177,25 +175,9 @@ body {
 }
 
 .profile-avatar-box {
-  border-radius: 12px !important;
+  border-radius: 12px;
   border: 3px solid rgb(var(--v-theme-surface));
   box-shadow: 0 4px 14px rgba(var(--v-theme-accent), 0.22);
-}
-
-.profile-avatar-box .v-img {
-  border-radius: 9px;
-}
-
-.profile-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.profile-title-row .profile-name {
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .profile-name {
@@ -222,45 +204,31 @@ body {
   margin-top: 12px;
 }
 
-.profile-actions .profile-search {
-  flex: 1 1 100%;
-  min-width: 0;
-  width: 100%;
-  max-width: none;
-}
-
-/* Buscador sobre fondo primary */
-.profile-actions .profile-search .v-field__input::placeholder {
-  color: rgba(var(--v-theme-accent), 0.45) !important;
+/* --- Overrides y Aumentos de Especificidad para Vuetify --- */
+/* Aumentamos la especificidad para evitar !important */
+#app .profile-actions .profile-search .v-field__input::placeholder {
+  color: rgba(var(--v-theme-accent), 0.45);
   opacity: 1;
 }
 
-.profile-actions .profile-search .v-field__input {
-  color: rgb(var(--v-theme-accent));
-}
-
-.profile-actions .profile-search .v-icon {
-  color: rgb(var(--v-theme-accent)) !important;
+#app .profile-actions .profile-search .v-icon {
   opacity: 0.75;
 }
 
-.list-subheader-muted {
-  opacity: 0.85;
+#app .btn-11.v-btn {
+  min-height: 36px;
 }
 
-.initials-on-secondary-avatar {
-  color: rgb(var(--v-theme-on-secondary)) !important;
-}
-
+/* --- Media Queries --- */
 @media (max-width: 959px) {
   .chat-main-row {
-    flex-direction: column !important;
-    flex-wrap: nowrap !important;
+    flex-direction: column;
+    flex-wrap: nowrap;
   }
 
   .sidebar-col {
-    flex: 0 1 auto !important;
-    max-width: 100% !important;
+    flex: 0 1 auto;
+    max-width: 100%;
     max-height: min(48vh, 440px);
     min-height: 0;
     border-inline-end: none;
@@ -268,20 +236,8 @@ body {
   }
 
   .chat-col {
-    flex: 1 1 auto !important;
+    flex: 1 1 auto;
     min-height: 0;
-    max-width: 100% !important;
-  }
-}
-
-@media (min-width: 960px) {
-  .chat-main-row {
-    flex-direction: row;
-    flex-wrap: nowrap;
-  }
-
-  .sidebar-col {
-    max-height: none;
-    border-bottom: none;
+    max-width: 100%;
   }
 }

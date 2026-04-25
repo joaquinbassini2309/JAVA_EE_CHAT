@@ -7,6 +7,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.TypedQuery;
 
+import java.util.List;
 import java.util.Optional;
 
 public class ManejadorUsuario {
@@ -69,6 +70,16 @@ public class ManejadorUsuario {
                     Usuario.class);
             q.setParameter("username", username);
             return q.getResultList().stream().findFirst();
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<Usuario> listarUsuarios() {
+        EntityManager em = em();
+        try {
+            TypedQuery<Usuario> q = em.createQuery("SELECT u FROM Usuario u", Usuario.class);
+            return q.getResultList();
         } finally {
             em.close();
         }

@@ -19,39 +19,87 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Versiones de Jakarta EE -->
         <jakarta.jakartaee-api.version>10.0.0</jakarta.jakartaee-api.version>
-        <wildfly.maven.plugin.version>4.2.2.Final</wildfly.maven.plugin.version>
+        <jakarta.enterprise.cdi-api.version>4.0.1</jakarta.enterprise.cdi-api.version>
+        <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
+        <jakarta.websocket-api.version>2.1.0</jakarta.websocket-api.version>
+        <jakarta.annotation-api.version>2.1.1</jakarta.annotation-api.version>
+        <jakarta.json-api.version>2.1.1</jakarta.json-api.version>
+
+        <!-- Otras dependencias -->
+        <jbcrypt.version>0.4</jbcrypt.version>
+        <postgresql.version>42.7.2</postgresql.version>
+        <hibernate.version>6.4.4.Final</hibernate.version>
+        <jboss-logging.version>3.5.3.Final</jboss-logging.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- Jakarta EE APIs -->
             <dependency>
                 <groupId>jakarta.platform</groupId>
                 <artifactId>jakarta.jakartaee-api</artifactId>
                 <version>${jakarta.jakartaee-api.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.enterprise</groupId>
+                <artifactId>jakarta.enterprise.cdi-api</artifactId>
+                <version>${jakarta.enterprise.cdi-api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.ws.rs</groupId>
+                <artifactId>jakarta.ws.rs-api</artifactId>
+                <version>${jakarta.ws.rs-api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.websocket</groupId>
+                <artifactId>jakarta.websocket-api</artifactId>
+                <version>${jakarta.websocket-api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.annotation</groupId>
+                <artifactId>jakarta.annotation-api</artifactId>
+                <version>${jakarta.annotation-api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.json</groupId>
+                <artifactId>jakarta.json-api</artifactId>
+                <version>${jakarta.json-api.version}</version>
                 <scope>provided</scope>
             </dependency>
 
+            <!-- Otras dependencias -->
             <dependency>
                 <groupId>org.mindrot</groupId>
                 <artifactId>jbcrypt</artifactId>
-                <version>0.4</version>
+                <version>${jbcrypt.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
-                <version>42.7.2</version>
+                <version>${postgresql.version}</version>
                 <scope>provided</scope>
             </dependency>
-
             <dependency>
                 <groupId>org.hibernate.orm</groupId>
                 <artifactId>hibernate-core</artifactId>
-                <version>6.4.4.Final</version>
+                <version>${hibernate.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.logging</groupId>
+                <artifactId>jboss-logging</artifactId>
+                <version>${jboss-logging.version}</version>
                 <scope>provided</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
-
 </project>
