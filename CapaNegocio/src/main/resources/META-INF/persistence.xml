@@ -4,22 +4,11 @@
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_1.xsd">
 
-    <!-- Unidad de persistencia para WildFly -->
-    <persistence-unit name="chatPU" transaction-type="JTA">
+    <!-- Unidad de persistencia independiente para que funcione sin datasource JNDI de WildFly -->
+    <persistence-unit name="chatPU" transaction-type="RESOURCE_LOCAL">
         
-        <!-- Provider de Hibernate (puede ser omitido, Wildfly lo detecta automáticamente) -->
+        <!-- Provider de Hibernate -->
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-        
-        <!-- Data Source JTA configurado en WildFly -->
-        <!-- El script de setup configura este data source para apuntar a la BD 'chat'
-             /subsystem=datasources/data-source=ChatDS:add(
-                 jndi-name=java:/ChatDS,
-                 driver-name=postgresql,
-                 connection-url=jdbc:postgresql://localhost:5432/chat,
-                 user-name=postgres,
-                 password=tu_password)
-        -->
-        <jta-data-source>java:/ChatDS</jta-data-source>
         
         <!-- Entidades mapeadas explícitamente -->
         <class>chat.clases.Usuario</class>
@@ -28,6 +17,12 @@
         <class>chat.clases.Participante</class>
 
         <properties>
+            <!-- Propiedades de conexión directa a la base de datos PostgreSQL -->
+            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver" />
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/chat" />
+            <property name="jakarta.persistence.jdbc.user" value="postgres" />
+            <property name="jakarta.persistence.jdbc.password" value="postgres" /> <!-- <- Cambiar si la pass de postgres es distinta -->
+
             <!-- Dialecto de Hibernate para PostgreSQL -->
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             
