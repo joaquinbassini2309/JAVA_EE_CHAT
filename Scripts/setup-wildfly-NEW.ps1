@@ -86,6 +86,9 @@ if (Test-Path $WildFlyDir) {
     Write-Warning-Custom "[!] WildFly ya existe en $WildFlyDir"
     $response = Read-Host "Descargar de nuevo? (s/n)"
     if ($response -eq "s") {
+        # Detener WildFly si se está ejecutando antes de borrar
+        Get-Process | Where-Object { $_.ProcessName -eq "java" -and $_.Path -like "$WildFlyDir*" } | Stop-Process -Force
+        Start-Sleep -Seconds 2
         Remove-Item -Recurse -Force $WildFlyDir
     } else {
         Write-Info "Usando WildFly existente..."
@@ -153,16 +156,18 @@ $process = Start-Process -FilePath $wildflyCli -WindowStyle Hidden -PassThru
 Start-Sleep -Seconds 3
 
 Write-Success "[OK] WildFly iniciado (PID: $($process.Id))"
-Write-Info "Esperando a que WildFly este listo (hasta 30s)..."
+Write-Info "Esperando a que WildFly este listo (hasta 45s)..."
 
-$maxAttempts = 30
+$maxAttempts = 45
 $attempt = 0
 $ready = $false
 
 while ($attempt -lt $maxAttempts -and -not $ready) {
     try {
-        $response = Invoke-WebRequest -Uri "http://localhost:9990/console" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
-        $ready = $true
+        $response = Invoke-WebRequest -Uri "http://localhost:9990/management" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
+        if ($response.StatusCode -eq 200) {
+            $ready = $true
+        }
     } catch {
         $attempt++
         Write-Host "." -NoNewline
@@ -174,8 +179,10 @@ if ($ready) {
     Write-Success ""
     Write-Success "[OK] WildFly esta listo en http://localhost:9990/console"
 } else {
-    Write-Warning-Custom ""
-    Write-Warning-Custom "[!] WildFly puede no estar completamente listo, continuando..."
+    Write-Error-Custom ""
+    Write-Error-Custom "[!] WildFly no pudo iniciarse. Revisa los logs en $WildFlyDir\standalone\log"
+    Stop-Process -Id $process.Id -Force
+    exit 1
 }
 
 Write-Info "======================================"
@@ -183,17 +190,20 @@ Write-Info "Instalando Driver y Configurando Data Source en WildFly..."
 Write-Info "======================================"
 
 $cliCommands = @"
-# Desplegar el driver JDBC de PostgreSQL
-deploy $driverPath
+# Iniciar un batch para que los comandos se ejecuten en orden
+batch
+
+# Eliminar el Data Source de ejemplo si existe
+/subsystem=datasources/data-source=ExampleDS:remove
+
+# Instalar el driver JDBC de PostgreSQL como un módulo
+jdbc-driver add --driver-name=postgresql --driver-module-name=org.postgresql.jdbc --driver-class-name=org.postgresql.Driver --driver-resources=$driverPath
 
 # Crear el Data Source
-/subsystem=datasources/data-source=ChatDS:add(jndi-name=java:/ChatDS,driver-name=postgresql,connection-url=jdbc:postgresql://localhost:5432/chat,user-name=postgres,password=$PostgresPassword,min-pool-size=10,max-pool-size=30)
+data-source add --name=ChatDS --jndi-name=java:/ChatDS --driver-name=postgresql --connection-url=jdbc:postgresql://localhost:5432/chat --user-name=postgres --password=$PostgresPassword --min-pool-size=10 --max-pool-size=30 --validate-on-match=true --background-validation=false --exception-sorter-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter
 
-# Probar la conexión
-/subsystem=datasources/data-source=ChatDS:test-connection-in-pool()
-
-# Recargar la configuración
-reload
+# Ejecutar el batch
+run-batch
 exit
 "@
 
@@ -204,10 +214,10 @@ Write-Info "Ejecutando comandos CLI..."
 try {
     & $wildflyCLI --connect --file=$cliFile 2>&1 | Tee-Object -Variable cliOutput | Write-Host
     
-    if ($cliOutput -match "success" -or $cliOutput -match "successfully") {
-        Write-Success "[OK] Data Source ChatDS creado exitosamente"
+    if ($cliOutput -match "WFLYJCA0040" -or $cliOutput -match '\"outcome\" => \"success\"') {
+        Write-Success "[OK] Data Source ChatDS configurado exitosamente"
     } else {
-        Write-Info "Verificando data source..."
+        Write-Warning-Custom "[!] El Data Source podría no haberse creado. Revisa el output."
     }
 } catch {
     Write-Warning-Custom "[!] Error ejecutando CLI: $_"
@@ -261,7 +271,9 @@ if (Test-Path $warFile) {
     while ($attempt -lt $maxAttempts -and -not $deployed) {
         try {
             $response = Invoke-WebRequest -Uri "http://localhost:8080/chat-empresarial/InicioSesion.html" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
-            $deployed = $true
+            if ($response.StatusCode -eq 200) {
+                $deployed = $true
+            }
         } catch {
             $attempt++
             Write-Host "." -NoNewline
@@ -274,7 +286,7 @@ if (Test-Path $warFile) {
         Write-Success "[OK] Aplicacion desplegada exitosamente"
     } else {
         Write-Info ""
-        Write-Info "Aplicacion en proceso de despliegue, verifica logs..."
+        Write-Error-Custom "[!] La aplicación no se desplegó correctamente (404 Not Found). Revisa los logs de WildFly."
     }
 } else {
     Write-Error-Custom "[!] WAR no encontrado en $warFile"
@@ -303,7 +315,9 @@ Write-Warning-Custom "   2. Asegurate que PostgreSQL este corriendo"
 Write-Warning-Custom "   3. Prueba el inicio de sesion en la URL de la aplicacion"
 Write-Warning-Custom "   4. Para detener WildFly: Stop-Process -Id $($process.Id)"
 
-Start-Process "http://localhost:8080/chat-empresarial/InicioSesion.html"
+if ($deployed) {
+    Start-Process "http://localhost:8080/chat-empresarial/InicioSesion.html"
+}
 
 Write-Info ""
 Write-Info "======================================"
