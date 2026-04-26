@@ -13,12 +13,14 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Path("/conversaciones")
 @RequestScoped
+@Transactional
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ConversacionResource {
@@ -40,7 +42,10 @@ public class ConversacionResource {
 
         List<chat.clases.Conversacion> convs = sistema.obtenerConversacionesDeUsuario(userId);
 
-        List<DtConversacion> dtos = convs.stream().map(DtConversacion::from).collect(Collectors.toList());
+        List<DtConversacion> dtos = convs.stream()
+                .map(DtConversacion::from)
+                .filter(d -> d.getUltimoMensaje() != null)
+                .collect(Collectors.toList());
 
         return Response.ok(dtos).build();
     }

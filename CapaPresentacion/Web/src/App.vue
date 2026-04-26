@@ -6,7 +6,7 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import { useAlmacen } from '@/almacen'
+import { useAlmacen } from '@/stores'
 
 const almacen = useAlmacen()
 

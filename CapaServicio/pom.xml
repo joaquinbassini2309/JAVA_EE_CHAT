@@ -82,7 +82,7 @@
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                     <webResources>
                         <resource>
-                            <directory>../CapaPresentacion/Web/public</directory>
+                            <directory>../CapaPresentacion/Web/dist</directory>
                             <targetPath>/</targetPath>
                         </resource>
                     </webResources>
