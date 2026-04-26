@@ -39,9 +39,6 @@ public class Sistema implements ISistema {
     @Inject
     private ManejadorMensaje mensajeHandler;
 
-    @Inject
-    private ISistema sistema;
-
     @Override
     public ManejadorUsuario usuarioHandler() { return usuarioHandler; }
 

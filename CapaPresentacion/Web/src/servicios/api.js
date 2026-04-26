@@ -1,7 +1,10 @@
 // Servicios API para la aplicación Vue.js
 import axios from 'axios'
+import { useAlmacen } from '@/almacen'
 
-const API_BASE_URL = 'http://localhost:8080/chat-empresarial/api/v1'
+// Al compilar, la app Vue y la API Java estarán en el mismo dominio.
+// Usamos una ruta relativa para que funcione en cualquier entorno (desarrollo, producción).
+const API_BASE_URL = '/chat-empresarial/api/v1'
 
 class ServicioAPI {
   constructor() {
@@ -13,7 +16,8 @@ class ServicioAPI {
     // Interceptor para agregar token JWT
     this.cliente.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('token')
+        const almacen = useAlmacen()
+        const token = almacen.token
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
         }
@@ -22,15 +26,14 @@ class ServicioAPI {
       (error) => Promise.reject(error)
     )
 
-    // Interceptor para manejar errores
+    // Interceptor para manejar errores de autenticación
     this.cliente.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          // Token expirado o inválido
-          localStorage.removeItem('token')
-          localStorage.removeItem('usuario')
-          window.location.href = '/login'
+          const almacen = useAlmacen()
+          almacen.cerrarSesion() // Usar la acción del almacén para limpiar
+          window.location.href = '/chat-empresarial/login' // Redirigir a la página de login
         }
         return Promise.reject(error)
       }
@@ -39,27 +42,24 @@ class ServicioAPI {
 
   // ========== AUTENTICACIÓN ==========
 
-  async iniciarSesion(nombreUsuario, contraseña) {
+  async iniciarSesion(email, password) {
+    // El login no debería usar el interceptor de token, pero para este caso es inofensivo
     const { data } = await this.cliente.post('/usuarios/login', {
-      username: nombreUsuario,
-      password: contraseña
+      email,
+      password
     })
     return data
   }
 
-  async registrarse(nombreUsuario, email, contraseña) {
-    const { data } = await this.cliente.post('/usuarios/register', {
-      username: nombreUsuario,
-      email: email,
-      password: contraseña
-    })
+  async registrarUsuario(datosRegistro) {
+    const { data } = await this.cliente.post('/usuarios/register', datosRegistro)
     return data
   }
 
   async actualizarPerfil(fotoUrl, estado) {
     const { data } = await this.cliente.put('/usuarios/perfil', {
-      fotoUrl: fotoUrl,
-      estado: estado
+      fotoUrl,
+      estado
     })
     return data
   }
@@ -87,7 +87,7 @@ class ServicioAPI {
     })
     return data
   }
-
+  
   async obtenerConversacion(idConversacion) {
     const { data } = await this.cliente.get(`/conversaciones/${idConversacion}`)
     return data
@@ -95,51 +95,17 @@ class ServicioAPI {
 
   // ========== MENSAJES ==========
 
-  async enviarMensaje(nuevoMensaje) {
-    const { data } = await this.cliente.post('/mensajes', nuevoMensaje)
-    return data
-  }
-
   async obtenerMensajes(idConversacion, limite = 50) {
     const { data } = await this.cliente.get(
-      `/mensajes/conversacion/${idConversacion}?limite=${limite}`
+      `/conversaciones/${idConversacion}/mensajes?limite=${limite}`
     )
     return data
   }
 
-  async marcarMensajeLeido(idMensaje) {
-    const { data } = await this.cliente.post(
-      `/mensajes/${idMensaje}/leido`
-    )
-    return data
-  }
-
-  async marcarConversacionLeida(idConversacion) {
-    const { data } = await this.cliente.post(
-      `/mensajes/conversacion/${idConversacion}/leidos`
-    )
-    return data
-  }
-
-  // ========== WEBSOCKET ==========
-
-  conectarWebSocket(idConversacion, idUsuario, token) {
-    const url = `ws://localhost:8080/chat-empresarial/api/v1/websocket/conversacion/${idConversacion}/usuario/${idUsuario}`
-
-    const ws = new WebSocket(url)
-
-    // Configurar headers manualmente no funciona en WebSocket,
-    // así que pasamos el token en la URL (alternativa: usar socket.io)
-    ws.onopen = () => {
-      console.log('WebSocket conectado')
-      // Enviar token en primer mensaje si es necesario
-    }
-
-    ws.onerror = (error) => {
-      console.error('Error WebSocket:', error)
-    }
-
-    return ws
+  // ========== USUARIOS ==========
+  async obtenerUsuarios() {
+    const { data } = await this.cliente.get('/usuarios');
+    return data;
   }
 }
 

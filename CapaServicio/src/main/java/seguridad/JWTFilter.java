@@ -8,17 +8,18 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-import jakarta.ws.rs.ext.Provider;
+// Eliminamos la importación de @Provider
+// import jakarta.ws.rs.ext.Provider; 
 
 import java.io.IOException;
 import java.security.Principal;
 
 /**
  * Filtro JWT para validar tokens en peticiones HTTP.
- * Extrae el token del header Authorization (Bearer <token>)
- * y lo valida usando JWTUtil.
+ * Se activa solo en los endpoints anotados con @Secured.
+ * Ya NO usa @Provider, se registrará manualmente en JAXRSConfiguration.
  */
-@Provider
+@Secured // El filtro está vinculado a esta anotación.
 @Priority(Priorities.AUTHENTICATION)
 public class JWTFilter implements ContainerRequestFilter {
 
@@ -31,8 +32,12 @@ public class JWTFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext) throws IOException {
         String authHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
-        // Si no hay header Authorization, continuar sin autenticación
+        // Si no hay header Authorization, abortar (porque este filtro solo corre en endpoints seguros)
         if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            requestContext.abortWith(
+                    Response.status(Response.Status.UNAUTHORIZED)
+                            .entity(new ErrorMessage("Authorization header must be provided"))
+                            .build());
             return;
         }
 

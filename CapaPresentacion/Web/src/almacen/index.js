@@ -5,7 +5,7 @@ import { ref, computed } from 'vue'
 export const useAlmacen = defineStore('principal', () => {
   // ===== ESTADO =====
 
-  const usuarioActual = ref(null)
+  const usuario = ref(null) // Corregido: Nombre consistente
   const token = ref(null)
   const conversaciones = ref([])
   const conversacionActual = ref(null)
@@ -15,7 +15,7 @@ export const useAlmacen = defineStore('principal', () => {
 
   // ===== GETTERS =====
 
-  const estaAutenticado = computed(() => !!token.value && !!usuarioActual.value)
+  const estaAutenticado = computed(() => !!token.value && !!usuario.value)
 
   const conversacionesOrdenadas = computed(() => {
     return conversaciones.value.sort((a, b) => {
@@ -31,8 +31,14 @@ export const useAlmacen = defineStore('principal', () => {
 
   // ===== ACCIONES =====
 
-  function establecerUsuario(usuario) {
-    usuarioActual.value = usuario
+  function establecerUsuario(nuevoUsuario) {
+    usuario.value = nuevoUsuario
+    // Corregido: Guardar en localStorage para persistencia
+    if (nuevoUsuario) {
+      localStorage.setItem('usuario', JSON.stringify(nuevoUsuario))
+    } else {
+      localStorage.removeItem('usuario')
+    }
   }
 
   function establecerToken(nuevoToken) {
@@ -91,7 +97,7 @@ export const useAlmacen = defineStore('principal', () => {
   }
 
   function cerrarSesion() {
-    usuarioActual.value = null
+    usuario.value = null
     token.value = null
     conversaciones.value = []
     conversacionActual.value = null
@@ -110,7 +116,7 @@ export const useAlmacen = defineStore('principal', () => {
       token.value = tokenGuardado
     }
     if (usuarioGuardado) {
-      usuarioActual.value = JSON.parse(usuarioGuardado)
+      usuario.value = JSON.parse(usuarioGuardado)
     }
     if (conversacionGuardada) {
       conversacionActual.value = JSON.parse(conversacionGuardada)
@@ -119,7 +125,7 @@ export const useAlmacen = defineStore('principal', () => {
 
   return {
     // Estado
-    usuarioActual,
+    usuario, // Corregido
     token,
     conversaciones,
     conversacionActual,

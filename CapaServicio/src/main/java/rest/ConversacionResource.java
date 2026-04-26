@@ -5,9 +5,11 @@ import chat.Datatype.DtMensaje;
 import chat.Sistema.ISistema;
 import exceptions.ErrorResponse;
 import seguridad.AuthService;
+import seguridad.Secured;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional; // Importar
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -21,6 +23,8 @@ import java.util.stream.Collectors;
 @RequestScoped
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Secured 
+@Transactional // <-- AÑADIDO: Transacción a nivel de recurso
 public class ConversacionResource {
 
     @Inject

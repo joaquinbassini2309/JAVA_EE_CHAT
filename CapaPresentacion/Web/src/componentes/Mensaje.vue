@@ -21,10 +21,12 @@ const props = defineProps({
 })
 
 const almacen = useAlmacen()
-const usuarioActual = computed(() => almacen.usuarioActual)
+// Corregido: Usar 'usuario' en lugar de 'usuarioActual'
+const usuario = computed(() => almacen.usuario)
 
 const propio = computed(() => {
-  return props.mensaje.emisorId === usuarioActual.value?.id
+  if (!usuario.value) return false
+  return props.mensaje.emisorId === usuario.value?.id
 })
 </script>
 

@@ -68,6 +68,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Dependencia de Jackson para @JsonIgnore. Sin 'provided' para asegurar que se empaquete. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.16.1</version>
+        </dependency>
+
         <!-- Hibernate para ORM (provided by WildFly) -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>

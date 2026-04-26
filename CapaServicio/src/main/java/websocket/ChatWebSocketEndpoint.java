@@ -51,14 +51,19 @@ public class ChatWebSocketEndpoint {
                                 @PathParam("conversacionId") Long idConversacion,
                                 @PathParam("usuarioId") Long idUsuario) {
         try {
-            // Validar token JWT desde los parámetros de la sesión
+            // 1. Obtener token de los parámetros de la sesión (inyectado por el configurator)
             String token = (String) sesion.getUserProperties().get("token");
-            if (token == null || !servicioAutenticacion.esTokenValido(token)) {
+
+            // 2. Validar el token y extraer el ID de usuario del token
+            Long idUsuarioDelToken = servicioAutenticacion.validarTokenYExtraerIdUsuario(token);
+
+            // 3. Verificar que el token es válido Y que el ID del token coincide con el ID de la URL
+            if (idUsuarioDelToken == null || !idUsuarioDelToken.equals(idUsuario)) {
                 sesion.close();
                 return;
             }
 
-            // Verificar que el usuario existe y está en la conversación
+            // 4. Verificar que el usuario existe y pertenece a la conversación
             if (!sistema.usuarioEstaEnConversacion(idUsuario, idConversacion)) {
                 sesion.close();
                 return;

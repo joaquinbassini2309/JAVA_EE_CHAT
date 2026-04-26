@@ -1,193 +1,153 @@
 <template>
-  <div class="lista-conversaciones">
-    <div class="encabezado">
-      <h3>Conversaciones</h3>
-      <button class="btn-nueva" @click="abrirNuevaConversacion">
-        +
-      </button>
-    </div>
-
-    <div class="campo-busqueda">
-      <input
-        v-model="termino"
-        type="text"
-        placeholder="Buscar conversación..."
-        class="input-busqueda"
-      />
-    </div>
-
-    <div class="listado">
-      <div
-        v-for="conversacion in conversacionesFiltradas"
-        :key="conversacion.id"
-        class="item-conversacion"
-        :class="{ activa: esActiva(conversacion) }"
-        @click="seleccionarConversacion(conversacion)"
-      >
-        <div class="info-conversacion">
-          <h4>{{ conversacion.nombre }}</h4>
-          <p>{{ conversacion.ultimoMensaje || 'Sin mensajes' }}</p>
+  <div class="pa-3 pb-2 flex-shrink-0">
+    <div class="profile-header">
+      <div class="profile-banner profile-banner--default"/>
+      <div class="profile-lower">
+        <div class="profile-avatar-wrap">
+          <v-avatar class="profile-avatar-box" color="accent" size="72" rounded="lg">
+            <span class="text-white text-subtitle-1 font-weight-medium">{{ yo.iniciales }}</span>
+          </v-avatar>
         </div>
-        <span v-if="conversacion.noLeidos > 0" class="badge-no-leidos">
-          {{ conversacion.noLeidos }}
-        </span>
+        <div class="profile-title-row">
+          <div class="profile-name text-truncate">{{ yo.nombre }}</div>
+          <v-btn icon="mdi-account-plus" variant="tonal" color="accent" size="small" density="comfortable" @click="emit('abrir-modal-usuario')"/>
+        </div>
+        <div class="profile-subtitle text-truncate">{{ yo.subtitulo }}</div>
+        <div class="profile-actions">
+          <v-text-field v-model="contactSearch" density="compact" variant="solo-filled" flat hide-details placeholder="Buscar contactos" prepend-inner-icon="mdi-magnify" class="profile-search" bg-color="rgba(255,255,255,0.55)" color="accent"/>
+        </div>
       </div>
     </div>
+  </div>
+  <v-divider opacity="0.2" color="accent" />
+  <div class="sidebar-list-scroll">
+    <v-list density="comfortable" lines="two" class="bg-transparent py-2">
+      <v-list-subheader class="heading-14 text-uppercase list-subheader-muted">Conversaciones</v-list-subheader>
+      <v-list-item
+        v-for="conv in conversacionesFiltradas"
+        :key="conv.id"
+        rounded="lg"
+        class="mx-2 mb-1"
+        :active="conversacionActivaId === conv.id"
+        color="accent"
+        @click="emit('seleccionar-conversacion', conv)"
+      >
+        <template #prepend>
+          <v-avatar color="secondary" size="40" class="text-caption">{{ conv.nombre.charAt(0).toUpperCase() }}</v-avatar>
+        </template>
+        <v-list-item-title class="font-weight-medium">{{ conv.nombre }}</v-list-item-title>
+        <v-list-item-subtitle>Último mensaje...</v-list-item-subtitle>
+      </v-list-item>
+    </v-list>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useAlmacen } from '@/almacen'
+import { ref, computed } from 'vue';
 
-const almacen = useAlmacen()
-const termino = ref('')
+const props = defineProps({
+  yo: { type: Object, required: true },
+  conversaciones: { type: Array, required: true },
+  conversacionActivaId: { type: [Number, null], default: null }
+});
 
-const conversacionesActuales = computed(() => almacen.conversacionesOrdenadas)
-const conversacionActual = computed(() => almacen.conversacionActual)
+const emit = defineEmits(['seleccionar-conversacion', 'abrir-modal-usuario']);
+
+const contactSearch = ref('');
 
 const conversacionesFiltradas = computed(() => {
-  if (!termino.value) {
-    return conversacionesActuales.value
+  if (!contactSearch.value) {
+    return props.conversaciones;
   }
-
-  const terminoLower = termino.value.toLowerCase()
-  return conversacionesActuales.value.filter(c =>
-    c.nombre.toLowerCase().includes(terminoLower)
-  )
-})
-
-const esActiva = (conversacion) => {
-  return conversacionActual.value?.id === conversacion.id
-}
-
-const seleccionarConversacion = (conversacion) => {
-  almacen.establecerConversacionActual(conversacion)
-}
-
-const abrirNuevaConversacion = () => {
-  // Aquí irá el modal para crear nueva conversación
-  console.log('Abrir nueva conversación')
-}
+  const termino = contactSearch.value.toLowerCase();
+  return props.conversaciones.filter(c => c.nombre.toLowerCase().includes(termino));
+});
 </script>
 
 <style scoped>
-.lista-conversaciones {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: #f9fafb;
-  border-right: 1px solid #e5e7eb;
-  max-width: 350px;
-  width: 100%;
-}
-
-.encabezado {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.encabezado h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.btn-nueva {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.btn-nueva:hover {
-  background-color: rgba(255, 255, 255, 0.3);
-}
-
-.campo-busqueda {
-  padding: 12px 16px;
-}
-
-.input-busqueda {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.input-busqueda:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.listado {
-  flex: 1;
+/* Estilos exactos del diseño original para la barra lateral */
+.sidebar-list-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
 }
-
-.item-conversacion {
+.profile-header {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.profile-banner {
+  height: 76px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.profile-banner--default {
+  background-color: rgb(var(--v-theme-primary));
+  background-image:
+    linear-gradient(135deg, rgba(var(--v-theme-accent), 0.2) 0%, transparent 55%),
+    linear-gradient(225deg, rgba(255, 255, 255, 0.45) 0%, transparent 48%),
+    radial-gradient(ellipse 90% 140% at 15% 0%, rgba(var(--v-theme-accent), 0.18), transparent);
+}
+.profile-lower {
+  position: relative;
+  background: rgb(var(--v-theme-primary));
+  padding: 14px 14px 16px;
+  padding-inline-start: 108px;
+  min-height: 88px;
+}
+.profile-avatar-wrap {
+  position: absolute;
+  z-index: 2;
+  inset-inline-start: 14px;
+  top: -38px;
+}
+.profile-avatar-box {
+  border-radius: 12px;
+  border: 3px solid rgb(var(--v-theme-surface));
+  box-shadow: 0 4px 14px rgba(var(--v-theme-accent), 0.22);
+}
+.profile-title-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  cursor: pointer;
-  transition: background-color 0.2s;
+  gap: 8px;
 }
-
-.item-conversacion:hover {
-  background-color: #f3f4f6;
+.profile-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: rgb(var(--v-theme-on-primary));
+  line-height: 1.25;
+  letter-spacing: 0.01em;
 }
-
-.item-conversacion.activa {
-  background-color: #ede9fe;
-  border-left: 4px solid #667eea;
-}
-
-.info-conversacion {
-  flex: 1;
-}
-
-.info-conversacion h4 {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.info-conversacion p {
-  margin: 0;
+.profile-subtitle {
   font-size: 12px;
-  color: #6b7280;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: rgb(var(--v-theme-accent));
+  line-height: 1.4;
+  margin-top: 4px;
+  opacity: 0.9;
 }
-
-.badge-no-leidos {
-  display: inline-flex;
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 6px;
-  background-color: #667eea;
-  color: white;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
+  gap: 8px;
+  margin-top: 12px;
+}
+.heading-14 {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  color: rgb(var(--v-theme-accent));
+}
+/* Estos :global son necesarios para que Vuetify pueda aplicar los estilos correctamente */
+:global(.profile-search .v-field__input::placeholder) {
+  color: rgba(var(--v-theme-accent), 0.45);
+  opacity: 1;
+}
+:global(.profile-search .v-icon) {
+  opacity: 0.75;
 }
 </style>

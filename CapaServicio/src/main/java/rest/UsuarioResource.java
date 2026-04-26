@@ -6,6 +6,7 @@ import chat.clases.Usuario;
 import exceptions.ErrorResponse;
 import seguridad.AuthService;
 import seguridad.JWTUtil;
+import seguridad.Secured; // Importar la anotación
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -39,6 +40,7 @@ public class UsuarioResource {
     private SecurityContext securityContext;
 
     @GET
+    @Secured // Proteger este endpoint
     public Response getAllUsers() {
         List<Usuario> usuarios = sistema.listarUsuarios();
         List<DtUsuario.UsuarioResponseDTO> dtos = usuarios.stream()
@@ -49,6 +51,7 @@ public class UsuarioResource {
 
     @POST
     @Path("/login")
+    // NO @Secured aquí, es público
     public Response login(DtUsuario.LoginDTO loginDto) {
         if (loginDto == null || loginDto.getEmail() == null || loginDto.getEmail().isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -74,6 +77,7 @@ public class UsuarioResource {
 
     @POST
     @Path("/register")
+    // NO @Secured aquí, es público
     public Response register(DtUsuario.CrearUsuarioDTO crearDto) {
         if (crearDto == null) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -117,6 +121,7 @@ public class UsuarioResource {
 
     @PUT
     @Path("/perfil")
+    @Secured // Proteger este endpoint
     public Response updateProfile(DtUsuario.ActualizarUsuarioDTO actualizarDto) {
         Long usuarioId = authService.getAuthenticatedUserId(securityContext);
         if (usuarioId == null) {

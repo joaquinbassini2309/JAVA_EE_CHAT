@@ -2,6 +2,7 @@
 package chat.clases;
 
 import chat.Enum.EstadoUsuario;
+import com.fasterxml.jackson.annotation.JsonIgnore; // Importar la anotación
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -21,6 +22,7 @@ public class Usuario {
     private String email;
 
     @Column(name = "password_hash", length = 255, nullable = false)
+    @JsonIgnore // No exponer nunca el hash de la contraseña
     private String passwordHash;
 
     @Column(name = "foto_url", length = 255)
@@ -37,9 +39,11 @@ public class Usuario {
     private LocalDateTime fechaRegistro;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore // <-- ¡AÑADIDO! Rompe el bucle de serialización Usuario -> Participante
     private Set<Participante> participaciones = new HashSet<>();
 
     @OneToMany(mappedBy = "emisor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore // Buena práctica añadirlo aquí también para evitar otros bucles
     private Set<Mensaje> mensajesEnviados = new HashSet<>();
 
     @PrePersist

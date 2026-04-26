@@ -74,18 +74,52 @@
     <build>
         <finalName>chat-empresarial</finalName>
         <plugins>
+            <!-- Plugin para ejecutar comandos de frontend (npm) -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <!-- Ejecutar 'npm install' -->
+                    <execution>
+                        <id>npm-install</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <executable>npm</executable>
+                            <arguments>
+                                <argument>install</argument>
+                            </arguments>
+                            <workingDirectory>../CapaPresentacion/Web</workingDirectory>
+                        </configuration>
+                    </execution>
+                    <!-- Ejecutar 'npm run build' -->
+                    <execution>
+                        <id>npm-build</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <executable>npm</executable>
+                            <arguments>
+                                <argument>run</argument>
+                                <argument>build</argument>
+                            </arguments>
+                            <workingDirectory>../CapaPresentacion/Web</workingDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.4.0</version>
                 <configuration>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
-                    <webResources>
-                        <resource>
-                            <directory>../CapaPresentacion/Web/public</directory>
-                            <targetPath>/</targetPath>
-                        </resource>
-                    </webResources>
                 </configuration>
             </plugin>
             <plugin>

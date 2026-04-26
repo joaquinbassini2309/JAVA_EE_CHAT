@@ -2,6 +2,7 @@
 package chat.clases;
 
 import chat.Enum.RolParticipante;
+import com.fasterxml.jackson.annotation.JsonIgnore; // Importar la anotación
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -17,6 +18,7 @@ public class Participante {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_conversacion", nullable = false)
+    @JsonIgnore // <-- ¡AÑADIDO! Rompe el bucle de serialización
     private Conversacion conversacion;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

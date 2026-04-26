@@ -9,8 +9,20 @@
         <div v-if="error" class="alerta-error">
           {{ error }}
         </div>
+         <div v-if="success" class="alerta-success">
+          {{ success }}
+        </div>
 
-        <form @submit.prevent="iniciarSesion">
+        <form @submit.prevent="registrarUsuario">
+          <div class="form-group">
+            <label for="username">Nombre de Usuario</label>
+            <input
+              id="username"
+              v-model="username"
+              type="text"
+              required
+            />
+          </div>
           <div class="form-group">
             <label for="email">Email</label>
             <input
@@ -20,7 +32,6 @@
               required
             />
           </div>
-
           <div class="form-group">
             <label for="password">Contraseña</label>
             <input
@@ -30,21 +41,20 @@
               required
             />
           </div>
-
           <button
             type="submit"
             class="login-button"
             :disabled="cargando"
           >
-            {{ cargando ? 'Iniciando...' : 'Iniciar Sesión' }}
+            {{ cargando ? 'Registrando...' : 'Registrarse' }}
           </button>
         </form>
         <div class="switch-form">
-          <span>¿No tienes una cuenta? <router-link to="/registro">Regístrate</router-link></span>
+          <span>¿Ya tienes una cuenta? <router-link to="/login">Inicia sesión</router-link></span>
         </div>
       </div>
       <div class="welcome-panel">
-        <h1>Bienvenido</h1>
+        <h1>Únete a Nosotros</h1>
       </div>
     </div>
   </div>
@@ -53,41 +63,44 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAlmacen } from '@/almacen'
 import { servicioApi } from '@/servicios/api'
 
 const router = useRouter()
-const almacen = useAlmacen()
 
+const username = ref('')
 const email = ref('')
 const password = ref('')
 const cargando = ref(false)
 const error = ref(null)
+const success = ref(null)
 
-const iniciarSesion = async () => {
-  if (!email.value || !password.value) {
+const registrarUsuario = async () => {
+  if (!username.value || !email.value || !password.value) {
     error.value = 'Por favor completa todos los campos'
     return
   }
 
   cargando.value = true
   error.value = null
+  success.value = null
 
   try {
-    const respuesta = await servicioApi.iniciarSesion(
-      email.value,
-      password.value
-    )
+    await servicioApi.registrarUsuario({
+      username: username.value,
+      email: email.value,
+      password: password.value,
+    })
 
-    almacen.establecerToken(respuesta.token)
-    almacen.establecerUsuario(respuesta.usuario)
+    success.value = '¡Registro exitoso! Redirigiendo al login...'
+    setTimeout(() => {
+      router.push('/login')
+    }, 2000)
 
-    router.push('/chat')
   } catch (err) {
     error.value =
       err.response?.data?.detalle ||
       err.response?.data?.mensaje ||
-      'Error al iniciar sesión'
+      'Error en el registro. Inténtalo de nuevo.'
   } finally {
     cargando.value = false
   }
@@ -222,6 +235,17 @@ body {
   border: 1px solid #fca5a5;
   border-radius: 6px;
   color: #991b1b;
+  font-size: 14px;
+  text-align: center;
+}
+
+.alerta-success {
+  padding: 12px;
+  margin-bottom: 16px;
+  background-color: #dcfce7;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  color: #166534;
   font-size: 14px;
   text-align: center;
 }
