@@ -138,4 +138,29 @@ export function obtenerUrlAvatar(email) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(emailLower)}&background=667eea&color=fff`
 }
 
+/**
+ * Obtiene el nombre visible de una conversación
+ * Para chats privados, devuelve solo el nombre del otro participante
+ * Para grupos, devuelve el nombre del grupo
+ */
+export function obtenerNombreVisibleConversacion(conversacion, usuarioActualId) {
+  if (!conversacion) return 'Chat'
+  
+  // Si es un grupo, devolver el nombre del grupo
+  if (conversacion.tipo === 'GRUPO') {
+    return conversacion.nombre
+  }
+  
+  // Si es privado y tenemos el ID del usuario actual, extraer el nombre del otro
+  if (conversacion.tipo === 'PRIVADA' && usuarioActualId && conversacion.participantes) {
+    const otro = conversacion.participantes.find(p => p.id !== usuarioActualId)
+    if (otro && otro.username) {
+      return otro.username
+    }
+  }
+  
+  // Fallback: devolver el nombre de la conversación
+  return conversacion.nombre || 'Chat'
+}
+
 export { formatearFecha, formatearHora, formatearFechaRelativa }
