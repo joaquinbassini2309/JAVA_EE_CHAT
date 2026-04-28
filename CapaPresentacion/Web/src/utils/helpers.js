@@ -1,5 +1,4 @@
 // Utilidades y helpers para la aplicación
-import { formatearFecha, formatearHora, formatearFechaRelativa } from './formateoFechas'
 
 /**
  * Valida un email
@@ -137,5 +136,3 @@ export function obtenerUrlAvatar(email) {
   const emailLower = (email || '').toLowerCase().trim()
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(emailLower)}&background=667eea&color=fff`
 }
-
-export { formatearFecha, formatearHora, formatearFechaRelativa }

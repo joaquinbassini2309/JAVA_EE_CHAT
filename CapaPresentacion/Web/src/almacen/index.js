@@ -5,7 +5,7 @@ import { ref, computed } from 'vue'
 export const useAlmacen = defineStore('principal', () => {
   // ===== ESTADO =====
 
-  const usuario = ref(null) // Corregido: Nombre consistente
+  const usuario = ref(null)
   const token = ref(null)
   const conversaciones = ref([])
   const conversacionActual = ref(null)
@@ -25,17 +25,10 @@ export const useAlmacen = defineStore('principal', () => {
     })
   })
 
-  const usuariosEnLinea = computed(() => {
-    return conversaciones.value
-      .flatMap(c => c.participantes || [])
-      .filter(u => u.estado === 'ONLINE')
-  })
-
   // ===== ACCIONES =====
 
   function establecerUsuario(nuevoUsuario) {
     usuario.value = nuevoUsuario
-    // Corregido: Guardar en localStorage para persistencia
     if (nuevoUsuario) {
       localStorage.setItem('usuario', JSON.stringify(nuevoUsuario))
     } else {
@@ -68,44 +61,20 @@ export const useAlmacen = defineStore('principal', () => {
   }
 
   function agregarMensaje(nuevoMensaje) {
+    // Lógica mejorada del compañero
     mensajes.value = [...mensajes.value, nuevoMensaje]
     
-    // Actualizar el último mensaje en la lista de conversaciones
     const index = conversaciones.value.findIndex(c => c.id === nuevoMensaje.conversacionId)
     if (index !== -1) {
       const conv = conversaciones.value[index]
       conv.ultimoMensaje = nuevoMensaje.contenido
       conv.fechaUltimoMensaje = nuevoMensaje.fechaEnvio
-      // Forzar actualización de la lista
       conversaciones.value = [...conversaciones.value]
     }
   }
 
   function agregarConversacion(conversacion) {
     conversaciones.value.unshift(conversacion)
-  }
-
-  function actualizarEstadoUsuario(idUsuario, nuevoEstado) {
-    conversaciones.value.forEach(conv => {
-      if (conv.participantes) {
-        const participante = conv.participantes.find(p => p.id === idUsuario)
-        if (participante) {
-          participante.estado = nuevoEstado
-        }
-      }
-    })
-  }
-
-  function establecerCargando(valor) {
-    cargando.value = valor
-  }
-
-  function establecerError(mensaje) {
-    error.value = mensaje
-  }
-
-  function limpiarError() {
-    error.value = null
   }
 
   function cerrarSesion() {
@@ -136,21 +105,15 @@ export const useAlmacen = defineStore('principal', () => {
   }
 
   return {
-    // Estado
-    usuario, // Corregido
+    usuario,
     token,
     conversaciones,
     conversacionActual,
     mensajes,
     cargando,
     error,
-
-    // Getters
     estaAutenticado,
     conversacionesOrdenadas,
-    usuariosEnLinea,
-
-    // Acciones
     establecerUsuario,
     establecerToken,
     establecerConversaciones,
@@ -158,10 +121,6 @@ export const useAlmacen = defineStore('principal', () => {
     establecerMensajes,
     agregarMensaje,
     agregarConversacion,
-    actualizarEstadoUsuario,
-    establecerCargando,
-    establecerError,
-    limpiarError,
     cerrarSesion,
     cargarDelAlmacenamientoLocal
   }

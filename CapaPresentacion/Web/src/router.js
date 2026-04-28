@@ -1,8 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginVista from './vistas/LoginVista.vue'
 import ChatVista from './vistas/ChatVista.vue'
-import RegistroVista from './vistas/RegistroVista.vue' // Importar la nueva vista
-import { useAlmacen } from './almacen'
+import RegistroVista from './vistas/RegistroVista.vue'
 
 const routes = [
   {
@@ -15,35 +14,21 @@ const routes = [
     component: LoginVista
   },
   {
-    path: '/registro', // Añadir la nueva ruta
-    name: 'Registro',
-    component: RegistroVista
-  },
-  {
     path: '/chat',
     name: 'Chat',
-    component: ChatVista,
-    meta: { requiresAuth: true }
+    component: ChatVista
+    // La protección de ruta se ha movido a la propia vista
+  },
+  {
+    path: '/registro',
+    name: 'Registro',
+    component: RegistroVista
   }
 ]
 
 const router = createRouter({
   history: createWebHistory('/chat-empresarial/'),
   routes
-})
-
-router.beforeEach((to, from, next) => {
-  const almacen = useAlmacen()
-  const estaAutenticado = almacen.token
-
-  if (to.meta.requiresAuth && !estaAutenticado) {
-    next('/login')
-  } else if ((to.path === '/login' || to.path === '/registro') && estaAutenticado) {
-    // Si el usuario está autenticado, no debe poder acceder a login/registro
-    next('/chat')
-  } else {
-    next()
-  }
 })
 
 export default router

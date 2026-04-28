@@ -58,16 +58,6 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
                     exception.getMessage(),
                     tipoError
             );
-        } else if (exception instanceof jakarta.ws.rs.WebApplicationException) {
-            jakarta.ws.rs.WebApplicationException wae = (jakarta.ws.rs.WebApplicationException) exception;
-            status = wae.getResponse().getStatus();
-            tipoError = "HTTP_ERROR";
-            errorResponse = new ErrorResponse(
-                    status,
-                    "Error de protocolo HTTP",
-                    wae.getMessage(),
-                    tipoError
-            );
         } else {
             // Error genérico
             errorResponse = new ErrorResponse(

@@ -3,7 +3,6 @@ import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 export default defineConfig({
-  // Añadido: La ruta base pública cuando se despliega en producción
   base: '/chat-empresarial/',
 
   plugins: [vue()],
@@ -25,7 +24,8 @@ export default defineConfig({
   },
   build: {
     outDir: '../../CapaServicio/src/main/webapp', 
-    emptyOutDir: true,
+    // Cambiado a false para evitar que se borre el web.xml
+    emptyOutDir: false,
     sourcemap: false,
     rollupOptions: {
       output: {

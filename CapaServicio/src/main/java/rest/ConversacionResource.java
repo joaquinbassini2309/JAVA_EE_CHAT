@@ -22,11 +22,10 @@ import java.util.stream.Collectors;
 
 @Path("/conversaciones")
 @RequestScoped
-@Transactional
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Secured 
-@Transactional // <-- AÑADIDO: Transacción a nivel de recurso
+@Transactional
 public class ConversacionResource {
 
     @Inject
