@@ -10,8 +10,8 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useAlmacen } from '@/stores'
-import { formatearFecha } from '@/utils/formateoFechas'
+import { useAlmacen } from '@/almacenes/almacen'
+import { formatearFecha } from '@/utilidades/formateoFechas'
 
 const props = defineProps({
   mensaje: {

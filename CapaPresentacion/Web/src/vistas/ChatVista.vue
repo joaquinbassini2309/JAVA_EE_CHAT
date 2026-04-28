@@ -16,10 +16,10 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAlmacen } from '@/stores'
-import { servicioApi } from '@/services/api'
-import Chat from '@/components/Chat.vue'
-import ListaConversaciones from '@/components/ListaConversaciones.vue'
+import { useAlmacen } from '@/almacenes/almacen'
+import { servicioApi } from '@/servicios/api'
+import Chat from '@/componentes/Chat.vue'
+import ListaConversaciones from '@/componentes/ListaConversaciones.vue'
 
 const router = useRouter()
 const almacen = useAlmacen()

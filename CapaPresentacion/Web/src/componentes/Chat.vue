@@ -34,8 +34,8 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { useAlmacen } from '@/stores'
-import { servicioApi } from '@/services/api'
+import { useAlmacen } from '@/almacenes/almacen'
+import { servicioApi } from '@/servicios/api'
 import Mensaje from './Mensaje.vue'
 
 const almacen = useAlmacen()

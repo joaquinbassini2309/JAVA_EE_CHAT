@@ -13,7 +13,7 @@ import {
   mdiPaperclip,
   mdiSend,
 } from '@mdi/js'
-import { defaultThemeName, temaProyecto } from '@/config/temaProyecto.js'
+import { defaultThemeName, temaProyecto } from '@/configuracion/temaProyecto.js'
 
 const iconos = {
   defaultSet: 'mdi',

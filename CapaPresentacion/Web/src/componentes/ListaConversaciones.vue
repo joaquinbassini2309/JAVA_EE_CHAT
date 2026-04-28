@@ -87,8 +87,8 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useAlmacen } from '@/stores'
-import { servicioApi } from '@/services/api'
+import { useAlmacen } from '@/almacenes/almacen'
+import { servicioApi } from '@/servicios/api'
 
 const almacen = useAlmacen()
 const termino = ref('')

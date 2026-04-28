@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LoginVista from '../views/LoginVista.vue'
-import ChatVista from '../views/ChatVista.vue'
-import RegistroVista from '../views/RegistroVista.vue'
+import LoginVista from '../vistas/LoginVista.vue'
+import ChatVista from '../vistas/ChatVista.vue'
+import RegistroVista from '../vistas/RegistroVista.vue'
 
 const routes = [
   {

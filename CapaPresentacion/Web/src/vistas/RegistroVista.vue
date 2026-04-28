@@ -70,7 +70,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { servicioApi } from '@/services/api'
+import { servicioApi } from '@/servicios/api'
 
 const router = useRouter()
 

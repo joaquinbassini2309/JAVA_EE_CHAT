@@ -57,8 +57,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAlmacen } from '@/stores'
-import { servicioApi } from '@/services/api'
+import { useAlmacen } from '@/almacenes/almacen'
+import { servicioApi } from '@/servicios/api'
 
 const router = useRouter()
 const almacen = useAlmacen()

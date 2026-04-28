@@ -34,7 +34,7 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        additionalData: '@import "@/assets/estilos.scss";'
+        additionalData: '@import "@/recursos/estilos.scss";'
       }
     }
   }
