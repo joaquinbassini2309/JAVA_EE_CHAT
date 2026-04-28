@@ -1,6 +1,7 @@
 package seguridad;
 
 import jakarta.annotation.Priority;
+import jakarta.enterprise.inject.spi.CDI;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -30,6 +31,18 @@ public class JWTFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
+        if (jwtUtil == null) {
+            try {
+                jwtUtil = CDI.current().select(JWTUtil.class).get();
+            } catch (Exception ignored) {
+                requestContext.abortWith(
+                        Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                .entity(new ErrorMessage("JWT service unavailable"))
+                                .build());
+                return;
+            }
+        }
+
         String authHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
         // Si no hay header Authorization, abortar (porque este filtro solo corre en endpoints seguros)

@@ -1,6 +1,7 @@
 package exceptions;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -12,13 +13,13 @@ public class ErrorResponse {
     private String mensaje;
     private String detalle;
     private List<String> errores;
-    private LocalDateTime timestamp;
+    private String timestamp;
     private String path;
     private String tipoError;
 
     // Constructores
     public ErrorResponse() {
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
     }
 
     public ErrorResponse(int status, String mensaje) {
@@ -82,11 +83,11 @@ public class ErrorResponse {
         this.errores = errores;
     }
 
-    public LocalDateTime getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 

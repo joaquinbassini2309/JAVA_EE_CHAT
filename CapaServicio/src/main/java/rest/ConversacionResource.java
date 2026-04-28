@@ -9,7 +9,6 @@ import seguridad.Secured;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional; // Importar
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -17,15 +16,16 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.transaction.Transactional;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Path("/conversaciones")
 @RequestScoped
+@Transactional
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Secured 
-@Transactional
+@Secured
 public class ConversacionResource {
 
     @Inject
@@ -67,22 +67,33 @@ public class ConversacionResource {
                     .entity(new ErrorResponse(400, "Request body is required")).build();
         }
 
-        // Conversacion privada: Se espera exactamente 1 participante adicional
-        if (dto.getTipo() == chat.Enum.TipoConversacion.PRIVADA) {
-            List<Long> participantes = dto.getParticipanteIds();
+        List<Long> participantes = dto.getParticipanteIds();
+        int cantidadParticipantes = participantes == null ? 0 : participantes.size();
+        boolean parecePrivada = dto.getTipo() == chat.Enum.TipoConversacion.PRIVADA
+                || (dto.getTipo() == null && cantidadParticipantes == 1);
 
-            if (participantes == null || participantes.size() != 1) {
+        // Conversacion privada: exactamente 1 participante adicional
+        if (parecePrivada) {
+            if (cantidadParticipantes != 1) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity(new ErrorResponse(400, "For private chat provide exactly 1 participant")).build();
             }
             Long otroId = participantes.getFirst();
+            if (otroId == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new ErrorResponse(400, "participant id is required")).build();
+            }
             chat.clases.Conversacion creada = sistema.iniciarChatPrivado(userId, otroId);
             DtConversacion res = DtConversacion.from(creada);
             return Response.status(Response.Status.CREATED).entity(res).build();
         }
 
         // Conversacion Grupo
-        List<Long> miembros = dto.getParticipanteIds() == null ? List.of() : dto.getParticipanteIds();
+        List<Long> miembros = participantes == null ? List.of() : participantes;
+        if (dto.getNombre() == null || dto.getNombre().isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(400, "Group name is required")).build();
+        }
         chat.clases.Conversacion creada = sistema.crearGrupo(dto.getNombre(), userId, miembros);
         DtConversacion res = DtConversacion.from(creada);
 
@@ -92,7 +103,7 @@ public class ConversacionResource {
     @GET
     @Path("/{id}")
     public Response getConversacion(@PathParam("id") Long id,
-                                    @Context SecurityContext securityContext) {
+            @Context SecurityContext securityContext) {
         Long userId = authService.getAuthenticatedUserId(securityContext);
 
         if (userId == null) {
@@ -118,7 +129,8 @@ public class ConversacionResource {
 
     @GET
     @Path("/{id}/mensajes")
-    public Response getMensajesConversacion(@PathParam("id") Long id, @QueryParam("limit") @DefaultValue("50") int limit, @Context SecurityContext securityContext) {
+    public Response getMensajesConversacion(@PathParam("id") Long id,
+            @QueryParam("limit") @DefaultValue("50") int limit, @Context SecurityContext securityContext) {
         Long userId = authService.getAuthenticatedUserId(securityContext);
 
         if (userId == null) {
@@ -126,7 +138,9 @@ public class ConversacionResource {
                     .entity(new ErrorResponse(401, "Authentication required")).build();
         }
 
+        System.out.println("DEBUG: getMensajesConversacion - userId: " + userId + ", conversacionId: " + id);
         if (!sistema.usuarioEstaEnConversacion(userId, id)) {
+            System.out.println("DEBUG: Acceso denegado para usuario " + userId + " en conversacion " + id);
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(new ErrorResponse(403, "Access denied to conversation")).build();
         }
@@ -135,5 +149,26 @@ public class ConversacionResource {
         List<DtMensaje> dtos = mensajes.stream().map(DtMensaje::from).collect(Collectors.toList());
 
         return Response.ok(dtos).build();
+    }
+
+    @POST
+    @Path("/{id}/participantes")
+    public Response addParticipant(@PathParam("id") Long id, Map<String, Long> body, @Context SecurityContext securityContext) {
+        Long currentUserId = authService.getAuthenticatedUserId(securityContext);
+        if (currentUserId == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        Long newUserId = body.get("usuarioId");
+        if (newUserId == null) return Response.status(Response.Status.BAD_REQUEST).build();
+
+        try {
+            System.out.println("DEBUG: Añadiendo usuario " + newUserId + " a conversacion " + id + " por admin " + currentUserId);
+            sistema.agregarMiembroAGrupo(id, newUserId, currentUserId);
+            return Response.ok().build();
+        } catch (Exception e) {
+            System.err.println("ERROR al añadir participante: " + e.getMessage());
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(500, "Error adding participant", e.getMessage())).build();
+        }
     }
 }

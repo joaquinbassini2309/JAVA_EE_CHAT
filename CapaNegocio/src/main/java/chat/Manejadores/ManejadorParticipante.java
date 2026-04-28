@@ -61,7 +61,9 @@ public class ManejadorParticipante {
                 Long.class);
         q.setParameter("cid", conversacionId);
         q.setParameter("uid", usuarioId);
-        return q.getSingleResult() > 0;
+        long count = q.getSingleResult();
+        System.out.println("DEBUG: existeParticipante - cid: " + conversacionId + ", uid: " + usuarioId + ", count: " + count);
+        return count > 0;
     }
 
     public Optional<Participante> buscarParticipante(Long conversacionId, Long usuarioId) {

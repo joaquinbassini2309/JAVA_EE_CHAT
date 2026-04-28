@@ -6,7 +6,6 @@ export default defineConfig({
   base: '/chat-empresarial/',
 
   plugins: [vue()],
-  base: './',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')
@@ -24,7 +23,6 @@ export default defineConfig({
   },
   build: {
     outDir: '../../CapaServicio/src/main/webapp', 
-    // Cambiado a false para evitar que se borre el web.xml
     emptyOutDir: false,
     sourcemap: false,
     rollupOptions: {
@@ -38,7 +36,7 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        additionalData: '@import "@/assets/estilos.scss";'
+        additionalData: '@import "@/recursos/estilos.scss";'
       }
     }
   }

@@ -9,6 +9,9 @@ import seguridad.JWTUtil;
 import seguridad.Secured; // Importar la anotación
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -16,6 +19,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import org.mindrot.jbcrypt.BCrypt;
 
+import java.io.StringReader;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -52,19 +56,28 @@ public class UsuarioResource {
     @POST
     @Path("/login")
     // NO @Secured aquí, es público
-    public Response login(DtUsuario.LoginDTO loginDto) {
-        if (loginDto == null || loginDto.getEmail() == null || loginDto.getEmail().isBlank()) {
+    public Response login(String rawBody) {
+        JsonObject body = parseJsonBody(rawBody);
+        if (body == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(400, "Invalid JSON body")).build();
+        }
+
+        String email = getString(body, "email");
+        String password = getString(body, "password");
+
+        if (email == null || email.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(new ErrorResponse(400, "Email is required")).build();
         }
 
-        if (loginDto.getPassword() == null || loginDto.getPassword().isBlank()) {
+        if (password == null || password.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(new ErrorResponse(400, "Password is required")).build();
         }
 
-        return sistema.buscarUsuarioPorEmail(loginDto.getEmail())
-                .filter(usuario -> BCrypt.checkpw(loginDto.getPassword(), usuario.getPasswordHash()))
+        return sistema.buscarUsuarioPorEmail(email)
+                .filter(usuario -> BCrypt.checkpw(password, usuario.getPasswordHash()))
                 .map(usuario -> {
                     String token = generateToken(usuario);
                     DtUsuario.UsuarioResponseDTO usuarioDto = DtUsuario.UsuarioResponseDTO.fromEntity(usuario);
@@ -78,15 +91,21 @@ public class UsuarioResource {
     @POST
     @Path("/register")
     // NO @Secured aquí, es público
-    public Response register(DtUsuario.CrearUsuarioDTO crearDto) {
-        if (crearDto == null) {
+    public Response register(String rawBody) {
+        JsonObject body = parseJsonBody(rawBody);
+        if (body == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(400, "Invalid JSON body")).build();
+        }
+
+        if (body == null || body.isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(new ErrorResponse(400, "Request body is required")).build();
         }
 
-        String username = crearDto.getUsername();
-        String email = crearDto.getEmail();
-        String password = crearDto.getPassword();
+        String username = getString(body, "username");
+        String email = getString(body, "email");
+        String password = getString(body, "password");
 
         if (username == null || username.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -149,5 +168,23 @@ public class UsuarioResource {
 
     private String generateToken(Usuario usuario) {
         return jwtUtil.generarToken(usuario.getId(), usuario.getUsername());
+    }
+
+    private String getString(JsonObject body, String key) {
+        if (body == null || key == null || !body.containsKey(key) || body.isNull(key)) {
+            return null;
+        }
+        return body.getString(key, null);
+    }
+
+    private JsonObject parseJsonBody(String rawBody) {
+        if (rawBody == null || rawBody.isBlank()) {
+            return null;
+        }
+        try (JsonReader reader = Json.createReader(new StringReader(rawBody))) {
+            return reader.readObject();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

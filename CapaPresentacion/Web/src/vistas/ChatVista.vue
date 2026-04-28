@@ -1,88 +1,92 @@
 <template>
-  <v-app class="chat-app-root">
-    <v-main class="chat-main-fill bg-background pa-0">
-      <v-container fluid class="chat-container-fill pa-2 pa-sm-3 pa-md-4">
-        <v-sheet class="chat-shell bg-surface d-flex flex-column flex-grow-1" elevation="0">
-          <v-row no-gutters class="chat-main-row">
-
-            <v-col cols="12" md="4" class="sidebar-col">
-              <ListaConversaciones />
-            </v-col>
-
-            <v-col cols="12" md="8" class="chat-col">
-              <Chat v-if="conversacionActiva" />
-              <div v-else class="d-flex flex-column align-center justify-center h-100">
-                <v-icon size="80" color="accent" class="mb-4">mdi-message-text-outline</v-icon>
-                <p class="heading-14">Selecciona una conversación para empezar</p>
-              </div>
-            </v-col>
-
-          </v-row>
-        </v-sheet>
-      </v-container>
-    </v-main>
-  </v-app>
+  <div class="chat-vista">
+    <div class="contenedor-principal">
+      <ListaConversaciones />
+      <div class="area-derecha">
+        <Chat v-if="conversacionActual" />
+        <div v-else class="sin-conversacion">
+          <div class="logo-placeholder"></div>
+          <p>Selecciona una conversación para empezar</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { onMounted, computed } from 'vue';
-import { useAlmacen } from '@/almacen'; // Corregido
-import { useRouter } from 'vue-router';
-import { servicioApi } from '@/services/api'; // Corregido
-import ListaConversaciones from '@/componentes/ListaConversaciones.vue';
-import Chat from '@/componentes/Chat.vue';
+import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAlmacen } from '@/almacenes/almacen'
+import { servicioApi } from '@/servicios/api'
+import Chat from '@/componentes/Chat.vue'
+import ListaConversaciones from '@/componentes/ListaConversaciones.vue'
 
-const almacen = useAlmacen();
-const router = useRouter();
+const router = useRouter()
+const almacen = useAlmacen()
 
-const conversacionActiva = computed(() => almacen.conversacionActual);
+const conversacionActual = computed(() => almacen.conversacionActual)
 
 onMounted(async () => {
   if (!almacen.estaAutenticado) {
-    router.push('/login');
-    return;
+    router.push('/login')
+    return
   }
+
   try {
-    const conversaciones = await servicioApi.obtenerConversaciones();
-    almacen.establecerConversaciones(conversaciones);
+    almacen.establecerCargando(true)
+    const conversaciones = await servicioApi.obtenerConversaciones()
+    almacen.establecerConversaciones(conversaciones)
   } catch (error) {
-    console.error('Error al cargar conversaciones:', error);
+    console.error('Error al cargar conversaciones:', error)
+  } finally {
+    almacen.establecerCargando(false)
   }
-});
+})
 </script>
 
 <style scoped>
-.chat-app-root, .chat-main-fill, .chat-container-fill, .chat-shell, .chat-main-row {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-.sidebar-col, .chat-col {
-  height: 100%;
+.chat-vista {
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  background-color: #e4f6f9;
+  padding: 10px;
+}
+
+.contenedor-principal {
+  display: flex;
+  flex: 1;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid rgba(64, 109, 115, 0.25);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.area-derecha {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   min-height: 0;
+  background: #f7fcfd;
 }
-.heading-14 {
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.3;
-  letter-spacing: 0.01em;
-  color: rgb(var(--v-theme-accent));
+
+.sin-conversacion {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  background-color: #f7fcfd;
+  color: #406D73;
 }
-@media (max-width: 959px) {
-  .chat-main-row {
-    flex-direction: column;
-    flex-wrap: nowrap;
-  }
-  .sidebar-col {
-    flex: 0 1 auto;
-    max-height: min(48vh, 440px);
-    border-inline-end: none;
-    border-bottom: 1px solid rgba(var(--v-theme-accent), 0.25);
-  }
-  .chat-col {
-    flex: 1 1 auto;
-  }
+
+.logo-placeholder {
+  width: 100px;
+  height: 100px;
+  background-color: #B3EBF2;
+  border-radius: 50%;
+  margin-bottom: 20px;
+  opacity: 0.5;
 }
 </style>

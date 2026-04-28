@@ -139,8 +139,10 @@ public class MensajeResource {
                     .entity(new ErrorResponse(400, "Invalid conversation ID")).build();
         }
 
+        System.out.println("DEBUG: MensajeResource.getMensajesDeConversacion - userId: " + usuarioId + ", conversacionId: " + conversacionId);
         // Validar que el usuario está en la conversación
         if (!sistema.usuarioEstaEnConversacion(usuarioId, conversacionId)) {
+            System.out.println("DEBUG: MensajeResource - Acceso denegado para usuario " + usuarioId + " en conversacion " + conversacionId);
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(new ErrorResponse(403, "You don't have access to this conversation")).build();
         }

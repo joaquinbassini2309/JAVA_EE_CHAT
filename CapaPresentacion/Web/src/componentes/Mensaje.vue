@@ -1,35 +1,96 @@
 <template>
-  <div class="bubble" :class="esPropio ? 'bubble-me' : 'bubble-them'">
-    {{ mensaje.contenido }}
+  <div class="mensaje" :class="{ propio }">
+    <div class="contenedor-mensaje">
+      <span v-if="mostrarNombre" class="nombre-emisor">{{ mensaje.emisorNombre }}</span>
+      <p class="contenido">{{ mensaje.contenido }}</p>
+      <span class="timestamp">{{ formatearFecha(mensaje.fechaEnvio) }}</span>
+    </div>
+    <span v-if="propio && mensaje.leido" class="icono-leido">✓✓</span>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { useAlmacen } from '@/almacen'; // Corregido
+import { computed } from 'vue'
+import { useAlmacen } from '@/almacenes/almacen'
+import { formatearFecha } from '@/utilidades/formateoFechas'
 
 const props = defineProps({
   mensaje: {
     type: Object,
     required: true
   }
-});
+})
 
-const almacen = useAlmacen();
-const usuario = computed(() => almacen.usuario);
+const almacen = useAlmacen()
+const usuarioActual = computed(() => almacen.usuario)
 
-const esPropio = computed(() => {
-  if (!usuario.value || !props.mensaje) {
-    return false;
-  }
-  return props.mensaje.emisorId === usuario.value.id;
-});
+const propio = computed(() => {
+  return props.mensaje.emisorId === usuarioActual.value?.id
+})
+
+const mostrarNombre = computed(() => {
+  return !propio.value && almacen.conversacionActual?.tipo === 'GRUPO'
+})
 </script>
 
 <style scoped>
-/* Tus estilos se mantienen intactos */
-.bubble { border-radius: 14px; padding: 10px 14px; max-width: 78%; font-size: 14px; line-height: 1.45; white-space: pre-wrap; word-wrap: break-word; animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.bubble-them { background: #b2c5c8; color: #2f4a4f; align-self: flex-start; }
-.bubble-me { background: rgba(179, 235, 242, 0.95); border: 1px solid rgba(64, 109, 115, 0.25); color: #2a4d52; align-self: flex-end; }
+.mensaje {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.mensaje.propio {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.contenedor-mensaje {
+  max-width: 75%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background-color: #ced6d9; /* other messages */
+  color: #2f4a4f;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  word-wrap: break-word;
+}
+
+.nombre-emisor {
+  display: block;
+  font-size: 11px;
+  font-weight: bold;
+  color: #406D73;
+  margin-bottom: 2px;
+}
+
+.mensaje.propio .contenedor-mensaje {
+  background-color: #B2C5C8; /* own messages */
+  color: #2f4a4f;
+}
+
+.timestamp {
+  display: block;
+  font-size: 10px;
+  opacity: 0.6;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.icono-leido {
+  font-size: 12px;
+  color: #406D73;
+}
 </style>

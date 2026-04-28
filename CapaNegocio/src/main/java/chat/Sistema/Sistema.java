@@ -59,6 +59,11 @@ public class Sistema implements ISistema {
         if (usuarioHandler().buscarUsuarioPorEmail(email).isPresent()) {
             throw new IllegalArgumentException("El correo electrónico ya se encuentra registrado");
         }
+        
+        // Validar que el nombre de usuario no esté en uso
+        if (usuarioHandler().buscarUsuarioPorUsername(username).isPresent()) {
+            throw new IllegalArgumentException("El nombre de usuario ya está en uso");
+        }
 
         // Hashear password con BCrypt
         String passwordHash = org.mindrot.jbcrypt.BCrypt.hashpw(password, org.mindrot.jbcrypt.BCrypt.gensalt());
@@ -175,14 +180,16 @@ public class Sistema implements ISistema {
         Conversacion grupo = conversacionHandler().crearConversacion(nombre, TipoConversacion.GRUPO);
 
         // Agregar al creador como ADMIN
-        participanteHandler().agregarParticipante(grupo.getId(), creadorId, RolParticipante.ADMIN);
+        Participante pCreador = participanteHandler().agregarParticipante(grupo.getId(), creadorId, RolParticipante.ADMIN);
+        grupo.getParticipantes().add(pCreador);
 
         // Agregar miembros como MIEMBRO
         if (miembrosIds != null) {
             for (Long miembroId : miembrosIds) {
                 if (!miembroId.equals(creadorId)) { // Evitar duplicar al creador
                     try {
-                        participanteHandler().agregarParticipante(grupo.getId(), miembroId, RolParticipante.MIEMBRO);
+                        Participante pMiembro = participanteHandler().agregarParticipante(grupo.getId(), miembroId, RolParticipante.MIEMBRO);
+                        grupo.getParticipantes().add(pMiembro);
                     } catch (Exception e) {
                         // Log y continuar con el siguiente
                         System.err.println("No se pudo agregar miembro " + miembroId + ": " + e.getMessage());

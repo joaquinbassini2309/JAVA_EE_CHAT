@@ -45,9 +45,9 @@ function Check-WildFlyStatus {
         
         # Verificar si la aplicación está desplegada
         try {
-            $appResponse = Invoke-WebRequest -Uri "http://localhost:8080/chat-empresarial/InicioSesion.html" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
+            $appResponse = Invoke-WebRequest -Uri "http://localhost:8080/chat-empresarial/" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
             if ($appResponse.StatusCode -eq 200) {
-                Write-Success "[OK] Aplicacion DESPLEGADA en http://localhost:8080/chat-empresarial/InicioSesion.html"
+                Write-Success "[OK] Aplicacion DESPLEGADA en http://localhost:8080/chat-empresarial/"
             } else {
                 Write-Warning-Custom "[!] La aplicación respondió, pero no con éxito (Código: $($appResponse.StatusCode))"
             }
@@ -212,8 +212,28 @@ function Redeploy-App {
     
     Push-Location $projectRoot
     
-    Write-Info "Compilando con Maven..."
-    & mvn clean install 2>&1 | Tee-Object -Variable mavenOutput
+    $frontendDir = "$projectRoot\CapaPresentacion\Web"
+    if (-not (Test-Path "$frontendDir\package.json")) {
+        Write-Error-Custom "[!] package.json no encontrado en $frontendDir"
+        Pop-Location
+        return
+    }
+
+    Write-Info "Compilando frontend (npm run build)..."
+    Push-Location $frontendDir
+    & npm run build 2>&1 | Tee-Object -Variable frontendBuildOutput
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error-Custom "[!] Error compilando frontend."
+        Pop-Location
+        Pop-Location
+        return
+    }
+    Pop-Location
+    Write-Success "[OK] Frontend compilado."
+
+    Write-Info "Compilando backend y empaquetando WAR con Maven..."
+    & mvn -pl CapaServicio -DskipTests package 2>&1 | Tee-Object -Variable mavenOutput
     
     if ($LASTEXITCODE -ne 0) {
         Write-Error-Custom "[!] Error en la compilación de Maven."
@@ -228,7 +248,17 @@ function Redeploy-App {
     
     if (Test-Path $warFile) {
         Write-Info "Desplegando WAR..."
+
+        # Limpiar marcadores/artefactos de despliegues previos para forzar redeploy real
+        Remove-Item "$deploymentsDir\chat-empresarial.war.deployed" -ErrorAction SilentlyContinue
+        Remove-Item "$deploymentsDir\chat-empresarial.war.failed" -ErrorAction SilentlyContinue
+        Remove-Item "$deploymentsDir\chat-empresarial.war.isdeploying" -ErrorAction SilentlyContinue
+        Remove-Item "$deploymentsDir\chat-empresarial.war.isundeploying" -ErrorAction SilentlyContinue
+        Remove-Item "$deploymentsDir\chat-empresarial.war" -ErrorAction SilentlyContinue
+        Remove-Item "$deploymentsDir\chat-empresarial.war.*" -Recurse -Force -ErrorAction SilentlyContinue
+
         Copy-Item $warFile -Destination $deploymentsDir -Force
+        New-Item -Path "$deploymentsDir\chat-empresarial.war.dodeploy" -ItemType File -Force | Out-Null
         Write-Success "[OK] WAR copiado a la carpeta de despliegue."
         Write-Info "WildFly detectará el cambio y redesplegará la aplicación automáticamente."
         Write-Info "Revisa los logs (Opción 5) para ver el progreso."

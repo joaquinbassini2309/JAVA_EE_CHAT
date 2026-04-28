@@ -23,6 +23,7 @@ public class ManejadorUsuario {
         u.setUsername(username);
         u.setEmail(email);
         u.setPasswordHash(passwordHash);
+        u.setActivo(true); // Asegurar que el usuario esté activo al crearse
         em.persist(u);
         return u;
     }

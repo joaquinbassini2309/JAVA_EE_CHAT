@@ -17,6 +17,14 @@
     <name>Capa de Presentación - Chat Empresarial</name>
     <description>Capa de presentación (frontend) para aplicación de chat empresarial</description>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>chat-empresarial-negocio</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <finalName>chat-empresarial-presentacion</finalName>
         <plugins>

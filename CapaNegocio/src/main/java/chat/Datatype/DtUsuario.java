@@ -4,6 +4,7 @@ import chat.Enum.EstadoUsuario;
 import chat.clases.Usuario;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public final class DtUsuario {
 
@@ -42,7 +43,7 @@ public final class DtUsuario {
         private String email;
         private String fotoUrl;
         private EstadoUsuario estado;
-        private LocalDateTime fechaRegistro;
+        private String fechaRegistro;
 
         public UsuarioResponseDTO() {}
 
@@ -52,7 +53,7 @@ public final class DtUsuario {
                 String email,
                 String fotoUrl,
                 EstadoUsuario estado,
-                LocalDateTime fechaRegistro
+                String fechaRegistro
         ) {
             this.id = id;
             this.username = username;
@@ -71,7 +72,9 @@ public final class DtUsuario {
             dto.email = usuario.getEmail();
             dto.fotoUrl = usuario.getFotoUrl();
             dto.estado = usuario.getEstado();
-            dto.fechaRegistro = usuario.getFechaRegistro();
+            dto.fechaRegistro = usuario.getFechaRegistro() == null
+                    ? null
+                    : usuario.getFechaRegistro().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             return dto;
         }
 
@@ -93,8 +96,8 @@ public final class DtUsuario {
         // Compatibilidad temporal para capas que aún envían String
         public void setEstado(String estado) { this.estado = parseEstado(estado); }
 
-        public LocalDateTime getFechaRegistro() { return fechaRegistro; }
-        public void setFechaRegistro(LocalDateTime fechaRegistro) { this.fechaRegistro = fechaRegistro; }
+        public String getFechaRegistro() { return fechaRegistro; }
+        public void setFechaRegistro(String fechaRegistro) { this.fechaRegistro = fechaRegistro; }
     }
 
     // DTO para actualizar perfil
