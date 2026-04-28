@@ -98,6 +98,13 @@ class ServicioAPI {
     return data
   }
 
+  async añadirParticipante(idConversacion, idUsuario) {
+    const { data } = await this.cliente.post(`/conversaciones/${idConversacion}/participantes`, {
+      usuarioId: idUsuario
+    })
+    return data
+  }
+
   // ========== MENSAJES ==========
 
   async enviarMensaje(nuevoMensaje) {

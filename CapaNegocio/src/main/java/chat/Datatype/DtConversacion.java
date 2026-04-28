@@ -15,6 +15,7 @@ public class DtConversacion {
     private TipoConversacion tipo;
     private LocalDateTime fechaCreacion;
     private List<Long> participanteIds;
+    private List<DtUsuario.UsuarioResponseDTO> participantes;
     private String ultimoMensaje;
     private LocalDateTime fechaUltimoMensaje;
     private Integer noLeidos;
@@ -22,12 +23,13 @@ public class DtConversacion {
     public DtConversacion() {
     }
 
-    public DtConversacion(Long id, String nombre, TipoConversacion tipo, LocalDateTime fechaCreacion, List<Long> participanteIds, String ultimoMensaje, LocalDateTime fechaUltimoMensaje, Integer noLeidos) {
+    public DtConversacion(Long id, String nombre, TipoConversacion tipo, LocalDateTime fechaCreacion, List<Long> participanteIds, List<DtUsuario.UsuarioResponseDTO> participantes, String ultimoMensaje, LocalDateTime fechaUltimoMensaje, Integer noLeidos) {
         this.id = id;
         this.nombre = nombre;
         this.tipo = tipo;
         this.fechaCreacion = fechaCreacion;
         this.participanteIds = participanteIds;
+        this.participantes = participantes;
         this.ultimoMensaje = ultimoMensaje;
         this.fechaUltimoMensaje = fechaUltimoMensaje;
         this.noLeidos = noLeidos;
@@ -39,6 +41,10 @@ public class DtConversacion {
         }
         List<Long> participanteIds = conversacion.getParticipantes().stream()
                 .map(p -> p.getUsuario().getId())
+                .collect(Collectors.toList());
+
+        List<DtUsuario.UsuarioResponseDTO> participantesDtos = conversacion.getParticipantes().stream()
+                .map(p -> DtUsuario.UsuarioResponseDTO.fromEntity(p.getUsuario()))
                 .collect(Collectors.toList());
 
         String ultimoContenido = null;
@@ -61,11 +67,15 @@ public class DtConversacion {
                 conversacion.getTipo(),
                 conversacion.getFechaCreacion(),
                 participanteIds,
+                participantesDtos,
                 ultimoContenido,
                 ultimaFecha,
                 0 // Default no leidos
         );
     }
+
+    public List<DtUsuario.UsuarioResponseDTO> getParticipantes() { return participantes; }
+    public void setParticipantes(List<DtUsuario.UsuarioResponseDTO> participantes) { this.participantes = participantes; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

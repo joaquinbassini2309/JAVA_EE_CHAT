@@ -46,17 +46,30 @@
       </div>
     </div>
 
-    <button class="btn-flotante-nueva" @click="abrirNuevaConversacion">
+    <button class="btn-flotante-nueva" @click="abrirNuevaConversacion" title="Nueva conversación">
       +
     </button>
+    <button class="btn-flotante-grupo" @click="abrirNuevoGrupo" title="Nuevo grupo">
+      👥
+    </button>
 
-    <!-- Modal Nueva Conversación -->
+    <!-- Modal Nueva Conversación / Grupo -->
     <div v-if="mostrarModal" class="modal-overlay" @click.self="cerrarModal">
       <div class="modal-contenido">
         <div class="modal-encabezado">
-          <h3>Nueva Conversación</h3>
+          <h3>{{ esGrupo ? 'Nuevo Grupo' : 'Nueva Conversación' }}</h3>
           <button class="btn-cerrar" @click="cerrarModal">&times;</button>
         </div>
+        
+        <div v-if="esGrupo" class="modal-config-grupo">
+          <input
+            v-model="nombreGrupo"
+            type="text"
+            placeholder="Nombre del grupo..."
+            class="input-nombre-grupo"
+          />
+        </div>
+
         <div class="modal-busqueda">
           <input
             v-model="terminoUsuario"
@@ -64,12 +77,13 @@
             placeholder="Buscar usuario..."
           />
         </div>
+
         <div class="modal-listado">
           <div
             v-for="usuario in usuariosFiltrados"
             :key="usuario.id"
             class="item-usuario"
-            @click="crearChatPrivado(usuario.id)"
+            @click="toggleSeleccion(usuario.id)"
           >
             <div class="avatar-mini">
               {{ usuario.username.charAt(0).toUpperCase() }}
@@ -78,7 +92,16 @@
               <span class="nombre">{{ usuario.username }}</span>
               <span class="email">{{ usuario.email }}</span>
             </div>
+            <div v-if="esGrupo" class="checkbox-seleccion">
+              <input type="checkbox" :checked="seleccionados.includes(usuario.id)" @click.stop />
+            </div>
           </div>
+        </div>
+
+        <div v-if="esGrupo" class="modal-acciones">
+          <button class="btn-crear-grupo" @click="crearGrupo" :disabled="!nombreGrupo || seleccionados.length === 0">
+            Crear Grupo
+          </button>
         </div>
       </div>
     </div>
@@ -86,7 +109,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 
@@ -94,7 +117,11 @@ const almacen = useAlmacen()
 const termino = ref('')
 const terminoUsuario = ref('')
 const mostrarModal = ref(false)
+const esGrupo = ref(false)
+const nombreGrupo = ref('')
+const seleccionados = ref([])
 const usuarios = ref([])
+let intervaloRefresco = null
 
 const usuarioActual = computed(() => almacen.usuarioActual)
 const conversacionesActuales = computed(() => almacen.conversacionesOrdenadas)
@@ -102,9 +129,13 @@ const conversacionActual = computed(() => almacen.conversacionActual)
 
 const conversacionesFiltradas = computed(() => {
   let lista = conversacionesActuales.value
+  console.log('Conversaciones actuales:', lista)
   if (termino.value) {
     const t = termino.value.toLowerCase()
-    lista = lista.filter(c => c.nombre.toLowerCase().includes(t))
+    lista = lista.filter(c => {
+      const nombre = c.nombre || 'Chat'
+      return nombre.toLowerCase().includes(t)
+    })
   }
   return lista
 })
@@ -125,12 +156,57 @@ const seleccionarConversacion = (conversacion) => {
   almacen.establecerConversacionActual(conversacion)
 }
 
+const cargarConversaciones = async () => {
+  try {
+    const convs = await servicioApi.obtenerConversaciones()
+    console.log('Conversaciones obtenidas del servidor:', convs)
+    almacen.establecerConversaciones(convs)
+  } catch (error) {
+    console.error('Error al refrescar conversaciones:', error)
+  }
+}
+
+onMounted(() => {
+  cargarConversaciones()
+  intervaloRefresco = setInterval(cargarConversaciones, 5000)
+})
+
+onUnmounted(() => {
+  if (intervaloRefresco) clearInterval(intervaloRefresco)
+})
+
 const abrirNuevaConversacion = async () => {
   try {
+    esGrupo.value = false
     mostrarModal.value = true
     usuarios.value = await servicioApi.obtenerUsuarios()
   } catch (error) {
     console.error('Error al cargar usuarios:', error)
+  }
+}
+
+const abrirNuevoGrupo = async () => {
+  try {
+    esGrupo.value = true
+    nombreGrupo.value = ''
+    seleccionados.value = []
+    mostrarModal.value = true
+    usuarios.value = await servicioApi.obtenerUsuarios()
+  } catch (error) {
+    console.error('Error al cargar usuarios:', error)
+  }
+}
+
+const toggleSeleccion = (idUsuario) => {
+  if (!esGrupo.value) {
+    crearChatPrivado(idUsuario)
+    return
+  }
+  const index = seleccionados.value.indexOf(idUsuario)
+  if (index === -1) {
+    seleccionados.value.push(idUsuario)
+  } else {
+    seleccionados.value.splice(index, 1)
   }
 }
 
@@ -150,6 +226,18 @@ const crearChatPrivado = async (idUsuario) => {
     console.error('Error al crear conversación:', error)
   }
 }
+
+const crearGrupo = async () => {
+  try {
+    console.log('Creando grupo con seleccionados:', seleccionados.value)
+    const nuevaConv = await servicioApi.crearGrupo(nombreGrupo.value, seleccionados.value)
+    almacen.agregarConversacion(nuevaConv)
+    almacen.establecerConversacionActual(nuevaConv)
+    cerrarModal()
+  } catch (error) {
+    console.error('Error al crear grupo:', error)
+  }
+}
 </script>
 
 <style scoped>
@@ -157,7 +245,7 @@ const crearChatPrivado = async (idUsuario) => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #B3EBF2; /* primary (light cyan) as background in sidebar */
+  background: #B3EBF2;
   width: 320px;
   position: relative;
 }
@@ -297,6 +385,26 @@ const crearChatPrivado = async (idUsuario) => {
   font-size: 24px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   cursor: pointer;
+  z-index: 10;
+}
+
+.btn-flotante-grupo {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #6A9E7D;
+  color: white;
+  border: none;
+  font-size: 24px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .modal-overlay {
@@ -315,8 +423,11 @@ const crearChatPrivado = async (idUsuario) => {
 .modal-contenido {
   background: white;
   width: 400px;
+  max-height: 80vh;
   border-radius: 8px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-encabezado {
@@ -325,6 +436,19 @@ const crearChatPrivado = async (idUsuario) => {
   color: white;
   display: flex;
   justify-content: space-between;
+}
+
+.modal-config-grupo {
+  padding: 16px;
+  background: #f7fcfd;
+  border-bottom: 1px solid #ddd;
+}
+
+.input-nombre-grupo {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #B2C5C8;
+  border-radius: 4px;
 }
 
 .modal-busqueda {
@@ -336,5 +460,48 @@ const crearChatPrivado = async (idUsuario) => {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
+}
+
+.modal-listado {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.item-usuario {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.item-usuario:hover {
+  background-color: #f7fcfd;
+}
+
+.checkbox-seleccion {
+  margin-left: auto;
+}
+
+.modal-acciones {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #eee;
+}
+
+.btn-crear-grupo {
+  background-color: #406D73;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-crear-grupo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

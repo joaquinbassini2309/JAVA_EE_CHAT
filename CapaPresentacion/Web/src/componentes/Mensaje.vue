@@ -1,6 +1,7 @@
 <template>
   <div class="mensaje" :class="{ propio }">
     <div class="contenedor-mensaje">
+      <span v-if="mostrarNombre" class="nombre-emisor">{{ mensaje.emisorNombre }}</span>
       <p class="contenido">{{ mensaje.contenido }}</p>
       <span class="timestamp">{{ formatearFecha(mensaje.fechaEnvio) }}</span>
     </div>
@@ -25,6 +26,10 @@ const usuarioActual = computed(() => almacen.usuarioActual)
 
 const propio = computed(() => {
   return props.mensaje.emisorId === usuarioActual.value?.id
+})
+
+const mostrarNombre = computed(() => {
+  return !propio.value && almacen.conversacionActual?.tipo === 'GRUPO'
 })
 </script>
 
@@ -61,6 +66,14 @@ const propio = computed(() => {
   color: #2f4a4f;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   word-wrap: break-word;
+}
+
+.nombre-emisor {
+  display: block;
+  font-size: 11px;
+  font-weight: bold;
+  color: #406D73;
+  margin-bottom: 2px;
 }
 
 .mensaje.propio .contenedor-mensaje {

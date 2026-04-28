@@ -1,34 +1,65 @@
 <template>
   <div class="componente-chat">
-    <div class="encabezado-chat">
-      <h2>{{ conversacionActual?.nombre || 'Chat' }}</h2>
-      <span class="badge-estado" :class="estadoUsuario">
-        {{ estadoUsuario }}
-      </span>
-    </div>
-
-    <div class="contenedor-mensajes" ref="contenedorMensajes">
-      <div
-        v-for="mensaje in mensajesFiltrados"
-        :key="mensaje.id"
-        class="mensaje"
-        :class="{ 'propio': esPropio(mensaje) }"
-      >
-        <Mensaje :mensaje="mensaje" />
+    <template v-if="!mostrandoInfo">
+      <div class="encabezado-chat">
+        <div class="info-encabezado clickable" @click="mostrandoInfo = true">
+          <h2>{{ conversacionActual?.nombre || 'Chat' }}</h2>
+          <button v-if="esGrupo" class="btn-añadir-miembro" @click.stop="abrirModalAñadir" title="Añadir miembro">
+            +
+          </button>
+        </div>
+        <span class="badge-estado" :class="estadoUsuario">
+          {{ estadoUsuario }}
+        </span>
       </div>
-    </div>
 
-    <div class="entrada-mensaje">
-      <textarea
-        v-model="contenidoNuevo"
-        @keydown.enter="enviarMensaje"
-        placeholder="Escribe un mensaje..."
-        rows="3"
-      ></textarea>
-      <button @click="enviarMensaje" class="btn-enviar">
-        Enviar
-      </button>
-    </div>
+      <!-- Modal Añadir Miembro (se mantiene igual) -->
+      <div v-if="mostrarModalAñadir" class="modal-overlay" @click.self="cerrarModalAñadir">
+        <div class="modal-contenido">
+          <div class="modal-encabezado">
+            <h3>Añadir al Grupo</h3>
+            <button class="btn-cerrar" @click="cerrarModalAñadir">&times;</button>
+          </div>
+          <div class="modal-busqueda">
+            <input v-model="terminoUsuario" type="text" placeholder="Buscar usuario..." />
+          </div>
+          <div class="modal-listado">
+            <div v-for="usuario in usuariosFiltrados" :key="usuario.id" class="item-usuario" @click="añadirMiembro(usuario.id)">
+              <div class="avatar-mini">{{ usuario.username.charAt(0).toUpperCase() }}</div>
+              <div class="info-usuario">
+                <span class="nombre">{{ usuario.username }}</span>
+              </div>
+              <div class="accion-añadir">+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contenedor-mensajes" ref="contenedorMensajes">
+        <div
+          v-for="mensaje in mensajesFiltrados"
+          :key="mensaje.id"
+          class="mensaje"
+          :class="{ 'propio': esPropio(mensaje) }"
+        >
+          <Mensaje :mensaje="mensaje" />
+        </div>
+      </div>
+
+      <div class="entrada-mensaje">
+        <textarea
+          v-model="contenidoNuevo"
+          @keydown.enter="enviarMensaje"
+          placeholder="Escribe un mensaje..."
+          rows="3"
+        ></textarea>
+        <button @click="enviarMensaje" class="btn-enviar">
+          Enviar
+        </button>
+      </div>
+    </template>
+    
+    <InfoGrupo v-else :conversacion="conversacionActual" @volver="mostrandoInfo = false" />
   </div>
 </template>
 
@@ -37,16 +68,32 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 import Mensaje from './Mensaje.vue'
+import InfoGrupo from './InfoGrupo.vue'
 
 const almacen = useAlmacen()
 const contenidoNuevo = ref('')
 const estadoUsuario = ref('ONLINE')
 const ws = ref(null)
 const contenedorMensajes = ref(null)
+const mostrarModalAñadir = ref(false)
+const mostrandoInfo = ref(false)
+const terminoUsuario = ref('')
+const usuariosDisponibles = ref([])
 
 const conversacionActual = computed(() => almacen.conversacionActual)
 const usuarioActual = computed(() => almacen.usuarioActual)
 const mensajes = computed(() => almacen.mensajes)
+const esGrupo = computed(() => conversacionActual.value?.tipo === 'GRUPO')
+
+const usuariosFiltrados = computed(() => {
+  const participantes = conversacionActual.value?.participanteIds || []
+  let lista = usuariosDisponibles.value.filter(u => !participantes.includes(u.id))
+  if (terminoUsuario.value) {
+    const t = terminoUsuario.value.toLowerCase()
+    lista = lista.filter(u => u.username.toLowerCase().includes(t))
+  }
+  return lista
+})
 
 const mensajesFiltrados = computed(() => {
   return mensajes.value
@@ -71,8 +118,39 @@ const cargarMensajes = async () => {
     )
     almacen.establecerMensajes(mensajesObtenidos)
     scrollToBottom()
+    // Marcar como leídos
+    await servicioApi.marcarConversacionLeida(conversacionActual.value.id)
   } catch (error) {
     console.error('Error al cargar mensajes:', error)
+  }
+}
+
+const abrirModalAñadir = async () => {
+  try {
+    usuariosDisponibles.value = await servicioApi.obtenerUsuarios()
+    mostrarModalAñadir.value = true
+  } catch (error) {
+    console.error('Error al cargar usuarios:', error)
+  }
+}
+
+const cerrarModalAñadir = () => {
+  mostrarModalAñadir.value = false
+  terminoUsuario.value = ''
+}
+
+const añadirMiembro = async (idUsuario) => {
+  try {
+    await servicioApi.añadirParticipante(conversacionActual.value.id, idUsuario)
+    
+    // Actualizar localmente para que desaparezca de la lista
+    if (conversacionActual.value.participanteIds) {
+      conversacionActual.value.participanteIds.push(idUsuario)
+    }
+    
+    cerrarModalAñadir()
+  } catch (error) {
+    console.error('Error al añadir miembro:', error)
   }
 }
 
@@ -180,6 +258,110 @@ onUnmounted(() => {
 .encabezado-chat h2 {
   margin: 0;
   font-size: 20px;
+}
+
+.info-encabezado {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.info-encabezado.clickable {
+  cursor: pointer;
+}
+
+.info-encabezado.clickable:hover h2 {
+  text-decoration: underline;
+}
+
+.btn-añadir-miembro {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid white;
+  background: transparent;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-añadir-miembro:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-contenido {
+  background: white;
+  width: 350px;
+  border-radius: 8px;
+  overflow: hidden;
+  color: #2f4a4f;
+}
+
+.modal-encabezado {
+  padding: 12px 16px;
+  background: #406D73;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+}
+
+.btn-cerrar {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.modal-busqueda {
+  padding: 12px;
+}
+
+.modal-busqueda input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #B2C5C8;
+  border-radius: 4px;
+}
+
+.modal-listado {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.item-usuario {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  cursor: pointer;
+  gap: 12px;
+}
+
+.item-usuario:hover {
+  background: #f7fcfd;
+}
+
+.accion-añadir {
+  margin-left: auto;
+  color: #406D73;
+  font-weight: bold;
+  font-size: 18px;
 }
 
 .badge-estado {

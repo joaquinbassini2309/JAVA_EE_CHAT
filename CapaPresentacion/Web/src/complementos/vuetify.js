@@ -12,6 +12,7 @@ import {
   mdiMenu,
   mdiPaperclip,
   mdiSend,
+  mdiAccountGroup,
 } from '@mdi/js'
 import { defaultThemeName, temaProyecto } from '@/configuracion/temaProyecto.js'
 
@@ -27,6 +28,7 @@ const iconos = {
     cerrarSesion: mdiLogout,
     buscar: mdiMagnify,
     añadirContacto: mdiAccountPlus,
+    grupo: mdiAccountGroup,
     adjuntar: mdiPaperclip,
   },
   sets: {
