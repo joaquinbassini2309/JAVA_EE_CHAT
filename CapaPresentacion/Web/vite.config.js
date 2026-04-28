@@ -7,6 +7,7 @@ export default defineConfig({
   base: '/chat-empresarial/',
 
   plugins: [vue()],
+  base: './',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')

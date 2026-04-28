@@ -29,10 +29,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * REST para operaciones CRUD (crear conversación, buscar usuarios)
  * WebSocket SOLO para mensajes en tiempo real y notificaciones
  * 
- * Estados de conexión: Cuando un usuario se conecta por WebSocket, actualiza su EstadoUsuario a ONLINE
+ * Estados de conexión: Cuando un usuario se conecta por WebSocket, actualiza su
+ * EstadoUsuario a ONLINE
  */
 @ApplicationScoped
-@ServerEndpoint(value = "/api/v1/websocket/conversacion/{conversacionId}/usuario/{usuarioId}", configurator = websocket.ChatWebSocketConfigurator.class)
+@ServerEndpoint(value = "/ws/conversacion/{conversacionId}/usuario/{usuarioId}", configurator = websocket.ChatWebSocketConfigurator.class)
 public class ChatWebSocketEndpoint {
 
     @Inject
@@ -41,29 +42,30 @@ public class ChatWebSocketEndpoint {
     @Inject
     private AuthService servicioAutenticacion;
 
-    private static final ObjectMapper mapeador = new ObjectMapper();
+    private static final ObjectMapper mapeador = new ObjectMapper()
+            .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
+            .configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
     // Almacena sesiones activas: clave = "conversacionId:usuarioId"
     private static final Map<String, Set<Session>> sesionesActivas = new ConcurrentHashMap<>();
 
     @OnOpen
     public void alAbrirConexion(Session sesion,
-                                @PathParam("conversacionId") Long idConversacion,
-                                @PathParam("usuarioId") Long idUsuario) {
+            @PathParam("conversacionId") Long idConversacion,
+            @PathParam("usuarioId") Long idUsuario) {
         try {
-            // 1. Obtener token de los parámetros de la sesión (inyectado por el configurator)
+            // Validar token JWT (desde header o query param)
             String token = (String) sesion.getUserProperties().get("token");
+            if (token == null && sesion.getRequestParameterMap().containsKey("token")) {
+                token = sesion.getRequestParameterMap().get("token").get(0);
+            }
 
-            // 2. Validar el token y extraer el ID de usuario del token
-            Long idUsuarioDelToken = servicioAutenticacion.validarTokenYExtraerIdUsuario(token);
-
-            // 3. Verificar que el token es válido Y que el ID del token coincide con el ID de la URL
-            if (idUsuarioDelToken == null || !idUsuarioDelToken.equals(idUsuario)) {
+            if (token == null || !servicioAutenticacion.esTokenValido(token)) {
                 sesion.close();
                 return;
             }
 
-            // 4. Verificar que el usuario existe y pertenece a la conversación
+            // Verificar que el usuario existe y está en la conversación
             if (!sistema.usuarioEstaEnConversacion(idUsuario, idConversacion)) {
                 sesion.close();
                 return;
@@ -86,8 +88,8 @@ public class ChatWebSocketEndpoint {
 
     @OnMessage
     public void alRecibirMensaje(String datosJson, Session sesion,
-                                 @PathParam("conversacionId") Long idConversacion,
-                                 @PathParam("usuarioId") Long idUsuario) {
+            @PathParam("conversacionId") Long idConversacion,
+            @PathParam("usuarioId") Long idUsuario) {
         try {
             // Parsear DTO del mensaje
             MensajeWebSocketDTO mensajeDTO = mapeador.readValue(datosJson, MensajeWebSocketDTO.class);
@@ -109,8 +111,7 @@ public class ChatWebSocketEndpoint {
                     idUsuario,
                     mensajeDTO.getContenido(),
                     mensajeDTO.obtenerTipoMensaje(),
-                    mensajeDTO.getUrlAdjunto()
-            );
+                    mensajeDTO.getUrlAdjunto());
 
             // Convertir a DTO para broadcast
             DtMensaje dtMensaje = DtMensaje.from(mensajeGuardado);
@@ -125,22 +126,22 @@ public class ChatWebSocketEndpoint {
 
     @OnClose
     public void alCerrarConexion(Session sesion,
-                                @PathParam("conversacionId") Long idConversacion,
-                                @PathParam("usuarioId") Long idUsuario) {
+            @PathParam("conversacionId") Long idConversacion,
+            @PathParam("usuarioId") Long idUsuario) {
         try {
             String claveSesion = idConversacion + ":" + idUsuario;
             Set<Session> sesiones = sesionesActivas.get(claveSesion);
-            
+
             if (sesiones != null) {
                 sesiones.remove(sesion);
                 if (sesiones.isEmpty()) {
                     sesionesActivas.remove(claveSesion);
-                    
+
                     // Si no hay más sesiones del usuario, actualizar estado a OFFLINE
                     if (!tieneOtrasSesionesActivas(idUsuario)) {
                         sistema.actualizarEstadoUsuario(idUsuario, EstadoUsuario.OFFLINE);
                     }
-                    
+
                     // Notificar desconexión
                     notificarConexionDesconexion(idConversacion, idUsuario, false);
                 }
@@ -175,8 +176,7 @@ public class ChatWebSocketEndpoint {
 
             String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta(
                     conectado ? "usuarioConectado" : "usuarioDesconectado",
-                    notificacion
-            ));
+                    notificacion));
 
             difundir(idConversacion, datosJson);
         } catch (JsonProcessingException e) {
@@ -221,7 +221,8 @@ public class ChatWebSocketEndpoint {
         return sesionesActivas.entrySet().stream()
                 .anyMatch(entrada -> {
                     String[] partes = entrada.getKey().split(":");
-                    return partes.length == 2 && Long.parseLong(partes[1]) == idUsuario && !entrada.getValue().isEmpty();
+                    return partes.length == 2 && Long.parseLong(partes[1]) == idUsuario
+                            && !entrada.getValue().isEmpty();
                 });
     }
 
@@ -233,17 +234,33 @@ public class ChatWebSocketEndpoint {
         private String tipoMensaje;
         private String urlAdjunto;
 
-        public String getContenido() { return contenido; }
-        public void setContenido(String contenido) { this.contenido = contenido; }
+        public String getContenido() {
+            return contenido;
+        }
 
-        public String getTipoMensaje() { return tipoMensaje; }
-        public void setTipoMensaje(String tipoMensaje) { this.tipoMensaje = tipoMensaje; }
+        public void setContenido(String contenido) {
+            this.contenido = contenido;
+        }
 
-        public String getUrlAdjunto() { return urlAdjunto; }
-        public void setUrlAdjunto(String urlAdjunto) { this.urlAdjunto = urlAdjunto; }
+        public String getTipoMensaje() {
+            return tipoMensaje;
+        }
+
+        public void setTipoMensaje(String tipoMensaje) {
+            this.tipoMensaje = tipoMensaje;
+        }
+
+        public String getUrlAdjunto() {
+            return urlAdjunto;
+        }
+
+        public void setUrlAdjunto(String urlAdjunto) {
+            this.urlAdjunto = urlAdjunto;
+        }
 
         public chat.Enum.TipoMensaje obtenerTipoMensaje() {
-            if (tipoMensaje == null) return chat.Enum.TipoMensaje.TEXTO;
+            if (tipoMensaje == null)
+                return chat.Enum.TipoMensaje.TEXTO;
             try {
                 return chat.Enum.TipoMensaje.valueOf(tipoMensaje.toUpperCase());
             } catch (IllegalArgumentException e) {
@@ -264,7 +281,12 @@ public class ChatWebSocketEndpoint {
             this.datos = datos;
         }
 
-        public String getTipo() { return tipo; }
-        public Object getDatos() { return datos; }
+        public String getTipo() {
+            return tipo;
+        }
+
+        public Object getDatos() {
+            return datos;
+        }
     }
 }
