@@ -13,9 +13,8 @@
         <div class="profile-title-row">
           <span class="profile-name text-truncate">{{ usuarioActual?.username }}</span>
           <div class="acciones-perfil">
-            <!-- DESPUÉS -->
-            <v-btn icon="grupo" variant="text" color="accent" size="small" density="comfortable" @click="abrirNuevoGrupo" title="Nuevo grupo" />
-            <v-btn icon="añadirContacto" variant="text" color="accent" size="small" density="comfortable" @click="abrirNuevaConversacion" title="Nueva conversación" />
+            <v-btn icon="mdi-account-multiple-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirNuevoGrupo" title="Nuevo grupo" />
+            <v-btn icon="mdi-plus-circle" variant="flat" color="accent" size="small" density="comfortable" @click="abrirNuevaConversacion" title="Nueva conversación" />
           </div>
         </div>
         <div class="profile-subtitle">En línea</div>
@@ -71,7 +70,7 @@
         <v-card-title class="modal-titulo">
           {{ esGrupo ? 'Nuevo Grupo' : 'Nueva Conversación' }}
           <v-spacer />
-          <v-btn icon="cerrar" variant="text" size="small" @click="cerrarModal" />
+          <v-btn icon="cerrar" variant="text" size="small" color="white" @click="cerrarModal" />
         </v-card-title>
 
         <v-card-text class="pa-0">
@@ -118,6 +117,7 @@
               variant="flat"
               rounded="lg"
               :disabled="!nombreGrupo || seleccionados.length === 0"
+              prepend-icon="mdi-check-circle"
               @click="crearGrupo"
           >
             Crear Grupo
@@ -224,6 +224,19 @@ const crearChatPrivado = async (idUsuario) => {
     const existe = almacen.conversaciones.find(c => c.id === nuevaConv.id)
     if (!existe) almacen.agregarConversacion(nuevaConv)
     almacen.establecerConversacionActual(nuevaConv)
+    
+    // Enviar mensaje automático de cifrado
+    try {
+      const mensajeAutomatico = await servicioApi.enviarMensaje({
+        conversacionId: nuevaConv.id,
+        contenido: 'Los mensajes están cifrados de extremo a extremo',
+        tipoMensaje: 'TEXTO'
+      })
+      almacen.agregarMensaje(mensajeAutomatico)
+    } catch (error) {
+      console.error('Error al enviar mensaje automático:', error)
+    }
+    
     cerrarModal()
   } catch (error) {
     console.error('Error al crear conversación:', error)
@@ -235,6 +248,19 @@ const crearGrupo = async () => {
     const nuevaConv = await servicioApi.crearGrupo(nombreGrupo.value, seleccionados.value)
     almacen.agregarConversacion(nuevaConv)
     almacen.establecerConversacionActual(nuevaConv)
+    
+    // Enviar mensaje automático de bienvenida
+    try {
+      const mensajeAutomatico = await servicioApi.enviarMensaje({
+        conversacionId: nuevaConv.id,
+        contenido: 'Bienvenido al grupo',
+        tipoMensaje: 'TEXTO'
+      })
+      almacen.agregarMensaje(mensajeAutomatico)
+    } catch (error) {
+      console.error('Error al enviar mensaje automático:', error)
+    }
+    
     cerrarModal()
   } catch (error) {
     console.error('Error al crear grupo:', error)

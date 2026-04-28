@@ -16,6 +16,8 @@ import {
   mdiAccountGroup,
   mdiArrowLeft,
   mdiCogOutline,
+  mdiPlus,
+  mdiCheck,
 } from '@mdi/js'
 import { defaultThemeName, temaProyecto } from '@/configuracion/temaProyecto.js'
 
@@ -35,6 +37,8 @@ const iconos = {
     adjuntar: mdiPaperclip,
     volver: mdiArrowLeft,
     opciones: mdiCogOutline,
+    crear: mdiPlus,
+    confirmar: mdiCheck,
   },
   sets: {
     mdi,
