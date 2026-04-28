@@ -1,6 +1,7 @@
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { mdi } from 'vuetify/iconsets/mdi-svg'
 import {
   mdiAccount,
   mdiAccountPlus,
@@ -13,6 +14,8 @@ import {
   mdiPaperclip,
   mdiSend,
   mdiAccountGroup,
+  mdiArrowLeft,
+  mdiCogOutline,
 } from '@mdi/js'
 import { defaultThemeName, temaProyecto } from '@/configuracion/temaProyecto.js'
 
@@ -30,19 +33,11 @@ const iconos = {
     añadirContacto: mdiAccountPlus,
     grupo: mdiAccountGroup,
     adjuntar: mdiPaperclip,
+    volver: mdiArrowLeft,
+    opciones: mdiCogOutline,
   },
   sets: {
-    mdi: {
-      component: (props) => ({
-        template: `<svg style="width:24px;height:24px" viewBox="0 0 24 24"><path :d="path" /></svg>`,
-        props: {
-          icon: { type: String, required: true },
-        },
-        setup(iconProps) {
-          return { path: iconProps.icon }
-        },
-      }),
-    },
+    mdi,
   },
 }
 

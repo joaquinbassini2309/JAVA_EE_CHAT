@@ -1,42 +1,58 @@
 <template>
   <div class="lista-conversaciones">
-    <!-- Panel Usuario -->
+
+    <!-- Panel usuario con banner + avatar cuadrado -->
     <div class="panel-usuario">
-      <div class="avatar-grande">
-        {{ usuarioActual?.username?.charAt(0).toUpperCase() }}
-      </div>
-      <div class="info-perfil">
-        <span class="nombre">{{ usuarioActual?.username }}</span>
-        <span class="estado">En línea</span>
+      <div class="profile-banner profile-banner--default" />
+      <div class="profile-lower">
+        <div class="profile-avatar-wrap">
+          <div class="avatar-cuadrado">
+            {{ usuarioActual?.username?.charAt(0).toUpperCase() }}
+          </div>
+        </div>
+        <div class="profile-title-row">
+          <span class="profile-name text-truncate">{{ usuarioActual?.username }}</span>
+          <div class="acciones-perfil">
+            <!-- DESPUÉS -->
+            <v-btn icon="grupo" variant="text" color="accent" size="small" density="comfortable" @click="abrirNuevoGrupo" title="Nuevo grupo" />
+            <v-btn icon="añadirContacto" variant="text" color="accent" size="small" density="comfortable" @click="abrirNuevaConversacion" title="Nueva conversación" />
+          </div>
+        </div>
+        <div class="profile-subtitle">En línea</div>
+
+        <!-- Buscador -->
+        <div class="campo-busqueda">
+          <v-icon size="16" color="#406D73" style="opacity:0.6">buscar</v-icon>
+          <input v-model="termino" type="text" placeholder="Buscar contactos" />
+        </div>
       </div>
     </div>
 
-    <!-- Buscador -->
-    <div class="campo-busqueda">
-      <div class="input-contenedor">
-        <span class="lupa">🔍</span>
-        <input
-          v-model="termino"
-          type="text"
-          placeholder="Buscar contactos"
-        />
-      </div>
+    <!-- Tabs Ver canales / Lista de tareas -->
+    <div class="tabs-row">
+      <button class="tab-btn" :class="{ activo: tabActivo === 'canales' }" @click="tabActivo = 'canales'">
+        Ver canales de aviso
+      </button>
+      <button class="tab-btn" :class="{ activo: tabActivo === 'tareas' }" @click="tabActivo = 'tareas'">
+        Lista de tareas
+      </button>
     </div>
 
+    <!-- Subheader lista -->
     <div class="seccion-titulo">
-      CONVERSACIONES
+      LISTA DE USUARIO Y MIEMBROS PARA HABLAR
     </div>
 
-    <!-- Listado -->
+    <!-- Listado conversaciones -->
     <div class="listado">
       <div
-        v-for="conversacion in conversacionesFiltradas"
-        :key="conversacion.id"
-        class="item-conversacion"
-        :class="{ activa: esActiva(conversacion) }"
-        @click="seleccionarConversacion(conversacion)"
+          v-for="conversacion in conversacionesFiltradas"
+          :key="conversacion.id"
+          class="item-conversacion"
+          :class="{ activa: esActiva(conversacion) }"
+          @click="seleccionarConversacion(conversacion)"
       >
-        <div class="avatar-mini">
+        <div class="avatar-mini-lista">
           {{ conversacion.nombre.charAt(0).toUpperCase() }}
         </div>
         <div class="info-conversacion">
@@ -44,67 +60,71 @@
           <span class="ultimo-msg">{{ conversacion.ultimoMensaje || '...' }}</span>
         </div>
       </div>
-    </div>
-
-    <button class="btn-flotante-nueva" @click="abrirNuevaConversacion" title="Nueva conversación">
-      +
-    </button>
-    <button class="btn-flotante-grupo" @click="abrirNuevoGrupo" title="Nuevo grupo">
-      👥
-    </button>
-
-    <!-- Modal Nueva Conversación / Grupo -->
-    <div v-if="mostrarModal" class="modal-overlay" @click.self="cerrarModal">
-      <div class="modal-contenido">
-        <div class="modal-encabezado">
-          <h3>{{ esGrupo ? 'Nuevo Grupo' : 'Nueva Conversación' }}</h3>
-          <button class="btn-cerrar" @click="cerrarModal">&times;</button>
-        </div>
-        
-        <div v-if="esGrupo" class="modal-config-grupo">
-          <input
-            v-model="nombreGrupo"
-            type="text"
-            placeholder="Nombre del grupo..."
-            class="input-nombre-grupo"
-          />
-        </div>
-
-        <div class="modal-busqueda">
-          <input
-            v-model="terminoUsuario"
-            type="text"
-            placeholder="Buscar usuario..."
-          />
-        </div>
-
-        <div class="modal-listado">
-          <div
-            v-for="usuario in usuariosFiltrados"
-            :key="usuario.id"
-            class="item-usuario"
-            @click="toggleSeleccion(usuario.id)"
-          >
-            <div class="avatar-mini">
-              {{ usuario.username.charAt(0).toUpperCase() }}
-            </div>
-            <div class="info-usuario">
-              <span class="nombre">{{ usuario.username }}</span>
-              <span class="email">{{ usuario.email }}</span>
-            </div>
-            <div v-if="esGrupo" class="checkbox-seleccion">
-              <input type="checkbox" :checked="seleccionados.includes(usuario.id)" @click.stop />
-            </div>
-          </div>
-        </div>
-
-        <div v-if="esGrupo" class="modal-acciones">
-          <button class="btn-crear-grupo" @click="crearGrupo" :disabled="!nombreGrupo || seleccionados.length === 0">
-            Crear Grupo
-          </button>
-        </div>
+      <div v-if="conversacionesFiltradas.length === 0" class="sin-resultados">
+        Sin conversaciones
       </div>
     </div>
+
+    <!-- Modal Nueva Conversación / Grupo -->
+    <v-dialog v-model="mostrarModal" max-width="420">
+      <v-card rounded="lg">
+        <v-card-title class="modal-titulo">
+          {{ esGrupo ? 'Nuevo Grupo' : 'Nueva Conversación' }}
+          <v-spacer />
+          <v-btn icon="cerrar" variant="text" size="small" @click="cerrarModal" />
+        </v-card-title>
+
+        <v-card-text class="pa-0">
+          <div v-if="esGrupo" class="modal-seccion">
+            <input
+                v-model="nombreGrupo"
+                type="text"
+                placeholder="Nombre del grupo..."
+                class="input-modal"
+            />
+          </div>
+          <div class="modal-busqueda-input">
+            <v-icon size="16" color="#406D73" style="opacity:0.6">buscar</v-icon>
+            <input v-model="terminoUsuario" type="text" placeholder="Buscar usuario..." />
+          </div>
+          <div class="modal-listado">
+            <div
+                v-for="usuario in usuariosFiltrados"
+                :key="usuario.id"
+                class="item-usuario-modal"
+                @click="toggleSeleccion(usuario.id)"
+            >
+              <div class="avatar-mini-modal">{{ usuario.username.charAt(0).toUpperCase() }}</div>
+              <div class="info-usuario-modal">
+                <span class="nombre">{{ usuario.username }}</span>
+                <span class="email">{{ usuario.email }}</span>
+              </div>
+              <v-checkbox
+                  v-if="esGrupo"
+                  :model-value="seleccionados.includes(usuario.id)"
+                  color="accent"
+                  hide-details
+                  density="compact"
+                  @click.stop
+              />
+            </div>
+          </div>
+        </v-card-text>
+
+        <v-card-actions v-if="esGrupo" class="pa-4 pt-2">
+          <v-spacer />
+          <v-btn
+              color="accent"
+              variant="flat"
+              rounded="lg"
+              :disabled="!nombreGrupo || seleccionados.length === 0"
+              @click="crearGrupo"
+          >
+            Crear Grupo
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -121,6 +141,7 @@ const esGrupo = ref(false)
 const nombreGrupo = ref('')
 const seleccionados = ref([])
 const usuarios = ref([])
+const tabActivo = ref('canales')
 let intervaloRefresco = null
 
 const usuarioActual = computed(() => almacen.usuarioActual)
@@ -129,13 +150,9 @@ const conversacionActual = computed(() => almacen.conversacionActual)
 
 const conversacionesFiltradas = computed(() => {
   let lista = conversacionesActuales.value
-  console.log('Conversaciones actuales:', lista)
   if (termino.value) {
     const t = termino.value.toLowerCase()
-    lista = lista.filter(c => {
-      const nombre = c.nombre || 'Chat'
-      return nombre.toLowerCase().includes(t)
-    })
+    lista = lista.filter(c => (c.nombre || 'Chat').toLowerCase().includes(t))
   }
   return lista
 })
@@ -151,15 +168,11 @@ const usuariosFiltrados = computed(() => {
 })
 
 const esActiva = (conversacion) => conversacionActual.value?.id === conversacion.id
-
-const seleccionarConversacion = (conversacion) => {
-  almacen.establecerConversacionActual(conversacion)
-}
+const seleccionarConversacion = (conversacion) => almacen.establecerConversacionActual(conversacion)
 
 const cargarConversaciones = async () => {
   try {
     const convs = await servicioApi.obtenerConversaciones()
-    console.log('Conversaciones obtenidas del servidor:', convs)
     almacen.establecerConversaciones(convs)
   } catch (error) {
     console.error('Error al refrescar conversaciones:', error)
@@ -176,25 +189,17 @@ onUnmounted(() => {
 })
 
 const abrirNuevaConversacion = async () => {
-  try {
-    esGrupo.value = false
-    mostrarModal.value = true
-    usuarios.value = await servicioApi.obtenerUsuarios()
-  } catch (error) {
-    console.error('Error al cargar usuarios:', error)
-  }
+  esGrupo.value = false
+  mostrarModal.value = true
+  usuarios.value = await servicioApi.obtenerUsuarios()
 }
 
 const abrirNuevoGrupo = async () => {
-  try {
-    esGrupo.value = true
-    nombreGrupo.value = ''
-    seleccionados.value = []
-    mostrarModal.value = true
-    usuarios.value = await servicioApi.obtenerUsuarios()
-  } catch (error) {
-    console.error('Error al cargar usuarios:', error)
-  }
+  esGrupo.value = true
+  nombreGrupo.value = ''
+  seleccionados.value = []
+  mostrarModal.value = true
+  usuarios.value = await servicioApi.obtenerUsuarios()
 }
 
 const toggleSeleccion = (idUsuario) => {
@@ -203,11 +208,8 @@ const toggleSeleccion = (idUsuario) => {
     return
   }
   const index = seleccionados.value.indexOf(idUsuario)
-  if (index === -1) {
-    seleccionados.value.push(idUsuario)
-  } else {
-    seleccionados.value.splice(index, 1)
-  }
+  if (index === -1) seleccionados.value.push(idUsuario)
+  else seleccionados.value.splice(index, 1)
 }
 
 const cerrarModal = () => {
@@ -229,7 +231,6 @@ const crearChatPrivado = async (idUsuario) => {
 
 const crearGrupo = async () => {
   try {
-    console.log('Creando grupo con seleccionados:', seleccionados.value)
     const nuevaConv = await servicioApi.crearGrupo(nombreGrupo.value, seleccionados.value)
     almacen.agregarConversacion(nuevaConv)
     almacen.establecerConversacionActual(nuevaConv)
@@ -241,267 +242,352 @@ const crearGrupo = async () => {
 </script>
 
 <style scoped>
+/* ---- Contenedor raíz ---- */
 .lista-conversaciones {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #B3EBF2;
-  width: 320px;
+  background: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---- Panel usuario (banner + lower) ---- */
+.panel-usuario {
+  flex-shrink: 0;
   position: relative;
 }
 
-.panel-usuario {
-  padding: 24px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: linear-gradient(to bottom, #f7fcfd 0%, #B3EBF2 100%);
+.profile-banner {
+  height: 76px;
+  background-color: #B3EBF2;
+  background-image:
+      linear-gradient(135deg, rgba(64,109,115,0.22) 0%, transparent 55%),
+      linear-gradient(225deg, rgba(255,255,255,0.45) 0%, transparent 48%),
+      radial-gradient(ellipse 90% 140% at 15% 0%, rgba(64,109,115,0.15), transparent);
+  background-size: cover;
+  background-position: center;
 }
 
-.avatar-grande {
-  width: 56px;
-  height: 56px;
+.profile-banner--default {
+  /* ya cubierto arriba */
+}
+
+.profile-lower {
+  position: relative;
+  background: #f7fcfd;
+  padding: 10px 14px 14px;
+  padding-left: 100px;
+  min-height: 86px;
+}
+
+.profile-avatar-wrap {
+  position: absolute;
+  left: 14px;
+  top: -34px;
+  z-index: 2;
+}
+
+.avatar-cuadrado {
+  width: 64px;
+  height: 64px;
   background: #406D73;
-  color: white;
-  border-radius: 4px;
+  color: #ffffff;
+  border-radius: 10px;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(64,109,115,0.22);
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 24px;
-  font-weight: bold;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 700;
 }
 
-.info-perfil {
+.profile-title-row {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.info-perfil .nombre {
-  font-weight: bold;
+.profile-name {
+  font-size: 1rem;
+  font-weight: 700;
   color: #2f4a4f;
-  font-size: 16px;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
 }
 
-.info-perfil .estado {
+.profile-subtitle {
   font-size: 12px;
   color: #5a8a94;
+  margin-top: 2px;
 }
 
-.campo-busqueda {
-  padding: 0 16px 16px 16px;
+.acciones-perfil {
+  display: flex;
+  gap: 4px;
 }
 
-.input-contenedor {
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  background: white;
-  border-radius: 4px;
-  padding: 4px 8px;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  transition: background 0.15s;
 }
 
-.input-contenedor input {
+.btn-icon:hover {
+  background: rgba(64,109,115,0.1);
+}
+
+/* ---- Buscador ---- */
+.campo-busqueda {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(64,109,115,0.2);
+  border-radius: 8px;
+  padding: 5px 10px;
+}
+
+.campo-busqueda input {
   border: none;
   background: transparent;
-  padding: 4px 8px;
+  font-size: 13px;
+  color: #2f4a4f;
   flex: 1;
-  font-size: 14px;
-}
-
-.input-contenedor input:focus {
   outline: none;
 }
 
-.seccion-titulo {
-  padding: 16px;
-  font-size: 12px;
-  font-weight: bold;
-  color: #406D73;
-  border-top: 1px solid rgba(0,0,0,0.05);
-  background: white;
+.campo-busqueda input::placeholder {
+  color: rgba(64,109,115,0.45);
 }
 
+/* ---- Tabs ---- */
+.tabs-row {
+  display: flex;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(64,109,115,0.15);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 9px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #7a9ea4;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tab-btn.activo {
+  color: #406D73;
+  border-bottom-color: #406D73;
+}
+
+.tab-btn:hover:not(.activo) {
+  color: #406D73;
+}
+
+/* ---- Subheader ---- */
+.seccion-titulo {
+  padding: 8px 16px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #406D73;
+  letter-spacing: 0.06em;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+/* ---- Listado ---- */
 .listado {
   flex: 1;
   overflow-y: auto;
-  background: white;
+  background: #ffffff;
 }
 
 .item-conversacion {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 10px 16px;
   cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid rgba(64,109,115,0.07);
+  transition: background 0.12s;
 }
 
 .item-conversacion:hover {
-  background-color: #f7fcfd;
+  background: #f7fcfd;
 }
 
 .item-conversacion.activa {
-  background-color: #B2C5C8;
+  background: rgba(179,235,242,0.4);
 }
 
-.avatar-mini {
-  width: 40px;
-  height: 40px;
+.avatar-mini-lista {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
   background: #B2C5C8;
   color: #2f4a4f;
   border-radius: 50%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-weight: bold;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
 }
 
 .info-conversacion {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  overflow: hidden;
 }
 
 .info-conversacion .nombre {
   font-weight: 600;
   font-size: 14px;
   color: #2f4a4f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .info-conversacion .ultimo-msg {
   font-size: 12px;
-  color: #7f8c8d;
-}
-
-.btn-flotante-nueva {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #406D73;
-  color: white;
-  border: none;
-  font-size: 24px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  cursor: pointer;
-  z-index: 10;
-}
-
-.btn-flotante-grupo {
-  position: absolute;
-  bottom: 80px;
-  right: 20px;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #6A9E7D;
-  color: white;
-  border: none;
-  font-size: 24px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  cursor: pointer;
-  z-index: 10;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-contenido {
-  background: white;
-  width: 400px;
-  max-height: 80vh;
-  border-radius: 8px;
+  color: #7f9ea4;
+  white-space: nowrap;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  text-overflow: ellipsis;
 }
 
-.modal-encabezado {
-  padding: 16px;
+.sin-resultados {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #a0b8bc;
+}
+
+/* ---- Modal ---- */
+.modal-titulo {
   background: #406D73;
   color: white;
+  font-size: 15px;
+  font-weight: 600;
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
 }
 
-.modal-config-grupo {
-  padding: 16px;
+.modal-seccion {
+  padding: 14px 16px 0;
   background: #f7fcfd;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid rgba(64,109,115,0.15);
 }
 
-.input-nombre-grupo {
+.input-modal {
   width: 100%;
-  padding: 10px;
+  padding: 9px 12px;
   border: 1px solid #B2C5C8;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 14px;
+  outline: none;
+  color: #2f4a4f;
 }
 
-.modal-busqueda {
-  padding: 12px;
+.input-modal:focus {
+  border-color: #406D73;
+  box-shadow: 0 0 0 3px rgba(64,109,115,0.1);
 }
 
-.modal-busqueda input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+.modal-busqueda-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 16px;
+  background: #f0f7f8;
+  border: 1px solid rgba(64,109,115,0.15);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.modal-busqueda-input input {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #2f4a4f;
+  flex: 1;
+  outline: none;
+}
+
+.modal-busqueda-input input::placeholder {
+  color: rgba(64,109,115,0.4);
 }
 
 .modal-listado {
-  flex: 1;
+  max-height: 280px;
   overflow-y: auto;
 }
 
-.item-usuario {
+.item-usuario-modal {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
   cursor: pointer;
+  transition: background 0.12s;
 }
 
-.item-usuario:hover {
-  background-color: #f7fcfd;
+.item-usuario-modal:hover {
+  background: #f7fcfd;
 }
 
-.checkbox-seleccion {
-  margin-left: auto;
-}
-
-.modal-acciones {
-  padding: 16px;
+.avatar-mini-modal {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  background: #B2C5C8;
+  color: #2f4a4f;
+  border-radius: 50%;
   display: flex;
-  justify-content: flex-end;
-  border-top: 1px solid #eee;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
 }
 
-.btn-crear-grupo {
-  background-color: #406D73;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
+.info-usuario-modal {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
 }
 
-.btn-crear-grupo:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.info-usuario-modal .nombre {
+  font-weight: 600;
+  font-size: 14px;
+  color: #2f4a4f;
+}
+
+.info-usuario-modal .email {
+  font-size: 12px;
+  color: #7f9ea4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

@@ -48,7 +48,7 @@ public class ManejadorMensaje {
 
     public List<Mensaje> obtenerMensajes(Long conversacionId, int limite) {
         TypedQuery<Mensaje> q = em.createQuery(
-                "SELECT m FROM Mensaje m WHERE m.conversacion.id = :cid ORDER BY m.fechaEnvio DESC",
+                "SELECT m FROM Mensaje m WHERE m.conversacion.id = :cid ORDER BY m.fechaEnvio ASC",
                 Mensaje.class);
         q.setParameter("cid", conversacionId);
         q.setMaxResults(limite > 0 ? limite : 50);
