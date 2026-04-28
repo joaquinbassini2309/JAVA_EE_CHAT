@@ -44,7 +44,7 @@ public class ConversacionResource {
         List<chat.clases.Conversacion> convs = sistema.obtenerConversacionesDeUsuario(userId);
 
         List<DtConversacion> dtos = convs.stream()
-                .map(DtConversacion::from)
+                .map(conv -> DtConversacion.from(conv, userId))
                 .filter(d -> d.getUltimoMensaje() != null)
                 .collect(Collectors.toList());
 
@@ -75,14 +75,14 @@ public class ConversacionResource {
             }
             Long otroId = participantes.getFirst();
             chat.clases.Conversacion creada = sistema.iniciarChatPrivado(userId, otroId);
-            DtConversacion res = DtConversacion.from(creada);
+            DtConversacion res = DtConversacion.from(creada, userId);
             return Response.status(Response.Status.CREATED).entity(res).build();
         }
 
         // Conversacion Grupo
         List<Long> miembros = dto.getParticipanteIds() == null ? List.of() : dto.getParticipanteIds();
         chat.clases.Conversacion creada = sistema.crearGrupo(dto.getNombre(), userId, miembros);
-        DtConversacion res = DtConversacion.from(creada);
+        DtConversacion res = DtConversacion.from(creada, userId);
 
         return Response.status(Response.Status.CREATED).entity(res).build();
     }
@@ -110,7 +110,7 @@ public class ConversacionResource {
                     .entity(new ErrorResponse(404, "Conversation not found")).build();
         }
 
-        DtConversacion dto = DtConversacion.from(opt.get());
+        DtConversacion dto = DtConversacion.from(opt.get(), userId);
         return Response.ok(dto).build();
     }
 

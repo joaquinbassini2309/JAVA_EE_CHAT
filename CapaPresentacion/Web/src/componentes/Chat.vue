@@ -97,6 +97,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
+import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
 import Mensaje from './Mensaje.vue'
 import InfoGrupo from './InfoGrupo.vue'
 
@@ -117,9 +118,10 @@ const esGrupo = computed(() => conversacionActual.value?.tipo === 'GRUPO')
 
 const destinatario = computed(() => {
   if (!conversacionActual.value) return { nombre: 'Chat', iniciales: '?' }
+  const nombreVisible = obtenerNombreVisibleConversacion(conversacionActual.value, usuarioActual.value?.id)
   return {
-    nombre: conversacionActual.value.nombre,
-    iniciales: conversacionActual.value.nombre?.charAt(0).toUpperCase() || '?',
+    nombre: nombreVisible,
+    iniciales: nombreVisible?.charAt(0).toUpperCase() || '?',
   }
 })
 

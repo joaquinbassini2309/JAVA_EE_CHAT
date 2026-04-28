@@ -5,16 +5,16 @@
     <div class="info-header">
       <div class="profile-banner profile-banner--default" />
       <div class="profile-lower">
-        <div class="profile-avatar-wrap">
-          <div class="avatar-cuadrado">
-            {{ conversacion.nombre?.charAt(0).toUpperCase() || 'G' }}
+      <div class="profile-avatar-wrap">
+            <div class="avatar-cuadrado">
+              {{ nombreVisibleConversacion?.charAt(0).toUpperCase() || 'G' }}
+            </div>
           </div>
-        </div>
-        <div class="profile-title-row">
-          <button class="btn-atras" @click="$emit('volver')" title="Volver">
-            <v-icon size="20" color="#406D73">volver</v-icon>
-          </button>
-          <span class="profile-name text-truncate">{{ conversacion.nombre }}</span>
+          <div class="profile-title-row">
+            <button class="btn-atras" @click="$emit('volver')" title="Volver">
+              <v-icon size="20" color="#406D73">volver</v-icon>
+            </button>
+            <span class="profile-name text-truncate">{{ nombreVisibleConversacion }}</span>
         </div>
         <div class="profile-subtitle">
           {{ conversacion.participantes?.length || 0 }} miembros
@@ -67,7 +67,13 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+import { useAlmacen } from '@/almacenes/almacen'
+import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
+
+const almacen = useAlmacen()
+
+const props = defineProps({
   conversacion: {
     type: Object,
     required: true,
@@ -75,6 +81,11 @@ defineProps({
 })
 
 defineEmits(['volver'])
+
+const nombreVisibleConversacion = computed(() => {
+  return obtenerNombreVisibleConversacion(props.conversacion, almacen.usuarioActual?.id)
+})
+
 </script>
 
 <style scoped>
