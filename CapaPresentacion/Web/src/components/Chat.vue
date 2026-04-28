@@ -161,10 +161,10 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #fff;
+  background: #f7fcfd; /* surface */
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   flex: 1;
 }
 
@@ -173,7 +173,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #B3EBF2 0%, #406D73 100%);
   color: white;
 }
 
@@ -191,12 +191,12 @@ onUnmounted(() => {
 }
 
 .badge-estado.ONLINE {
-  background-color: #10b981;
+  background-color: #6A9E7D; /* success */
   color: white;
 }
 
 .badge-estado.OFFLINE {
-  background-color: #6b7280;
+  background-color: #B2C5C8; /* secondary */
   color: white;
 }
 
@@ -207,6 +207,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background-color: #e4f6f9; /* background */
 }
 
 .mensaje {
@@ -234,14 +235,14 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   padding: 16px;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border-top: 1px solid #B2C5C8;
+  background: #f7fcfd;
 }
 
 textarea {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #B2C5C8;
   border-radius: 6px;
   font-family: inherit;
   font-size: 14px;
@@ -250,13 +251,13 @@ textarea {
 
 textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #406D73;
+  box-shadow: 0 0 0 3px rgba(64, 109, 115, 0.1);
 }
 
 .btn-enviar {
   padding: 8px 16px;
-  background-color: #667eea;
+  background-color: #406D73;
   color: white;
   border: none;
   border-radius: 6px;
@@ -266,10 +267,6 @@ textarea:focus {
 }
 
 .btn-enviar:hover {
-  background-color: #5568d3;
-}
-
-.btn-enviar:active {
-  background-color: #4c5bb8;
+  background-color: #34585d;
 }
 </style>

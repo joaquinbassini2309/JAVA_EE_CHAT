@@ -6,6 +6,10 @@ import RegistroVista from '../views/RegistroVista.vue'
 const routes = [
   {
     path: '/',
+    redirect: '/login'
+  },
+  {
+    path: '/login',
     name: 'login',
     component: LoginVista
   },
@@ -22,7 +26,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory('/chat-empresarial/'),
   routes
 })
 

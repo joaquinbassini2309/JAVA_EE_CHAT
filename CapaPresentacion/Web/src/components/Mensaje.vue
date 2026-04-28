@@ -55,29 +55,17 @@ const propio = computed(() => {
 
 .contenedor-mensaje {
   max-width: 75%;
-  padding: 12px 16px;
-  border-radius: 18px;
-  background-color: #f3f4f6;
-  color: #374151;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background-color: #ced6d9; /* other messages */
+  color: #2f4a4f;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   word-wrap: break-word;
-  position: relative;
 }
 
 .mensaje.propio .contenedor-mensaje {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-bottom-right-radius: 4px;
-}
-
-.mensaje:not(.propio) .contenedor-mensaje {
-  border-bottom-left-radius: 4px;
-}
-
-.contenido {
-  margin: 0;
-  font-size: 14.5px;
-  line-height: 1.5;
+  background-color: #B2C5C8; /* own messages */
+  color: #2f4a4f;
 }
 
 .timestamp {
@@ -88,13 +76,8 @@ const propio = computed(() => {
   text-align: right;
 }
 
-.mensaje.propio .timestamp {
-  color: rgba(255, 255, 255, 0.8);
-}
-
 .icono-leido {
   font-size: 12px;
-  color: #10b981;
-  margin-left: 4px;
+  color: #406D73;
 }
 </style>

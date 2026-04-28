@@ -1,21 +1,33 @@
 <template>
   <div class="lista-conversaciones">
-    <div class="encabezado">
-      <h3>Conversaciones</h3>
-      <button class="btn-nueva" @click="abrirNuevaConversacion">
-        +
-      </button>
+    <!-- Panel Usuario -->
+    <div class="panel-usuario">
+      <div class="avatar-grande">
+        {{ usuarioActual?.username?.charAt(0).toUpperCase() }}
+      </div>
+      <div class="info-perfil">
+        <span class="nombre">{{ usuarioActual?.username }}</span>
+        <span class="estado">En línea</span>
+      </div>
     </div>
 
+    <!-- Buscador -->
     <div class="campo-busqueda">
-      <input
-        v-model="termino"
-        type="text"
-        placeholder="Buscar conversación..."
-        class="input-busqueda"
-      />
+      <div class="input-contenedor">
+        <span class="lupa">🔍</span>
+        <input
+          v-model="termino"
+          type="text"
+          placeholder="Buscar contactos"
+        />
+      </div>
     </div>
 
+    <div class="seccion-titulo">
+      CONVERSACIONES
+    </div>
+
+    <!-- Listado -->
     <div class="listado">
       <div
         v-for="conversacion in conversacionesFiltradas"
@@ -24,29 +36,32 @@
         :class="{ activa: esActiva(conversacion) }"
         @click="seleccionarConversacion(conversacion)"
       >
-        <div class="info-conversacion">
-          <h4>{{ conversacion.nombre }}</h4>
-          <p>{{ conversacion.ultimoMensaje || 'Sin mensajes' }}</p>
+        <div class="avatar-mini">
+          {{ conversacion.nombre.charAt(0).toUpperCase() }}
         </div>
-        <span v-if="conversacion.noLeidos > 0" class="badge-no-leidos">
-          {{ conversacion.noLeidos }}
-        </span>
+        <div class="info-conversacion">
+          <span class="nombre">{{ conversacion.nombre }}</span>
+          <span class="ultimo-msg">{{ conversacion.ultimoMensaje || '...' }}</span>
+        </div>
       </div>
     </div>
+
+    <button class="btn-flotante-nueva" @click="abrirNuevaConversacion">
+      +
+    </button>
 
     <!-- Modal Nueva Conversación -->
     <div v-if="mostrarModal" class="modal-overlay" @click.self="cerrarModal">
       <div class="modal-contenido">
         <div class="modal-encabezado">
-          <h3>Iniciar nueva conversación</h3>
+          <h3>Nueva Conversación</h3>
           <button class="btn-cerrar" @click="cerrarModal">&times;</button>
         </div>
         <div class="modal-busqueda">
           <input
             v-model="terminoUsuario"
             type="text"
-            placeholder="Buscar usuario por nombre o email..."
-            class="input-busqueda"
+            placeholder="Buscar usuario..."
           />
         </div>
         <div class="modal-listado">
@@ -63,9 +78,6 @@
               <span class="nombre">{{ usuario.username }}</span>
               <span class="email">{{ usuario.email }}</span>
             </div>
-          </div>
-          <div v-if="usuariosFiltrados.length === 0" class="sin-resultados">
-            No se encontraron usuarios
           </div>
         </div>
       </div>
@@ -84,42 +96,30 @@ const terminoUsuario = ref('')
 const mostrarModal = ref(false)
 const usuarios = ref([])
 
+const usuarioActual = computed(() => almacen.usuarioActual)
 const conversacionesActuales = computed(() => almacen.conversacionesOrdenadas)
 const conversacionActual = computed(() => almacen.conversacionActual)
 
 const conversacionesFiltradas = computed(() => {
   let lista = conversacionesActuales.value
-
-  // Filtrar por búsqueda si hay término
   if (termino.value) {
     const t = termino.value.toLowerCase()
     lista = lista.filter(c => c.nombre.toLowerCase().includes(t))
   }
-
-  // Filtrar para mostrar solo chats con mensajes O el chat seleccionado/nuevo
-  return lista.filter(c => 
-    c.ultimoMensaje || c.id === conversacionActual.value?.id
-  )
+  return lista
 })
 
 const usuariosFiltrados = computed(() => {
   const yo = almacen.usuarioActual
   let lista = usuarios.value.filter(u => u.id !== yo?.id)
-  
-  if (!terminoUsuario.value) {
-    return lista
+  if (terminoUsuario.value) {
+    const t = terminoUsuario.value.toLowerCase()
+    lista = lista.filter(u => u.username.toLowerCase().includes(t))
   }
-
-  const t = terminoUsuario.value.toLowerCase()
-  return lista.filter(u => 
-    u.username.toLowerCase().includes(t) || 
-    u.email.toLowerCase().includes(t)
-  )
+  return lista
 })
 
-const esActiva = (conversacion) => {
-  return conversacionActual.value?.id === conversacion.id
-}
+const esActiva = (conversacion) => conversacionActual.value?.id === conversacion.id
 
 const seleccionarConversacion = (conversacion) => {
   almacen.establecerConversacionActual(conversacion)
@@ -142,13 +142,8 @@ const cerrarModal = () => {
 const crearChatPrivado = async (idUsuario) => {
   try {
     const nuevaConv = await servicioApi.crearConversacionPrivada(idUsuario)
-    
-    // Verificar si ya estaba en la lista
     const existe = almacen.conversaciones.find(c => c.id === nuevaConv.id)
-    if (!existe) {
-      almacen.agregarConversacion(nuevaConv)
-    }
-    
+    if (!existe) almacen.agregarConversacion(nuevaConv)
     almacen.establecerConversacionActual(nuevaConv)
     cerrarModal()
   } catch (error) {
@@ -162,129 +157,155 @@ const crearChatPrivado = async (idUsuario) => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #f9fafb;
-  border-right: 1px solid #e5e7eb;
-  max-width: 350px;
-  width: 100%;
+  background: #B3EBF2; /* primary (light cyan) as background in sidebar */
+  width: 320px;
+  position: relative;
 }
 
-.encabezado {
+.panel-usuario {
+  padding: 24px 16px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  gap: 12px;
+  background: linear-gradient(to bottom, #f7fcfd 0%, #B3EBF2 100%);
 }
 
-.encabezado h3 {
-  margin: 0;
-  font-size: 18px;
+.avatar-grande {
+  width: 56px;
+  height: 56px;
+  background: #406D73;
+  color: white;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
   font-weight: bold;
 }
 
-.btn-nueva {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+.info-perfil {
+  display: flex;
+  flex-direction: column;
 }
 
-.btn-nueva:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+.info-perfil .nombre {
+  font-weight: bold;
+  color: #2f4a4f;
+  font-size: 16px;
+}
+
+.info-perfil .estado {
+  font-size: 12px;
+  color: #5a8a94;
 }
 
 .campo-busqueda {
-  padding: 12px 16px;
+  padding: 0 16px 16px 16px;
 }
 
-.input-busqueda {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+.input-contenedor {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+.input-contenedor input {
+  border: none;
+  background: transparent;
+  padding: 4px 8px;
+  flex: 1;
   font-size: 14px;
 }
 
-.input-busqueda:focus {
+.input-contenedor input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.seccion-titulo {
+  padding: 16px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #406D73;
+  border-top: 1px solid rgba(0,0,0,0.05);
+  background: white;
 }
 
 .listado {
   flex: 1;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  background: white;
 }
 
 .item-conversacion {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
   cursor: pointer;
-  transition: background-color 0.2s;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .item-conversacion:hover {
-  background-color: #f3f4f6;
+  background-color: #f7fcfd;
 }
 
 .item-conversacion.activa {
-  background-color: #ede9fe;
-  border-left: 4px solid #667eea;
+  background-color: #B2C5C8;
 }
 
-.info-conversacion {
-  flex: 1;
-}
-
-.info-conversacion h4 {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.info-conversacion p {
-  margin: 0;
-  font-size: 12px;
-  color: #6b7280;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.badge-no-leidos {
-  display: inline-flex;
-  align-items: center;
+.avatar-mini {
+  width: 40px;
+  height: 40px;
+  background: #B2C5C8;
+  color: #2f4a4f;
+  border-radius: 50%;
+  display: flex;
   justify-content: center;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 6px;
-  background-color: #667eea;
-  color: white;
-  border-radius: 12px;
-  font-size: 12px;
+  align-items: center;
   font-weight: bold;
 }
 
-/* Estilos Modal */
+.info-conversacion {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.info-conversacion .nombre {
+  font-weight: 600;
+  font-size: 14px;
+  color: #2f4a4f;
+}
+
+.info-conversacion .ultimo-msg {
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.btn-flotante-nueva {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #406D73;
+  color: white;
+  border: none;
+  font-size: 24px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -293,89 +314,27 @@ const crearChatPrivado = async (idUsuario) => {
 
 .modal-contenido {
   background: white;
-  width: 90%;
-  max-width: 400px;
-  max-height: 80vh;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
+  width: 400px;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .modal-encabezado {
   padding: 16px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: #406D73;
+  color: white;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-}
-
-.btn-cerrar {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #6b7280;
 }
 
 .modal-busqueda {
   padding: 12px;
 }
 
-.modal-listado {
-  flex: 1;
-  overflow-y: auto;
+.modal-busqueda input {
+  width: 100%;
   padding: 8px;
-}
-
-.item-usuario {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.item-usuario:hover {
-  background-color: #f3f4f6;
-}
-
-.avatar-mini {
-  width: 32px;
-  height: 32px;
-  background: #667eea;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.info-usuario {
-  display: flex;
-  flex-direction: column;
-}
-
-.info-usuario .nombre {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.info-usuario .email {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.sin-resultados {
-  padding: 20px;
-  text-align: center;
-  color: #9ca3af;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 </style>

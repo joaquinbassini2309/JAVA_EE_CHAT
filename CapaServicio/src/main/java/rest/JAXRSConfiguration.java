@@ -13,6 +13,7 @@ public class JAXRSConfiguration extends Application {
         Set<Class<?>> classes = new HashSet<>();
         classes.add(UsuarioResource.class);
         classes.add(ConversacionResource.class);
+        classes.add(MensajeResource.class);
         classes.add(exceptions.GlobalExceptionMapper.class);
         classes.add(seguridad.JWTFilter.class);
         return classes;
