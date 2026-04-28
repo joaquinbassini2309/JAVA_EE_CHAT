@@ -223,6 +223,19 @@ const crearChatPrivado = async (idUsuario) => {
     const existe = almacen.conversaciones.find(c => c.id === nuevaConv.id)
     if (!existe) almacen.agregarConversacion(nuevaConv)
     almacen.establecerConversacionActual(nuevaConv)
+    
+    // Enviar mensaje automático de cifrado
+    try {
+      const mensajeAutomatico = await servicioApi.enviarMensaje({
+        conversacionId: nuevaConv.id,
+        contenido: 'Los mensajes están cifrados de extremo a extremo',
+        tipoMensaje: 'TEXTO'
+      })
+      almacen.agregarMensaje(mensajeAutomatico)
+    } catch (error) {
+      console.error('Error al enviar mensaje automático:', error)
+    }
+    
     cerrarModal()
   } catch (error) {
     console.error('Error al crear conversación:', error)
@@ -234,6 +247,19 @@ const crearGrupo = async () => {
     const nuevaConv = await servicioApi.crearGrupo(nombreGrupo.value, seleccionados.value)
     almacen.agregarConversacion(nuevaConv)
     almacen.establecerConversacionActual(nuevaConv)
+    
+    // Enviar mensaje automático de bienvenida
+    try {
+      const mensajeAutomatico = await servicioApi.enviarMensaje({
+        conversacionId: nuevaConv.id,
+        contenido: 'Bienvenido al grupo',
+        tipoMensaje: 'TEXTO'
+      })
+      almacen.agregarMensaje(mensajeAutomatico)
+    } catch (error) {
+      console.error('Error al enviar mensaje automático:', error)
+    }
+    
     cerrarModal()
   } catch (error) {
     console.error('Error al crear grupo:', error)
