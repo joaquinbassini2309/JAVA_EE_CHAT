@@ -14,8 +14,7 @@
           <div class="profile-title-row">
             <span class="profile-name text-truncate">{{ destinatario.nombre }}</span>
             <div class="encabezado-acciones" @click.stop>
-              <!-- DESPUÉS -->
-              <v-btn icon="añadirContacto" variant="text" color="accent" size="small" density="comfortable" @click="abrirModalAñadir" title="Añadir miembro" />
+              <v-btn icon="mdi-account-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirModalAñadir" title="Añadir miembro" />
               <span class="badge-estado" :class="estadoUsuario">{{ estadoUsuario }}</span>
             </div>
           </div>
