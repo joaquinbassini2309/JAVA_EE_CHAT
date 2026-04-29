@@ -29,8 +29,8 @@ public class CorsFilter implements ContainerRequestFilter, ContainerResponseFilt
         String configured = System.getenv("CORS_ALLOWED_ORIGINS");
         String source = (configured == null || configured.isBlank()) ? DEFAULT_ORIGINS : configured;
         // LOG para depuración: mostrar configuración en tiempo de arranque/ejecución
-        System.out.println("CORS: env CORS_ALLOWED_ORIGINS='" + configured + "'");
-        System.out.println("CORS: using source='" + source + "'");
+        System.out.println("[CORS-FILTER] env CORS_ALLOWED_ORIGINS='" + configured + "'");
+        System.out.println("[CORS-FILTER] using source='" + source + "'");
         Set<String> origins = new HashSet<>();
         Arrays.stream(source.split(","))
                 .map(String::trim)
