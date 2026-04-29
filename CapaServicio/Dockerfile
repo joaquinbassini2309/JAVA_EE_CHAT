@@ -7,7 +7,9 @@ COPY . /workspace
 # Construir el módulo de servicios (genera target/chat-empresarial.war)
 RUN mvn -B -pl CapaServicio -am -DskipTests package
 
-FROM quay.io/wildfly/wildfly:29.0.1.Final
+## Use the official JBoss WildFly image from Docker Hub. If a specific tag is unavailable
+## on your registry, change it to a tag that exists (e.g. 28.0.1.Final).
+FROM jboss/wildfly:28.0.1.Final
 
 ENV WILDFLY_HOME=/opt/jboss/wildfly
 
