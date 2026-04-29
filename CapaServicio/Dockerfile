@@ -4,7 +4,7 @@ WORKDIR /workspace
 # Copiar todo el repo para construir el módulo CapaServicio (y sus dependencias)
 COPY . /workspace
 
-# Construir el módulo de servicios (genera target/ROOT.war)
+# Construir el módulo de servicios (genera target/chat-empresarial.war)
 # El WAR incluirá automáticamente CapaPresentacion/Web/dist desde webResources en pom.xml
 RUN mvn -B -pl CapaServicio -am -DskipTests package
 
@@ -27,8 +27,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends bash gettext-ba
 # Copiar WildFly desde el stage de build
 COPY --from=builder /opt/wildfly /opt/wildfly
 
-# Copiar el .war generado
-COPY --from=builder /workspace/CapaServicio/target/chat-empresarial.war ${WILDFLY_HOME}/standalone/deployments/chat-empresarial.war
+# Copiar el .war generado y renombrarlo a ROOT.war para desplegar en el contexto raíz
+COPY --from=builder /workspace/CapaServicio/target/chat-empresarial.war ${WILDFLY_HOME}/standalone/deployments/ROOT.war
 
 # Instalar el driver PostgreSQL como módulo de WildFly
 RUN mkdir -p ${WILDFLY_HOME}/modules/system/layers/base/org/postgresql/main
@@ -46,4 +46,3 @@ RUN chmod +x ${WILDFLY_HOME}/bin/configure-and-run.sh
 EXPOSE 8080
 
 CMD ["/opt/wildfly/bin/configure-and-run.sh"]
-

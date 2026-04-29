@@ -8,7 +8,6 @@ TARGET="${WILDFLY_HOME}/standalone/deployments/chat-ds.xml"
 echo "[entrypoint] Configurando datasource si corresponde..."
 rm -f "$TARGET"
 
-
 if [ -n "${DB_HOST:-}" ] && [ -n "${DB_NAME:-}" ] && [ -n "${DB_USER:-}" ] && [ -n "${DB_PASSWORD:-}" ]; then
   DB_PORT=${DB_PORT:-5432}
   echo "[entrypoint] Generando datasource ChatDS desde plantilla (PostgreSQL)"
@@ -25,4 +24,3 @@ fi
 
 echo "[entrypoint] Iniciando WildFly..."
 exec ${WILDFLY_HOME}/bin/standalone.sh -b 0.0.0.0 -Djboss.http.port=${PORT:-8080}
-
