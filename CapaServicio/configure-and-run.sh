@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-WILDFLY_HOME=/opt/jboss/wildfly
+WILDFLY_HOME=/opt/wildfly
 
 echo "[entrypoint] Configurando datasource si corresponde..."
 
