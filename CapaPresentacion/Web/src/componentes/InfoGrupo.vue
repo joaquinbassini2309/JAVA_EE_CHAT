@@ -1,7 +1,7 @@
 <template>
   <div class="info-grupo">
 
-    <!-- Encabezado -->
+    <!-- Encabezado con banner + avatar cuadrado (mismo patrón que Chat.vue) -->
     <div class="info-header">
       <div class="profile-banner profile-banner--default" />
       <div class="profile-lower">
@@ -37,6 +37,16 @@
             @click="editandoNombre = true"
             class="ml-1"
           />
+      <div class="profile-avatar-wrap">
+            <div class="avatar-cuadrado">
+              {{ nombreVisibleConversacion?.charAt(0).toUpperCase() || 'G' }}
+            </div>
+          </div>
+          <div class="profile-title-row">
+            <button class="btn-atras" @click="$emit('volver')" title="Volver">
+              <v-icon size="20" color="#406D73">volver</v-icon>
+            </button>
+            <span class="profile-name text-truncate">{{ nombreVisibleConversacion }}</span>
         </div>
         <div class="profile-subtitle">
           {{ conversacion.participantes?.length || 0 }} miembros
@@ -46,6 +56,8 @@
 
     <!-- Cuerpo scrolleable -->
     <div class="info-cuerpo">
+
+      <!-- Sección integrantes -->
       <div class="seccion">
         <div class="seccion-titulo">
           <v-icon size="16" color="#406D73" class="mr-1">mdi-account-group</v-icon>
@@ -96,6 +108,13 @@
 import { ref, computed } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
+
+const props = defineProps({
+import { computed } from 'vue'
+import { useAlmacen } from '@/almacenes/almacen'
+import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
+
+const almacen = useAlmacen()
 
 const props = defineProps({
   conversacion: {
@@ -155,6 +174,12 @@ async function eliminarMiembro(participanteId) {
     }
   }
 }
+defineEmits(['volver'])
+
+const nombreVisibleConversacion = computed(() => {
+  return obtenerNombreVisibleConversacion(props.conversacion, almacen.usuarioActual?.id)
+})
+
 </script>
 
 <style scoped>

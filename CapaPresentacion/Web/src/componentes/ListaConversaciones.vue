@@ -52,10 +52,10 @@
           @click="seleccionarConversacion(conversacion)"
       >
         <div class="avatar-mini-lista">
-          {{ conversacion.nombre.charAt(0).toUpperCase() }}
+          {{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id).charAt(0).toUpperCase() }}
         </div>
         <div class="info-conversacion">
-          <span class="nombre">{{ conversacion.nombre }}</span>
+          <span class="nombre">{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id) }}</span>
           <span class="ultimo-msg">{{ conversacion.ultimoMensaje || '...' }}</span>
         </div>
       </div>
@@ -132,6 +132,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
+import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
 
 const almacen = useAlmacen()
 const termino = ref('')

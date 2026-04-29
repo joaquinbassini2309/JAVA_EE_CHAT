@@ -96,6 +96,16 @@
       <div class="entrada-mensaje">
         <button class="btn-adjunto" title="Archivos adjunto">
           <v-icon size="18" color="#406D73" style="opacity:0.75">mdi-paperclip</v-icon>
+        <!-- Nuevo: input de archivo oculto -->
+        <input
+            ref="fileInput"
+            type="file"
+            accept="image/*,application/pdf"
+            @change="handleFileSelected"
+            style="display:none"
+        />
+        <button class="btn-adjunto" title="Archivos adjunto" @click="seleccionarArchivo">
+          <v-icon size="18" color="#406D73" style="opacity:0.75">adjuntar</v-icon>
           <span>Archivos adjunto</span>
         </button>
         <input
@@ -121,6 +131,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
+import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
 import Mensaje from './Mensaje.vue'
 import InfoGrupo from './InfoGrupo.vue'
 import { formatearFecha } from '@/utilidades/formateoFechas'
@@ -137,6 +148,10 @@ const usuariosDisponibles = ref([])
 const mostrarModalInfo = ref(false)
 const mensajeParaInfo = ref(null)
 
+// Nuevo: input de archivo y estado de subida
+const fileInput = ref(null)
+const subiendoArchivo = ref(false)
+
 const conversacionActual = computed(() => almacen.conversacionActual)
 const usuarioActual = computed(() => almacen.usuarioActual)
 const mensajes = computed(() => almacen.mensajes)
@@ -144,9 +159,10 @@ const esGrupo = computed(() => conversacionActual.value?.tipo === 'GRUPO')
 
 const destinatario = computed(() => {
   if (!conversacionActual.value) return { nombre: 'Chat', iniciales: '?' }
+  const nombreVisible = obtenerNombreVisibleConversacion(conversacionActual.value, usuarioActual.value?.id)
   return {
-    nombre: conversacionActual.value.nombre,
-    iniciales: conversacionActual.value.nombre?.charAt(0).toUpperCase() || '?',
+    nombre: nombreVisible,
+    iniciales: nombreVisible?.charAt(0).toUpperCase() || '?',
   }
 })
 
@@ -189,6 +205,75 @@ const abrirModalAñadir = async () => {
     mostrarModalAñadir.value = true
   } catch (error) {
     console.error('Error al cargar usuarios:', error)
+  }
+}
+
+// Nuevo: abrir selector de archivos
+const seleccionarArchivo = () => {
+  if (fileInput.value) fileInput.value.click()
+}
+
+const handleFileSelected = async (event) => {
+  const f = event.target.files && event.target.files[0]
+  if (!f) return
+
+  // Tamaño máximo consistente con backend (10 MB)
+  const MAX_BYTES = 10 * 1024 * 1024
+  if (f.size > MAX_BYTES) {
+    console.error('Archivo demasiado grande')
+    alert('El archivo supera el tamaño máximo permitido (10 MB).')
+    return
+  }
+
+  try {
+    subiendoArchivo.value = true
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        let base64 = e.target.result
+        // El método uploadFile espera base64 posiblemente con prefijo data:...; lo aceptamos
+        const nombre = f.name
+        const resp = await servicioApi.uploadFile(nombre, base64)
+        // resp.url contiene la ruta pública
+        const urlAdjunto = resp.url
+
+        // Determinar tipoMensaje
+        const tipo = f.type.startsWith('image/') ? 'IMAGEN' : 'DOCUMENTO'
+
+        // Enviar mensaje con adjunto
+        if (ws.value && ws.value.readyState === WebSocket.OPEN) {
+          ws.value.send(JSON.stringify({
+            contenido: nombre,
+            tipoMensaje: tipo,
+            urlAdjunto: urlAdjunto
+          }))
+        } else {
+          const m = await servicioApi.enviarMensaje({
+            conversacionId: conversacionActual.value.id,
+            contenido: nombre,
+            tipoMensaje: tipo,
+            urlAdjunto: urlAdjunto
+          })
+          almacen.agregarMensaje(m)
+          scrollToBottom()
+        }
+      } catch (err) {
+        console.error('Error al subir o enviar archivo:', err)
+        alert('Error al subir el archivo. Intenta de nuevo.')
+      } finally {
+        subiendoArchivo.value = false
+        // limpiar input
+        if (fileInput.value) fileInput.value.value = null
+      }
+    }
+    reader.onerror = (err) => {
+      console.error('Error leyendo archivo:', err)
+      subiendoArchivo.value = false
+    }
+    reader.readAsDataURL(f)
+  } catch (err) {
+    console.error('Error procesando archivo:', err)
+    subiendoArchivo.value = false
   }
 }
 
@@ -583,4 +668,14 @@ onUnmounted(() => {
   font-size: 14px;
   color: #2f4a4f;
 }
+
+/* Adjuntos */
+.adjunto-imagen {
+  max-width: 280px;
+  max-height: 280px;
+  border-radius: 8px;
+  display: block;
+  margin-top: 8px;
+}
 </style>
+

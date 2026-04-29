@@ -31,6 +31,10 @@ public class DtConversacion {
     }
 
     public static DtConversacion from(Conversacion conversacion) {
+        return from(conversacion, null);
+    }
+
+    public static DtConversacion from(Conversacion conversacion, Long usuarioActualId) {
         if (conversacion == null) {
             return null;
         }
@@ -54,9 +58,19 @@ public class DtConversacion {
             }
         }
 
+        String nombreVisible = conversacion.getNombre();
+        if (conversacion.getTipo() == TipoConversacion.PRIVADA && usuarioActualId != null) {
+            nombreVisible = conversacion.getParticipantes().stream()
+                    .map(Participante::getUsuario)
+                    .filter(usuario -> usuario != null && !usuarioActualId.equals(usuario.getId()))
+                    .map(usuario -> usuario.getUsername())
+                    .findFirst()
+                    .orElse(conversacion.getNombre());
+        }
+
         return new DtConversacion(
                 conversacion.getId(),
-                conversacion.getNombre(),
+                nombreVisible,
                 conversacion.getTipo(),
                 conversacion.getFechaCreacion(),
                 participantesDtos, // Se pasa la nueva lista
