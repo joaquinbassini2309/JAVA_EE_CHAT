@@ -2,7 +2,18 @@
   <div class="burbuja-wrap" :class="{ propio }">
     <div class="burbuja" :class="propio ? 'burbuja-me' : 'burbuja-them'">
       <span v-if="mostrarNombre" class="nombre-emisor">{{ mensaje.emisorNombre }}</span>
-      <p class="contenido">{{ mensaje.contenido }}</p>
+      <!-- Mostrar contenido de texto normal -->
+      <p v-if="mensaje.contenido && !esSoloAdjunto" class="contenido">{{ mensaje.contenido }}</p>
+
+      <!-- Adjuntos: imagen inline -->
+      <img v-if="esImagenAdjunta" :src="mensaje.urlAdjunto" alt="adjunto" class="adjunto-imagen" />
+
+      <!-- Adjuntos: documento u otro tipo, mostrar enlace de descarga -->
+      <div v-if="esDocumentoAdjunto" class="adjunto-documento">
+        <a :href="mensaje.urlAdjunto" target="_blank" rel="noopener noreferrer">Descargar archivo adjunto</a>
+        <div class="nombre-archivo">{{ mensaje.contenido }}</div>
+      </div>
+
       <div class="burbuja-footer">
         <span class="timestamp">{{ formatearFecha(mensaje.fechaEnvio) }}</span>
         <span v-if="propio && mensaje.leido" class="icono-leido">✓✓</span>
@@ -31,6 +42,25 @@ const propio = computed(() => props.mensaje.emisorId === usuarioActual.value?.id
 const mostrarNombre = computed(
     () => !propio.value && almacen.conversacionActual?.tipo === 'GRUPO'
 )
+
+// Helper para detectar tipo de adjunto. El servidor devuelve el campo 'tipo' (enum) y 'urlAdjunto'.
+const tipoCampo = computed(() => {
+  // Puede venir como { tipo: 'IMAGEN' } o { tipo: 'TEXTO' }
+  return props.mensaje.tipo || props.mensaje.tipoMensaje || null
+})
+
+const esImagenAdjunta = computed(() => {
+  return props.mensaje.urlAdjunto && (String(tipoCampo.value)?.toUpperCase() === 'IMAGEN')
+})
+
+const esDocumentoAdjunto = computed(() => {
+  return props.mensaje.urlAdjunto && (String(tipoCampo.value)?.toUpperCase() === 'DOCUMENTO' || String(tipoCampo.value)?.toUpperCase() === 'ARCHIVO')
+})
+
+// Si el mensaje solo representa el adjunto y no tiene texto adicional
+const esSoloAdjunto = computed(() => {
+  return (!props.mensaje.contenido || props.mensaje.contenido.trim() === '') && !!props.mensaje.urlAdjunto
+})
 </script>
 
 <style scoped>
@@ -103,5 +133,34 @@ const mostrarNombre = computed(
 .icono-leido {
   font-size: 11px;
   color: #406D73;
+}
+
+/* Adjuntos */
+.adjunto-imagen {
+  max-width: 280px;
+  max-height: 280px;
+  border-radius: 8px;
+  display: block;
+  margin-top: 8px;
+}
+
+.adjunto-documento {
+  margin-top: 8px;
+  background: rgba(255,255,255,0.04);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.adjunto-documento a {
+  color: #18686b;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.nombre-archivo {
+  font-size: 12px;
+  color: #2f4a4f;
+  margin-top: 6px;
 }
 </style>

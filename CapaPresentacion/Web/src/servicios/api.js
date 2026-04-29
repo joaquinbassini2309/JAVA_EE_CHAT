@@ -112,6 +112,29 @@ class ServicioAPI {
     return data
   }
 
+  // Nuevo: subir archivo en Base64
+  async uploadFile(filename, contentBase64) {
+    const { data } = await this.cliente.post('/archivos/upload', {
+      filename: filename,
+      contentBase64: contentBase64
+    })
+
+    // Asegurar que la URL devuelta sea absoluta para que el frontend pueda mostrar/descargar correctamente
+    try {
+      // Usar el origin (protocolo + host + puerto) para no duplicar el contexto de aplicación
+      const urlObj = new URL(this.cliente.defaults.baseURL)
+      const origin = urlObj.origin
+      if (data && data.url && data.url.startsWith('/')) {
+        data.url = origin + data.url
+      }
+    } catch (e) {
+      // si algo falla, seguimos devolviendo lo que venga del servidor
+      console.warn('No se pudo normalizar URL de archivo:', e.message)
+    }
+
+    return data
+  }
+
   async obtenerMensajes(idConversacion, limite = 50) {
     const { data } = await this.cliente.get(
       `/mensajes/conversacion/${idConversacion}?limite=${limite}`
@@ -136,7 +159,10 @@ class ServicioAPI {
   // ========== WEBSOCKET ==========
 
   conectarWebSocket(idConversacion, idUsuario, token) {
-    const url = `ws://localhost:8080/chat-empresarial/ws/conversacion/${idConversacion}/usuario/${idUsuario}?token=${token}`
+    // Aceptar token como string o ref (Pinia)
+    const rawToken = (token && token.value) ? token.value : token;
+    const encoded = rawToken ? encodeURIComponent(rawToken) : '';
+    const url = `ws://localhost:8080/chat-empresarial/ws/conversacion/${idConversacion}/usuario/${idUsuario}` + (encoded ? `?token=${encoded}` : '')
     console.log('Intentando conectar WebSocket a:', url)
 
     const ws = new WebSocket(url)
@@ -150,6 +176,10 @@ class ServicioAPI {
 
     ws.onerror = (error) => {
       console.error('Error WebSocket:', error)
+    }
+
+    ws.onclose = (ev) => {
+      console.log('WebSocket cerrado', ev.code, ev.reason)
     }
 
     return ws
