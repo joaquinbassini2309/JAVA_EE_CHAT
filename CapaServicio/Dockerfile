@@ -7,19 +7,18 @@ COPY . /workspace
 # Construir el módulo de servicios (genera target/chat-empresarial.war)
 RUN mvn -B -pl CapaServicio -am -DskipTests package
 
-## Use the official JBoss WildFly image from Docker Hub. If a specific tag is unavailable
-## on your registry, change it to a tag that exists (e.g. 28.0.1.Final).
-FROM jboss/wildfly:28.0.1.Final
+# Descargar el driver PostgreSQL en el directorio del proyecto para copiarlo al runtime
+RUN mvn -B -f CapaServicio/pom.xml dependency:copy -Dartifact=org.postgresql:postgresql:42.7.2 -DoutputDirectory=/workspace/CapaServicio/target
+
+FROM quay.io/wildfly/wildfly:32.0.1.Final
 
 ENV WILDFLY_HOME=/opt/jboss/wildfly
 
 # Copiar el .war generado
 COPY --from=builder /workspace/CapaServicio/target/chat-empresarial.war ${WILDFLY_HOME}/standalone/deployments/
 
-# Descargar el driver de Postgres en la imagen para poder crear datasource en tiempo de arranque
-ARG POSTGRESQL_VERSION=42.7.2
-RUN curl -L -o ${WILDFLY_HOME}/standalone/deployments/postgresql.jar \
-    https://repo1.maven.org/maven2/org/postgresql/postgresql/${POSTGRESQL_VERSION}/postgresql-${POSTGRESQL_VERSION}.jar
+# Copiar el driver PostgreSQL desde el stage de build
+COPY --from=builder /workspace/CapaServicio/target/postgresql-42.7.2.jar ${WILDFLY_HOME}/standalone/deployments/postgresql.jar
 
 # Copiar script de configuración y hacerlo ejecutable
 COPY configure-and-run.sh ${WILDFLY_HOME}/bin/configure-and-run.sh
