@@ -2,6 +2,8 @@ package chat.Datatype;
 
 import chat.Enum.TipoConversacion;
 import chat.clases.Conversacion;
+import chat.clases.Participante;
+import chat.clases.Usuario;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,7 +65,7 @@ public class DtConversacion {
             nombreVisible = conversacion.getParticipantes().stream()
                     .map(Participante::getUsuario)
                     .filter(usuario -> usuario != null && !usuarioActualId.equals(usuario.getId()))
-                    .map(usuario -> usuario.getUsername())
+                    .map(Usuario::getUsername)
                     .findFirst()
                     .orElse(conversacion.getNombre());
         }

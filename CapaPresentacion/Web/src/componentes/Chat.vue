@@ -94,8 +94,6 @@
 
       <!-- Barra de entrada -->
       <div class="entrada-mensaje">
-        <button class="btn-adjunto" title="Archivos adjunto">
-          <v-icon size="18" color="#406D73" style="opacity:0.75">mdi-paperclip</v-icon>
         <!-- Nuevo: input de archivo oculto -->
         <input
             ref="fileInput"
@@ -105,7 +103,7 @@
             style="display:none"
         />
         <button class="btn-adjunto" title="Archivos adjunto" @click="seleccionarArchivo">
-          <v-icon size="18" color="#406D73" style="opacity:0.75">adjuntar</v-icon>
+          <v-icon size="18" color="#406D73" style="opacity:0.75">mdi-paperclip</v-icon>
           <span>Archivos adjunto</span>
         </button>
         <input
@@ -242,12 +240,15 @@ const handleFileSelected = async (event) => {
 
         // Enviar mensaje con adjunto
         if (ws.value && ws.value.readyState === WebSocket.OPEN) {
+          // Si WebSocket está abierto, enviar por WebSocket
+          // El servidor responderá con el mensaje en el mismo canal
           ws.value.send(JSON.stringify({
             contenido: nombre,
             tipoMensaje: tipo,
             urlAdjunto: urlAdjunto
           }))
         } else {
+          // Si no hay WebSocket, enviar por HTTP y agregar localmente
           const m = await servicioApi.enviarMensaje({
             conversacionId: conversacionActual.value.id,
             contenido: nombre,
@@ -319,8 +320,11 @@ const enviarMensaje = async () => {
   contenidoNuevo.value = ''
   try {
     if (ws.value && ws.value.readyState === WebSocket.OPEN) {
+      // Si WebSocket está abierto, enviar por WebSocket
+      // El servidor responderá con el mensaje en el mismo canal
       ws.value.send(JSON.stringify({ contenido: texto, tipoMensaje: 'TEXTO' }))
     } else {
+      // Si no hay WebSocket, enviar por HTTP y agregar localmente
       const m = await servicioApi.enviarMensaje({
         conversacionId: conversacionActual.value.id,
         contenido: texto,

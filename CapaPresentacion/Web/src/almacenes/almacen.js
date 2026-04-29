@@ -62,6 +62,12 @@ export const useAlmacen = defineStore('principal', () => {
   }
 
   function agregarMensaje(nuevoMensaje) {
+    // Verificar si el mensaje ya existe para evitar duplicados
+    const yaExiste = mensajes.value.some(m => m.id === nuevoMensaje.id)
+    if (yaExiste) {
+      return // No agregar si ya existe
+    }
+
     mensajes.value = [...mensajes.value, nuevoMensaje]
     
     // Actualizar el último mensaje en la lista de conversaciones

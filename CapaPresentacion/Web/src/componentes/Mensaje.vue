@@ -3,10 +3,8 @@
     <div class="burbuja" :class="propio ? 'burbuja-me' : 'burbuja-them'">
       <span v-if="mostrarNombre" class="nombre-emisor">{{ mensaje.emisorNombre }}</span>
       <p class="contenido" :class="{ eliminado: mensaje.eliminado }">
-        {{ mensaje.eliminado ? 'Mensaje eliminado' : mensaje.contenido }}
+        {{ mensaje.eliminado ? 'Mensaje eliminado' : (mensaje.contenido && !esSoloAdjunto ? mensaje.contenido : '') }}
       </p>
-      <!-- Mostrar contenido de texto normal -->
-      <p v-if="mensaje.contenido && !esSoloAdjunto" class="contenido">{{ mensaje.contenido }}</p>
 
       <!-- Adjuntos: imagen inline -->
       <img v-if="esImagenAdjunta" :src="mensaje.urlAdjunto" alt="adjunto" class="adjunto-imagen" />
