@@ -2,8 +2,17 @@
 import axios from 'axios'
 
 // Usar variables de entorno Vite (VITE_API_BASE_URL, VITE_WS_BASE_URL). Si no están,
-// por defecto se utiliza ruta relativa '/api/v1' (útil para servir backend y frontend juntos).
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (window.location.origin + '/api/v1')
+// inferir el contexto para soportar despliegue en '/chat-empresarial' o en raíz.
+const inferApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL
+  if (envUrl) return envUrl
+
+  const inChatContext = window.location.pathname.startsWith('/chat-empresarial')
+  const contextPath = inChatContext ? '/chat-empresarial' : ''
+  return `${window.location.origin}${contextPath}/api/v1`
+}
+
+const API_BASE_URL = inferApiBaseUrl()
 console.log('[API] URL Base configurada:', API_BASE_URL)
 console.log('[API] import.meta.env.VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL)
 
@@ -11,7 +20,8 @@ class ServicioAPI {
   constructor() {
     this.cliente = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 10000
+      // Render (plan free) puede tardar >10s en arrancar en frío.
+      timeout: 30000
     })
 
     // Interceptor para agregar token JWT
@@ -30,6 +40,17 @@ class ServicioAPI {
     this.cliente.interceptors.response.use(
       (response) => response,
       (error) => {
+        const requestUrl = error?.config?.baseURL
+          ? `${error.config.baseURL}${error?.config?.url || ''}`
+          : error?.config?.url
+        console.error('[API] Error en respuesta:', {
+          code: error?.code,
+          status: error?.response?.status,
+          method: error?.config?.method,
+          url: requestUrl,
+          message: error?.message
+        })
+
         if (error.response?.status === 401) {
           // Token expirado o inválido
           localStorage.removeItem('token')
