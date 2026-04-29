@@ -1,22 +1,11 @@
-FROM node:20-alpine AS frontend-builder
-WORKDIR /workspace/CapaPresentacion/Web
-
-# Build del frontend dentro del contenedor para que el WAR ya incluya la SPA
-COPY CapaPresentacion/Web/package*.json ./
-RUN npm install
-COPY CapaPresentacion/Web/ ./
-RUN npm run build
-
 FROM maven:3.9.9-eclipse-temurin-21 AS builder
 WORKDIR /workspace
 
 # Copiar todo el repo para construir el módulo CapaServicio (y sus dependencias)
 COPY . /workspace
 
-# Sobrescribir dist con el artefacto compilado del frontend
-COPY --from=frontend-builder /workspace/CapaPresentacion/Web/dist /workspace/CapaPresentacion/Web/dist
-
-# Construir el módulo de servicios (genera target/chat-empresarial.war)
+# Construir el módulo de servicios (genera target/ROOT.war)
+# El WAR incluirá automáticamente CapaPresentacion/Web/dist desde webResources en pom.xml
 RUN mvn -B -pl CapaServicio -am -DskipTests package
 
 # Descargar el driver PostgreSQL en el directorio del proyecto para copiarlo al runtime
