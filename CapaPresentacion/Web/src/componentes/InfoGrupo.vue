@@ -12,7 +12,7 @@
         </div>
         <div class="profile-title-row">
           <button class="btn-atras" @click="$emit('volver')" title="Volver">
-            <v-icon size="20" color="#406D73">volver</v-icon>
+            <v-icon size="20" color="#406D73">mdi-arrow-left</v-icon>
           </button>
           <span class="profile-name text-truncate">{{ conversacion.nombre }}</span>
         </div>
@@ -28,7 +28,7 @@
       <!-- Sección integrantes -->
       <div class="seccion">
         <div class="seccion-titulo">
-          <v-icon size="16" color="#406D73" class="mr-1">grupo</v-icon>
+          <v-icon size="16" color="#406D73" class="mr-1">mdi-account-group</v-icon>
           Integrantes
         </div>
         <div class="lista-miembros">
@@ -56,7 +56,7 @@
       <!-- Sección opciones adicionales -->
       <div class="seccion seccion-placeholder">
         <div class="seccion-titulo">
-          <v-icon size="16" color="#406D73" class="mr-1">opciones</v-icon>
+          <v-icon size="16" color="#406D73" class="mr-1">mdi-cog-outline</v-icon>
           Opciones adicionales
         </div>
         <p class="placeholder-text">Falta implementar: Archivos, Silenciar, Salir del grupo, etc.</p>

@@ -23,16 +23,10 @@
           />
         </template>
         <v-list>
-          <v-list-item @click="$emit('ver-info', mensaje)">
-            <template v-slot:prepend>
-              <v-icon>mdi-information</v-icon>
-            </template>
+          <v-list-item @click="$emit('ver-info', mensaje)" prepend-icon="mdi-information">
             <v-list-item-title>Info</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="$emit('eliminar', mensaje)" class="text-error">
-            <template v-slot:prepend>
-              <v-icon color="error">mdi-delete</v-icon>
-            </template>
+          <v-list-item @click="$emit('eliminar', mensaje)" class="text-error" prepend-icon="mdi-delete">
             <v-list-item-title>Eliminar</v-list-item-title>
           </v-list-item>
         </v-list>
