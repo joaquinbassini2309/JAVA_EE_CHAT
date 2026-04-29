@@ -4,7 +4,7 @@
 # ========================================
 
 param(
-    [string]$ProjectRoot = "C:\Users\Usuario\IdeaProjects\JAVA_EE_CHAT",
+    [string]$ProjectRoot = "C:\Users\Curbe\IdeaProjects\JAVA_EE_CHAT",
     [string]$WildFlyDir = "C:\wildfly-32.0.1.Final"
 )
 

@@ -204,7 +204,7 @@ function Redeploy-App {
         return
     }
     
-    $projectRoot = "C:\Users\Usuario\IdeaProjects\JAVA_EE_CHAT"
+    $projectRoot = "C:\Users\Curbe\IdeaProjects\JAVA_EE_CHAT"
     if (-not (Test-Path "$projectRoot\pom.xml")) {
         Write-Error-Custom "[!] pom.xml no encontrado en $projectRoot"
         return

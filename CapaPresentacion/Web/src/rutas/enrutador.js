@@ -25,8 +25,9 @@ const routes = [
   }
 ]
 
+const basePath = import.meta.env.VITE_BASE_PATH || '/'
 const router = createRouter({
-  history: createWebHistory('/chat-empresarial/'),
+  history: createWebHistory(basePath),
   routes
 })
 

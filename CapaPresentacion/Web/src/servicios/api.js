@@ -1,7 +1,9 @@
 // Servicios API para la aplicación Vue.js
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:8080/chat-empresarial/api/v1'
+// Usar variables de entorno Vite (VITE_API_BASE_URL, VITE_WS_BASE_URL). Si no están,
+// por defecto se utiliza ruta relativa '/api/v1' (útil para servir backend y frontend juntos).
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (window.location.origin + '/api/v1')
 
 class ServicioAPI {
   constructor() {
@@ -136,7 +138,9 @@ class ServicioAPI {
   // ========== WEBSOCKET ==========
 
   conectarWebSocket(idConversacion, idUsuario, token) {
-    const url = `ws://localhost:8080/chat-empresarial/ws/conversacion/${idConversacion}/usuario/${idUsuario}?token=${token}`
+    const wsBaseFromEnv = import.meta.env.VITE_WS_BASE_URL
+    const base = wsBaseFromEnv || API_BASE_URL.replace(/^http/, 'ws').replace(/\/api\/v1$/, '')
+    const url = `${base}/ws/conversacion/${idConversacion}/usuario/${idUsuario}?token=${token}`
     console.log('Intentando conectar WebSocket a:', url)
 
     const ws = new WebSocket(url)
