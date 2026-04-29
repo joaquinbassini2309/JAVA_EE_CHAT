@@ -1,9 +1,8 @@
 // Servicios API para la aplicación Vue.js
 import axios from 'axios'
 
-// Usar variables de entorno Vite (VITE_API_BASE_URL, VITE_WS_BASE_URL). Si no están,
-// usar la ruta por defecto /chat-empresarial/api/v1 (despliegue estándar).
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/chat-empresarial/api/v1'
+// Rutas relativas: toda la app está bajo /chat-empresarial
+const API_BASE_URL = '/chat-empresarial/api/v1'
 console.log('[API] URL Base configurada:', API_BASE_URL)
 console.log('[API] import.meta.env.VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL)
 
