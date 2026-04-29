@@ -1,5 +1,4 @@
-<!--
-  jboss-web.xml no es necesario: WildFly usa el nombre del WAR (chat-empresarial.war)
-  para determinar el contexto de despliegue (/chat-empresarial).
-  Se deja el archivo vacío para referencia.
--->
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-web>
+    <!-- Descriptor válido y mínimo para evitar errores de parseo en WildFly. -->
+</jboss-web>
