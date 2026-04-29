@@ -32,8 +32,8 @@ COPY --from=builder /workspace/CapaServicio/target/chat-empresarial.war ${WILDFL
 # Copiar el driver PostgreSQL desde el stage de build
 COPY --from=builder /workspace/CapaServicio/target/postgresql-42.7.2.jar ${WILDFLY_HOME}/standalone/deployments/postgresql.jar
 
-# Copiar script de configuración y hacerlo ejecutable
-COPY configure-and-run.sh ${WILDFLY_HOME}/bin/configure-and-run.sh
+# Copiar script de configuración y hacerlo ejecutable (el contexto de build es la raíz del repo)
+COPY CapaServicio/configure-and-run.sh ${WILDFLY_HOME}/bin/configure-and-run.sh
 RUN chmod +x ${WILDFLY_HOME}/bin/configure-and-run.sh
 
 EXPOSE 8080
