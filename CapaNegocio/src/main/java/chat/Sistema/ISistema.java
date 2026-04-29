@@ -85,6 +85,12 @@ public interface ISistema {
     //Verifica si un usuario pertenece a una conversación
     boolean usuarioEstaEnConversacion(Long usuarioId, Long conversacionId);
 
+    /**
+     * Actualiza la información de un grupo (nombre, etc.)
+     * - Valida permisos (ADMIN o MODERADOR)
+     */
+    void actualizarInfoGrupo(Long grupoId, String nombre, Long adminId);
+
     // ========== CASOS DE USO: PARTICIPANTES ==========
     
     /**
@@ -109,6 +115,12 @@ public interface ISistema {
     
     //Cambia el rol de un participante en un grupo
     void cambiarRolParticipante(Long grupoId, Long usuarioId, RolParticipante nuevoRol, Long adminId);
+
+    /**
+     * Silencia a un participante en un grupo
+     * - Valida permisos (ADMIN o MODERADOR)
+     */
+    void silenciarParticipante(Long grupoId, Long usuarioId, Long adminId);
 
     // ========== CASOS DE USO: MENSAJERÍA ==========
     

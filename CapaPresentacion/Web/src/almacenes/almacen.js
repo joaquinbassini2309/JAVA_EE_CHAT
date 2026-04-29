@@ -90,6 +90,42 @@ export const useAlmacen = defineStore('principal', () => {
     })
   }
 
+  function actualizarNombreConversacion(conversacionId, nombre) {
+    const conv = conversaciones.value.find(c => c.id === conversacionId)
+    if (conv) {
+      conv.nombre = nombre
+    }
+    if (conversacionActual.value?.id === conversacionId) {
+      conversacionActual.value.nombre = nombre
+    }
+  }
+
+  function actualizarRolParticipante(conversacionId, participanteId, nuevoRol) {
+    const conv = conversaciones.value.find(c => c.id === conversacionId)
+    if (conv?.participantes) {
+      const participante = conv.participantes.find(p => p.id === participanteId)
+      if (participante) {
+        participante.rol = nuevoRol
+      }
+    }
+    if (conversacionActual.value?.id === conversacionId) {
+      const participante = conversacionActual.value.participantes.find(p => p.id === participanteId)
+      if (participante) {
+        participante.rol = nuevoRol
+      }
+    }
+  }
+
+  function eliminarParticipante(conversacionId, participanteId) {
+    const conv = conversaciones.value.find(c => c.id === conversacionId)
+    if (conv?.participantes) {
+      conv.participantes = conv.participantes.filter(p => p.id !== participanteId)
+    }
+    if (conversacionActual.value?.id === conversacionId) {
+      conversacionActual.value.participantes = conversacionActual.value.participantes.filter(p => p.id !== participanteId)
+    }
+  }
+
   function establecerCargando(valor) {
     cargando.value = valor
   }
@@ -153,6 +189,9 @@ export const useAlmacen = defineStore('principal', () => {
     agregarMensaje,
     agregarConversacion,
     actualizarEstadoUsuario,
+    actualizarNombreConversacion,
+    actualizarRolParticipante,
+    eliminarParticipante,
     establecerCargando,
     establecerError,
     limpiarError,

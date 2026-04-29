@@ -215,10 +215,26 @@ public class Sistema implements ISistema {
         return participanteHandler().existeParticipante(conversacionId, usuarioId);
     }
 
-    // ========== IMPLEMENTACIÓN: PARTICIPANTES ==========
+    // ========== IMPLEMENTACIÓN: GESTIÓN DE GRUPOS ==========
 
     @Override
-    public Participante agregarMiembroAGrupo(Long grupoId, Long usuarioId, Long adminId) {
+    public void actualizarInfoGrupo(Long grupoId, String nombre, Long actorId) {
+        // Validar que quien actúa es ADMIN o MODERADOR
+        Participante actor = participanteHandler().buscarParticipante(grupoId, actorId)
+                .orElseThrow(() -> new IllegalArgumentException("No eres miembro de este grupo"));
+        
+        if (actor.getRol() != RolParticipante.ADMIN && actor.getRol() != RolParticipante.MODERADOR) {
+            throw new IllegalArgumentException("No tienes permisos para actualizar la información del grupo");
+        }
+
+        // Actualizar nombre
+        conversacionHandler().actualizarNombre(grupoId, nombre);
+        
+        // TODO: Notificar a observadores sobre el cambio de info
+    }
+
+    @Override
+    public Participante agregarMiembroAGrupo(Long grupoId, Long usuarioId, Long actorId) {
         // Validar que es un grupo
         Conversacion grupo = buscarConversacionPorId(grupoId)
                 .orElseThrow(() -> new IllegalArgumentException("Grupo no encontrado"));
@@ -227,11 +243,11 @@ public class Sistema implements ISistema {
             throw new IllegalArgumentException("Solo se pueden agregar miembros a grupos");
         }
 
-        // Validar que quien agrega es admin
-        Participante admin = participanteHandler().buscarParticipante(grupoId, adminId)
-                .orElseThrow(() -> new IllegalArgumentException("Admin no es parte del grupo"));
+        // Validar que quien agrega es ADMIN o MODERADOR
+        Participante actor = participanteHandler().buscarParticipante(grupoId, actorId)
+                .orElseThrow(() -> new IllegalArgumentException("No eres miembro de este grupo"));
         
-        if (admin.getRol() != RolParticipante.ADMIN && admin.getRol() != RolParticipante.MODERADOR) {
+        if (actor.getRol() != RolParticipante.ADMIN && actor.getRol() != RolParticipante.MODERADOR) {
             throw new IllegalArgumentException("Solo admins o moderadores pueden agregar miembros");
         }
 
@@ -247,17 +263,17 @@ public class Sistema implements ISistema {
     }
 
     @Override
-    public void removerMiembroDeGrupo(Long grupoId, Long usuarioId, Long adminId) {
-        // Validar permisos del admin
-        Participante admin = participanteHandler().buscarParticipante(grupoId, adminId)
-                .orElseThrow(() -> new IllegalArgumentException("Admin no es parte del grupo"));
+    public void removerMiembroDeGrupo(Long grupoId, Long usuarioId, Long actorId) {
+        // NUEVA LÓGICA: Solo el ADMIN puede remover
+        Participante actor = participanteHandler().buscarParticipante(grupoId, actorId)
+                .orElseThrow(() -> new IllegalArgumentException("No eres miembro de este grupo"));
         
-        if (admin.getRol() != RolParticipante.ADMIN && admin.getRol() != RolParticipante.MODERADOR) {
-            throw new IllegalArgumentException("Solo admins o moderadores pueden remover miembros");
+        if (actor.getRol() != RolParticipante.ADMIN) {
+            throw new IllegalArgumentException("Solo los administradores pueden remover miembros");
         }
 
         // No permitir que el admin se remueva a sí mismo si es el único admin
-        if (adminId.equals(usuarioId)) {
+        if (actorId.equals(usuarioId)) {
             long cantidadAdmins = participanteHandler().contarAdmins(grupoId);
             if (cantidadAdmins <= 1) {
                 throw new IllegalArgumentException("No se puede remover el único admin del grupo");
@@ -295,17 +311,33 @@ public class Sistema implements ISistema {
     }
 
     @Override
-    public void cambiarRolParticipante(Long grupoId, Long usuarioId, RolParticipante nuevoRol, Long adminId) {
-        // Validar permisos del admin
-        Participante admin = participanteHandler().buscarParticipante(grupoId, adminId)
-                .orElseThrow(() -> new IllegalArgumentException("Admin no es parte del grupo"));
+    public void cambiarRolParticipante(Long grupoId, Long usuarioId, RolParticipante nuevoRol, Long actorId) {
+        // Validar permisos del actor
+        Participante actor = participanteHandler().buscarParticipante(grupoId, actorId)
+                .orElseThrow(() -> new IllegalArgumentException("No eres miembro de este grupo"));
         
-        if (admin.getRol() != RolParticipante.ADMIN) {
-            throw new IllegalArgumentException("Solo admins pueden cambiar roles");
+        if (actor.getRol() != RolParticipante.ADMIN) {
+            throw new IllegalArgumentException("Solo los administradores pueden cambiar roles");
         }
 
         // Cambiar rol
         participanteHandler().actualizarRol(grupoId, usuarioId, nuevoRol);
+        // TODO: Notificar a observadores
+    }
+
+    @Override
+    public void silenciarParticipante(Long grupoId, Long usuarioId, Long actorId) {
+        // NUEVA LÓGICA: ADMIN o MODERADOR pueden silenciar
+        Participante actor = participanteHandler().buscarParticipante(grupoId, actorId)
+                .orElseThrow(() -> new IllegalArgumentException("No eres miembro de este grupo"));
+        
+        if (actor.getRol() != RolParticipante.ADMIN && actor.getRol() != RolParticipante.MODERADOR) {
+            throw new IllegalArgumentException("No tienes permisos para silenciar a un miembro");
+        }
+
+        // Cambiar rol a SILENCIADO
+        participanteHandler().actualizarRol(grupoId, usuarioId, RolParticipante.SILENCIADO);
+        // TODO: Notificar a observadores
     }
 
     // ========== IMPLEMENTACIÓN: MENSAJERÍA ==========
@@ -323,9 +355,17 @@ public class Sistema implements ISistema {
             throw new IllegalArgumentException("El usuario no pertenece a esta conversación");
         }
 
-        // Validar que la conversación existe
-        buscarConversacionPorId(conversacionId)
+        // NUEVA LÓGICA: Validar que el usuario no esté silenciado
+        Conversacion c = buscarConversacionPorId(conversacionId)
                 .orElseThrow(() -> new IllegalArgumentException("Conversación no encontrada"));
+        
+        if (c.getTipo() == TipoConversacion.GRUPO) {
+            Participante emisor = participanteHandler().buscarParticipante(conversacionId, emisorId)
+                    .orElseThrow(() -> new IllegalArgumentException("No se encontró tu participación en el grupo"));
+            if (emisor.getRol() == RolParticipante.SILENCIADO) {
+                throw new IllegalArgumentException("Estás silenciado en este grupo y no puedes enviar mensajes");
+            }
+        }
 
         // Enviar mensaje
         Mensaje m = mensajeHandler().enviarMensaje(conversacionId, emisorId, contenido, tipo, urlAdjunto);
@@ -361,12 +401,23 @@ public class Sistema implements ISistema {
 
     @Override
     public void eliminarMensaje(Long mensajeId, Long usuarioId) {
-        // Validar que el usuario es el emisor del mensaje
         Mensaje mensaje = mensajeHandler.buscarPorId(mensajeId)
                 .orElseThrow(() -> new IllegalArgumentException("Mensaje no encontrado"));
 
+        // Si el usuario no es el emisor, verificar si es ADMIN del grupo
         if (!mensaje.getEmisor().getId().equals(usuarioId)) {
-            throw new IllegalArgumentException("No tienes permiso para eliminar este mensaje");
+            Conversacion c = mensaje.getConversacion();
+            if (c.getTipo() == TipoConversacion.GRUPO) {
+                Participante actor = participanteHandler().buscarParticipante(c.getId(), usuarioId)
+                        .orElseThrow(() -> new IllegalArgumentException("No eres miembro de este grupo"));
+                
+                if (actor.getRol() != RolParticipante.ADMIN) {
+                    throw new IllegalArgumentException("No tienes permiso para eliminar este mensaje");
+                }
+            } else {
+                // En chats privados, solo el emisor puede borrar
+                throw new IllegalArgumentException("No tienes permiso para eliminar este mensaje");
+            }
         }
 
         mensajeHandler.eliminarMensaje(mensajeId, usuarioId);

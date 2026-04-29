@@ -98,9 +98,26 @@ class ServicioAPI {
     return data
   }
 
+  async actualizarConversacion(idConversacion, nombre) {
+    const { data } = await this.cliente.put(`/conversaciones/${idConversacion}`, { nombre })
+    return data
+  }
+
   async añadirParticipante(idConversacion, idUsuario) {
     const { data } = await this.cliente.post(`/conversaciones/${idConversacion}/participantes`, {
       usuarioId: idUsuario
+    })
+    return data
+  }
+
+  async eliminarParticipante(idConversacion, idParticipante) {
+    const { data } = await this.cliente.delete(`/conversaciones/${idConversacion}/participantes/${idParticipante}`)
+    return data
+  }
+
+  async actualizarRolParticipante(idConversacion, idParticipante, nuevoRol) {
+    const { data } = await this.cliente.put(`/conversaciones/${idConversacion}/participantes/${idParticipante}/rol`, {
+      rol: nuevoRol
     })
     return data
   }
