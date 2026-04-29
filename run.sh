@@ -77,3 +77,4 @@ docker stop $DOCKER_NAME
 
 echo ""
 echo -e "${GREEN}Entorno cerrado. ¡Hasta la próxima, Guzman!${NC}"
+
