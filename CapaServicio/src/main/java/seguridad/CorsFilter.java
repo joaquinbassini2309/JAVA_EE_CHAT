@@ -9,7 +9,6 @@ import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -42,6 +41,16 @@ public class CorsFilter implements ContainerRequestFilter, ContainerResponseFilt
         return allowedOrigins().contains(requestOrigin) ? requestOrigin : null;
     }
 
+    private static Response.ResponseBuilder corsHeaders(Response.ResponseBuilder builder, String origin) {
+        return builder
+                .header("Access-Control-Allow-Origin", origin)
+                .header("Vary", "Origin")
+                .header("Access-Control-Allow-Credentials", "true")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                .header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With")
+                .header("Access-Control-Expose-Headers", "Location, Content-Type, Authorization");
+    }
+
     @Override
     public void filter(ContainerRequestContext requestContext) {
         if ("OPTIONS".equalsIgnoreCase(requestContext.getMethod())) {
@@ -50,7 +59,7 @@ public class CorsFilter implements ContainerRequestFilter, ContainerResponseFilt
                 requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
                 return;
             }
-            requestContext.abortWith(Response.ok().build());
+            requestContext.abortWith(corsHeaders(Response.ok(), origin).build());
         }
     }
 
