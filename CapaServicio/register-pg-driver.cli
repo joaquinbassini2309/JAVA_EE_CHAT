@@ -1,0 +1,8 @@
+# Script de CLI para registrar el driver PostgreSQL en WildFly al arrancar
+# Ejecutado con jboss-cli en modo offline de configuración
+
+# Agregar el driver PostgreSQL si no existe
+if (outcome == undefined) of /subsystem=datasources/jdbc-driver=postgresql:read-resource
+    /subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql,driver-module-name=org.postgresql,driver-class-name=org.postgresql.Driver)
+end-if
+

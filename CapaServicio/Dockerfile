@@ -38,6 +38,12 @@ COPY --from=builder /workspace/CapaServicio/target/postgresql-42.7.2.jar ${WILDF
 # Copiar la plantilla del datasource
 COPY CapaServicio/chat-ds.xml.template ${WILDFLY_HOME}/standalone/configuration/chat-ds.xml.template
 
+# Copiar script de CLI para registrar el driver PostgreSQL
+COPY CapaServicio/register-pg-driver.cli ${WILDFLY_HOME}/bin/register-pg-driver.cli
+
+# Ejecutar CLI de WildFly en modo offline para registrar el driver PostgreSQL
+RUN ${WILDFLY_HOME}/bin/jboss-cli.sh --file=${WILDFLY_HOME}/bin/register-pg-driver.cli
+
 # Copiar script de configuración y hacerlo ejecutable (el contexto de build es la raíz del repo)
 COPY CapaServicio/configure-and-run.sh ${WILDFLY_HOME}/bin/configure-and-run.sh
 RUN chmod +x ${WILDFLY_HOME}/bin/configure-and-run.sh
