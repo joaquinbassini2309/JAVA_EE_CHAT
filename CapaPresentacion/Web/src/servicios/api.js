@@ -1,9 +1,9 @@
 // Servicios API para la aplicación Vue.js
 import axios from 'axios'
 
-// En producción y en local usamos la misma raíz del sitio.
-// En desarrollo, Vite proxyrea /api y /ws hacia WildFly.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+// Usar variables de entorno Vite (VITE_API_BASE_URL, VITE_WS_BASE_URL). Si no están,
+// usar la ruta por defecto /chat-empresarial/api/v1 (despliegue estándar).
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/chat-empresarial/api/v1'
 console.log('[API] URL Base configurada:', API_BASE_URL)
 console.log('[API] import.meta.env.VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL)
 
@@ -153,7 +153,7 @@ class ServicioAPI {
 
   conectarWebSocket(idConversacion, idUsuario, token) {
     const wsBaseFromEnv = import.meta.env.VITE_WS_BASE_URL
-    const base = wsBaseFromEnv || window.location.origin.replace(/^http/, 'ws')
+    const base = wsBaseFromEnv || (window.location.origin + '/chat-empresarial').replace(/^http/, 'ws')
     const url = `${base}/ws/conversacion/${idConversacion}/usuario/${idUsuario}?token=${token}`
     console.log('Intentando conectar WebSocket a:', url)
 

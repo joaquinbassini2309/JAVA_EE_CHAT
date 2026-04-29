@@ -27,8 +27,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends bash gettext-ba
 # Copiar WildFly desde el stage de build
 COPY --from=builder /opt/wildfly /opt/wildfly
 
-# Copiar el .war generado (ROOT.war para servir desde la raíz del dominio)
-COPY --from=builder /workspace/CapaServicio/target/ROOT.war ${WILDFLY_HOME}/standalone/deployments/ROOT.war
+# Copiar el .war generado
+COPY --from=builder /workspace/CapaServicio/target/chat-empresarial.war ${WILDFLY_HOME}/standalone/deployments/chat-empresarial.war
 
 # Instalar el driver PostgreSQL como módulo de WildFly
 RUN mkdir -p ${WILDFLY_HOME}/modules/system/layers/base/org/postgresql/main

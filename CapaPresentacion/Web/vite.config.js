@@ -14,12 +14,12 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8080/chat-empresarial',
         changeOrigin: true,
         rewrite: (path) => path
       },
       '/ws': {
-        target: 'ws://localhost:8080',
+        target: 'ws://localhost:8080/chat-empresarial',
         ws: true,
         changeOrigin: true
       }
