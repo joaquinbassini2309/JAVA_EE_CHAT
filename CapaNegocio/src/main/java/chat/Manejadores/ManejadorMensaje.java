@@ -64,4 +64,19 @@ public class ManejadorMensaje {
                 .setParameter("uid", usuarioId)
                 .executeUpdate();
     }
+
+    public void eliminarMensaje(Long mensajeId, Long usuarioId) {
+        Mensaje m = em.find(Mensaje.class, mensajeId);
+        if (m != null && m.getEmisor().getId().equals(usuarioId)) {
+            m.setEliminado(true);
+            m.setContenido("Mensaje eliminado");
+            em.merge(m);
+        } else {
+            throw new IllegalArgumentException("Mensaje no encontrado o no autorizado");
+        }
+    }
+
+    public Optional<Mensaje> obtenerMensajeConInfo(Long mensajeId) {
+        return Optional.ofNullable(em.find(Mensaje.class, mensajeId));
+    }
 }

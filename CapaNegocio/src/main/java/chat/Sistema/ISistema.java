@@ -139,6 +139,12 @@ public interface ISistema {
     //Marca todos los mensajes de una conversación como leídos
     void marcarConversacionComoLeida(Long conversacionId, Long usuarioId);
 
+    //Elimina un mensaje (solo el emisor puede eliminarlo)
+    void eliminarMensaje(Long mensajeId, Long usuarioId);
+
+    //Obtiene información detallada de un mensaje
+    Optional<Mensaje> obtenerInfoMensaje(Long mensajeId, Long usuarioId);
+
     // Observadores
     void registrarObservador(ChatObserver observer);
     void eliminarObservador(ChatObserver observer);

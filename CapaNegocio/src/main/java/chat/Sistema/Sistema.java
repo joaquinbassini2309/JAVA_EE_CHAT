@@ -360,6 +360,34 @@ public class Sistema implements ISistema {
     }
 
     @Override
+    public void eliminarMensaje(Long mensajeId, Long usuarioId) {
+        // Validar que el usuario es el emisor del mensaje
+        Mensaje mensaje = mensajeHandler.buscarPorId(mensajeId)
+                .orElseThrow(() -> new IllegalArgumentException("Mensaje no encontrado"));
+
+        if (!mensaje.getEmisor().getId().equals(usuarioId)) {
+            throw new IllegalArgumentException("No tienes permiso para eliminar este mensaje");
+        }
+
+        mensajeHandler.eliminarMensaje(mensajeId, usuarioId);
+        observable.notificar(new EventoChat(EventoTipo.MENSAJE_ELIMINADO, mensaje));
+    }
+
+    @Override
+    public Optional<Mensaje> obtenerInfoMensaje(Long mensajeId, Long usuarioId) {
+        // Validar que el usuario tiene acceso a la conversación del mensaje
+        Mensaje mensaje = mensajeHandler.buscarPorId(mensajeId)
+                .orElseThrow(() -> new IllegalArgumentException("Mensaje no encontrado"));
+
+        if (!usuarioEstaEnConversacion(usuarioId, mensaje.getConversacion().getId())) {
+            throw new IllegalArgumentException("No tienes acceso a este mensaje");
+        }
+
+        return mensajeHandler.obtenerMensajeConInfo(mensajeId);
+    }
+
+    // Observadores
+    @Override
     public void registrarObservador(ChatObserver observer) {
         observable.registrarObservador(observer);
     }
@@ -369,6 +397,7 @@ public class Sistema implements ISistema {
         observable.eliminarObservador(observer);
     }
 
+    // Encriptado
     @Override
     public String encriptarMensaje(String contenido) {
         // Implementación simple con Base64; idealmente usar AES

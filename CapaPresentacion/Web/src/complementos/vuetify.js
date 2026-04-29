@@ -1,47 +1,30 @@
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { mdi } from 'vuetify/iconsets/mdi-svg'
-import {
-  mdiAccount,
-  mdiAccountPlus,
-  mdiClose,
-  mdiEmail,
-  mdiLock,
-  mdiLogout,
-  mdiMagnify,
-  mdiMenu,
-  mdiPaperclip,
-  mdiSend,
-  mdiAccountGroup,
-  mdiArrowLeft,
-  mdiCogOutline,
-  mdiPlus,
-  mdiCheck,
-} from '@mdi/js'
 import { defaultThemeName, temaProyecto } from '@/configuracion/temaProyecto.js'
 
+// 1. Importar la fuente de íconos de Material Design Icons
+import '@mdi/font/css/materialdesignicons.css'
+
+// 2. (Opcional pero recomendado) Mantener los alias para usar nombres amigables
 const iconos = {
   defaultSet: 'mdi',
   aliases: {
-    usuario: mdiAccount,
-    correo: mdiEmail,
-    candado: mdiLock,
-    enviar: mdiSend,
-    menu: mdiMenu,
-    cerrar: mdiClose,
-    cerrarSesion: mdiLogout,
-    buscar: mdiMagnify,
-    añadirContacto: mdiAccountPlus,
-    grupo: mdiAccountGroup,
-    adjuntar: mdiPaperclip,
-    volver: mdiArrowLeft,
-    opciones: mdiCogOutline,
-    crear: mdiPlus,
-    confirmar: mdiCheck,
-  },
-  sets: {
-    mdi,
+    usuario: 'mdi-account',
+    correo: 'mdi-email',
+    candado: 'mdi-lock',
+    enviar: 'mdi-send',
+    menu: 'mdi-menu',
+    cerrar: 'mdi-close',
+    cerrarSesion: 'mdi-logout',
+    buscar: 'mdi-magnify',
+    añadirContacto: 'mdi-account-plus',
+    grupo: 'mdi-account-group',
+    adjuntar: 'mdi-paperclip',
+    volver: 'mdi-arrow-left',
+    opciones: 'mdi-cog-outline',
+    crear: 'mdi-plus',
+    confirmar: 'mdi-check',
   },
 }
 
@@ -54,5 +37,6 @@ export default createVuetify({
       [defaultThemeName]: temaProyecto,
     },
   },
+  // 3. Usar la nueva configuración de íconos
   icons: iconos,
 })

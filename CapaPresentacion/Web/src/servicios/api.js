@@ -133,6 +133,16 @@ class ServicioAPI {
     return data
   }
 
+  async eliminarMensaje(idMensaje) {
+    const { data } = await this.cliente.delete(`/mensajes/${idMensaje}`)
+    return data
+  }
+
+  async obtenerInfoMensaje(idMensaje) {
+    const { data } = await this.cliente.get(`/mensajes/${idMensaje}/info`)
+    return data
+  }
+
   // ========== WEBSOCKET ==========
 
   conectarWebSocket(idConversacion, idUsuario, token) {

@@ -53,6 +53,27 @@
         </v-card>
       </v-dialog>
 
+      <!-- Modal Info Mensaje -->
+      <v-dialog v-model="mostrarModalInfo" max-width="400">
+        <v-card v-if="mensajeParaInfo" rounded="lg">
+          <v-card-title class="modal-titulo">
+            Información del Mensaje
+            <v-spacer />
+            <v-btn icon="mdi-close" variant="text" size="small" @click="mostrarModalInfo = false" />
+          </v-card-title>
+          <v-card-text class="py-4">
+            <p class="mb-2"><strong>Contenido:</strong><br><em>"{{ mensajeParaInfo.contenido }}"</em></p>
+            <p class="mb-2"><strong>Enviado por:</strong> {{ esPropio(mensajeParaInfo) ? 'Tú' : (mensajeParaInfo.emisorNombre || 'Desconocido') }}</p>
+            <p class="mb-2"><strong>Fecha:</strong> {{ formatearFecha(mensajeParaInfo.fechaEnvio) }}</p>
+            <p><strong>Estado:</strong> {{ mensajeParaInfo.leido ? 'Leído' : 'Entregado' }}</p>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn text @click="mostrarModalInfo = false">Cerrar</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <!-- Área de mensajes -->
       <div ref="contenedorMensajes" class="contenedor-mensajes">
         <div
@@ -61,7 +82,11 @@
             class="mensaje-wrap"
             :class="{ propio: esPropio(mensaje) }"
         >
-          <Mensaje :mensaje="mensaje" />
+          <Mensaje
+              :mensaje="mensaje"
+              @ver-info="mostrarInfoMensaje"
+              @eliminar="eliminarMensaje"
+          />
         </div>
       </div>
 
@@ -98,6 +123,7 @@ import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 import Mensaje from './Mensaje.vue'
 import InfoGrupo from './InfoGrupo.vue'
+import { formatearFecha } from '@/utilidades/formateoFechas'
 
 const almacen = useAlmacen()
 const contenidoNuevo = ref('')
@@ -108,6 +134,8 @@ const mostrarModalAñadir = ref(false)
 const mostrandoInfo = ref(false)
 const terminoUsuario = ref('')
 const usuariosDisponibles = ref([])
+const mostrarModalInfo = ref(false)
+const mensajeParaInfo = ref(null)
 
 const conversacionActual = computed(() => almacen.conversacionActual)
 const usuarioActual = computed(() => almacen.usuarioActual)
@@ -219,6 +247,22 @@ const enviarMensaje = async () => {
   } catch (error) {
     console.error('Error al enviar mensaje:', error)
     contenidoNuevo.value = texto
+  }
+}
+
+const mostrarInfoMensaje = (mensaje) => {
+  mensajeParaInfo.value = mensaje
+  mostrarModalInfo.value = true
+}
+
+const eliminarMensaje = async (mensaje) => {
+  try {
+    await servicioApi.eliminarMensaje(mensaje.id)
+    // Marcar el mensaje como eliminado
+    mensaje.eliminado = true
+    mensaje.contenido = 'Mensaje eliminado'
+  } catch (error) {
+    console.error('Error al eliminar mensaje:', error)
   }
 }
 
