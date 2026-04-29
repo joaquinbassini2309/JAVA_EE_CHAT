@@ -6,6 +6,18 @@
 
     <display-name>Chat Empresarial</display-name>
 
+    <!-- Filtro CORS a nivel servlet para interceptar OPTIONS antes de JAX-RS -->
+    <filter>
+        <filter-name>CorsServletFilter</filter-name>
+        <filter-class>seguridad.CorsServletFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>CorsServletFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+
     <!-- Error page to handle SPA routing (no hash) -->
     <error-page>
         <error-code>404</error-code>

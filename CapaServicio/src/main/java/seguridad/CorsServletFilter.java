@@ -5,7 +5,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -18,7 +17,6 @@ import java.util.Set;
  * Servlet-level CORS filter que intercepta OPTIONS antes de JAX-RS.
  * Esto resuelve el problema de WildFly rechazando OPTIONS en 405.
  */
-@WebFilter(urlPatterns = "/*")
 public class CorsServletFilter implements Filter {
 
     private static final String DEFAULT_ORIGINS = String.join(",",

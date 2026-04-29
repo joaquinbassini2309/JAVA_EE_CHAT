@@ -1,8 +1,20 @@
+FROM node:20-alpine AS frontend-builder
+WORKDIR /workspace/CapaPresentacion/Web
+
+# Build del frontend dentro del contenedor para que el WAR ya incluya la SPA
+COPY CapaPresentacion/Web/package*.json ./
+RUN npm install
+COPY CapaPresentacion/Web/ ./
+RUN npm run build
+
 FROM maven:3.9.9-eclipse-temurin-21 AS builder
 WORKDIR /workspace
 
 # Copiar todo el repo para construir el módulo CapaServicio (y sus dependencias)
 COPY . /workspace
+
+# Sobrescribir dist con el artefacto compilado del frontend
+COPY --from=frontend-builder /workspace/CapaPresentacion/Web/dist /workspace/CapaPresentacion/Web/dist
 
 # Construir el módulo de servicios (genera target/chat-empresarial.war)
 RUN mvn -B -pl CapaServicio -am -DskipTests package
@@ -26,8 +38,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends bash gettext-ba
 # Copiar WildFly desde el stage de build
 COPY --from=builder /opt/wildfly /opt/wildfly
 
-# Copiar el .war generado
-COPY --from=builder /workspace/CapaServicio/target/chat-empresarial.war ${WILDFLY_HOME}/standalone/deployments/
+# Copiar el .war generado (ROOT.war para servir desde la raíz del dominio)
+COPY --from=builder /workspace/CapaServicio/target/ROOT.war ${WILDFLY_HOME}/standalone/deployments/ROOT.war
 
 # Instalar el driver PostgreSQL como módulo de WildFly
 RUN mkdir -p ${WILDFLY_HOME}/modules/system/layers/base/org/postgresql/main
