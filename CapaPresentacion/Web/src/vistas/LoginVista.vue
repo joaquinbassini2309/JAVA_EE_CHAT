@@ -68,6 +68,11 @@ const contraseña = ref('')
 const cargando = ref(false)
 const error = ref(null)
 
+const obtenerMensajeError = (err, fallback) => {
+  const data = err?.response?.data
+  return data?.detalle || data?.mensaje || data?.message || data?.errores?.[0] || fallback
+}
+
 const iniciarSesion = async () => {
   if (!email.value || !contraseña.value) {
     error.value = 'Por favor completa todos los campos'
@@ -89,7 +94,8 @@ const iniciarSesion = async () => {
 
     router.push('/chat')
   } catch (err) {
-    error.value = err.response?.data?.detalle || 'Error al iniciar sesión'
+    console.error('Error al iniciar sesión:', err?.response?.status, err?.response?.data || err)
+    error.value = obtenerMensajeError(err, 'Error al iniciar sesión')
   } finally {
     cargando.value = false
   }

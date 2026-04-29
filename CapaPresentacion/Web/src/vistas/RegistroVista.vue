@@ -81,6 +81,11 @@ const cargando = ref(false)
 const error = ref(null)
 const exito = ref(false)
 
+const obtenerMensajeError = (err, fallback) => {
+  const data = err?.response?.data
+  return data?.detalle || data?.mensaje || data?.message || data?.errores?.[0] || fallback
+}
+
 const registrarse = async () => {
   cargando.value = true
   error.value = null
@@ -96,7 +101,8 @@ const registrarse = async () => {
       router.push('/login')
     }, 1500)
   } catch (err) {
-    error.value = err.response?.data?.detalle || 'Error al registrarse'
+    console.error('Error al registrarse:', err?.response?.status, err?.response?.data || err)
+    error.value = obtenerMensajeError(err, 'Error al registrarse')
   } finally {
     cargando.value = false
   }
