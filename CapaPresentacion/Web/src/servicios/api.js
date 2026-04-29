@@ -4,6 +4,8 @@ import axios from 'axios'
 // Usar variables de entorno Vite (VITE_API_BASE_URL, VITE_WS_BASE_URL). Si no están,
 // por defecto se utiliza ruta relativa '/api/v1' (útil para servir backend y frontend juntos).
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (window.location.origin + '/api/v1')
+console.log('[API] URL Base configurada:', API_BASE_URL)
+console.log('[API] import.meta.env.VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL)
 
 class ServicioAPI {
   constructor() {
