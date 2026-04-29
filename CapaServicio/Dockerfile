@@ -20,8 +20,8 @@ FROM eclipse-temurin:21-jre-jammy
 
 ENV WILDFLY_HOME=/opt/wildfly
 
-# WildFly y el script de arranque requieren bash
-RUN apt-get update && apt-get install -y --no-install-recommends bash && rm -rf /var/lib/apt/lists/*
+# WildFly y la generación del datasource requieren bash + envsubst
+RUN apt-get update && apt-get install -y --no-install-recommends bash gettext-base && rm -rf /var/lib/apt/lists/*
 
 # Copiar WildFly desde el stage de build
 COPY --from=builder /opt/wildfly /opt/wildfly
@@ -29,8 +29,13 @@ COPY --from=builder /opt/wildfly /opt/wildfly
 # Copiar el .war generado
 COPY --from=builder /workspace/CapaServicio/target/chat-empresarial.war ${WILDFLY_HOME}/standalone/deployments/
 
-# Copiar el driver PostgreSQL desde el stage de build
-COPY --from=builder /workspace/CapaServicio/target/postgresql-42.7.2.jar ${WILDFLY_HOME}/standalone/deployments/postgresql.jar
+# Instalar el driver PostgreSQL como módulo de WildFly
+RUN mkdir -p ${WILDFLY_HOME}/modules/system/layers/base/org/postgresql/main
+COPY CapaServicio/postgresql-module.xml ${WILDFLY_HOME}/modules/system/layers/base/org/postgresql/main/module.xml
+COPY --from=builder /workspace/CapaServicio/target/postgresql-42.7.2.jar ${WILDFLY_HOME}/modules/system/layers/base/org/postgresql/main/postgresql-42.7.2.jar
+
+# Copiar la plantilla del datasource
+COPY CapaServicio/chat-ds.xml.template ${WILDFLY_HOME}/standalone/configuration/chat-ds.xml.template
 
 # Copiar script de configuración y hacerlo ejecutable (el contexto de build es la raíz del repo)
 COPY CapaServicio/configure-and-run.sh ${WILDFLY_HOME}/bin/configure-and-run.sh

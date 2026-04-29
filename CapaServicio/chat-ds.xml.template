@@ -1,0 +1,14 @@
+<datasources xmlns="urn:jboss:domain:datasources:6.0">
+  <datasource jndi-name="java:/ChatDS" pool-name="ChatDS" enabled="true" use-java-context="true">
+    <connection-url>jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}</connection-url>
+    <driver>postgresql</driver>
+    <security>
+      <user-name>${DB_USER}</user-name>
+      <password>${DB_PASSWORD}</password>
+    </security>
+  </datasource>
+  <drivers>
+    <driver name="postgresql" module="org.postgresql"/>
+  </drivers>
+</datasources>
+
