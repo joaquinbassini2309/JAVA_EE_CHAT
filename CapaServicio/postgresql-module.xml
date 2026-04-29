@@ -5,8 +5,7 @@
   </resources>
   <dependencies>
     <module name="java.sql"/>
-    <module name="javax.api"/>
-    <module name="javax.transaction.api"/>
+    <module name="java.logging"/>
   </dependencies>
 </module>
 

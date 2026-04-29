@@ -7,8 +7,5 @@
       <password>${DB_PASSWORD}</password>
     </security>
   </datasource>
-  <drivers>
-    <driver name="postgresql" module="org.postgresql"/>
-  </drivers>
 </datasources>
 

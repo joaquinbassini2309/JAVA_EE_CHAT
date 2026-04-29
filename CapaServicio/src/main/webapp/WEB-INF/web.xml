@@ -24,6 +24,11 @@
         <location>/index.html</location>
     </error-page>
 
+    <!-- Welcome file to serve index.html when requesting the directory /chat-empresarial/ -->
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+
     <session-config>
         <session-timeout>30</session-timeout>
     </session-config>
