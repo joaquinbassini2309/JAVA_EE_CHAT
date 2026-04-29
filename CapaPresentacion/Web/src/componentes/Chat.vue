@@ -28,11 +28,11 @@
           <v-card-title class="modal-titulo">
             Añadir al Grupo
             <v-spacer />
-            <v-btn icon="cerrar" variant="text" size="small" color="white" @click="cerrarModalAñadir" />
+            <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="cerrarModalAñadir" />
           </v-card-title>
           <v-card-text class="pa-0">
             <div class="modal-busqueda-input">
-              <v-icon size="16" color="#406D73" style="opacity:0.6">buscar</v-icon>
+              <v-icon size="16" color="#406D73" style="opacity:0.6">mdi-magnify</v-icon>
               <input v-model="terminoUsuario" type="text" placeholder="Buscar usuario..." />
             </div>
             <div class="modal-listado">
@@ -95,7 +95,7 @@
       <!-- Barra de entrada -->
       <div class="entrada-mensaje">
         <button class="btn-adjunto" title="Archivos adjunto">
-          <v-icon size="18" color="#406D73" style="opacity:0.75">adjuntar</v-icon>
+          <v-icon size="18" color="#406D73" style="opacity:0.75">mdi-paperclip</v-icon>
           <span>Archivos adjunto</span>
         </button>
         <input
@@ -106,7 +106,7 @@
             @keyup.enter="enviarMensaje"
         />
         <button class="btn-enviar" @click="enviarMensaje" :disabled="!contenidoNuevo.trim()">
-          <v-icon size="16">enviar</v-icon>
+          <v-icon size="16">mdi-send</v-icon>
           Enviar mensaje
         </button>
       </div>
