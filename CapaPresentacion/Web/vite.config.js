@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 export default defineConfig({
-  base: '',
+  base: process.env.VITE_CONTEXT_PATH || '/chat-empresarial/',
 
   plugins: [vue()],
   resolve: {
@@ -22,7 +22,7 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: 'dist', 
+    outDir: 'dist',
     emptyOutDir: true,
     sourcemap: false,
     rollupOptions: {
