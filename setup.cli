@@ -1,0 +1,11 @@
+batch
+# Añadir driver PostgreSQL como módulo
+module add --name=org.postgresql --resources=/opt/jboss/wildfly/standalone/deployments/postgresql-42.7.3.jar --dependencies=javax.api,javax.transaction.api
+
+# Registrar el driver
+/subsystem=datasources/jdbc-driver=postgres:add(driver-name=postgres,driver-module-name=org.postgresql,driver-class-name=org.postgresql.Driver)
+
+# Crear el DataSource
+data-source add --name=ChatDS --jndi-name=java:/ChatDS --driver-name=postgres --connection-url=${env.DB_URL} --user-name=${env.DB_USER} --password=${env.DB_PASSWORD} --check-valid-connection-sql="SELECT 1" --background-validation=true --enabled=true
+
+run-batch
