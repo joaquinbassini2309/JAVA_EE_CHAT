@@ -24,6 +24,7 @@ sleep 1
 # 1. Compilar Frontend (Vite)
 echo -e "${GREEN}Compilando Frontend con npm...${NC}"
 cd "$PROJECT_ROOT/CapaPresentacion/Web" && npm install && npm run build
+cp -r dist/* ../../CapaServicio/src/main/webapp/
 
 # 2. Compilar con Maven (para que siempre tengas la última versión de tu código)
 echo -e "${GREEN}Compilando proyecto con Maven...${NC}"
