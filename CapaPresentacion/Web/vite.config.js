@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 export default defineConfig({
-  base: '/',
+  base: '',
 
   plugins: [vue()],
   resolve: {
@@ -22,8 +22,8 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: '../../CapaServicio/src/main/webapp', 
-    emptyOutDir: false,
+    outDir: 'dist', 
+    emptyOutDir: true,
     sourcemap: false,
     rollupOptions: {
       output: {

@@ -9,7 +9,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
 COPY . .
 
 # 1. Compilar Frontend (Vite)
-RUN cd CapaPresentacion/Web && npm install && npm run build
+RUN cd CapaPresentacion/Web && npm install && npm run build && \
+    cp -r dist/* ../../CapaServicio/src/main/webapp/
 
 # 2. Compilar Backend (Maven)
 RUN mvn clean package -DskipTests
