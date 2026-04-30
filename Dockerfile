@@ -32,10 +32,7 @@ USER jboss
 COPY setup.cli /opt/jboss/wildfly/bin/
 
 RUN /opt/jboss/wildfly/bin/add-user.sh admin admin --silent && \
-    /opt/jboss/wildfly/bin/standalone.sh -c standalone.xml & \
-    sleep 10 && \
-    /opt/jboss/wildfly/bin/jboss-cli.sh --connect --file=/opt/jboss/wildfly/bin/setup.cli && \
-    /opt/jboss/wildfly/bin/jboss-cli.sh --connect --command=:shutdown
+    /opt/jboss/wildfly/bin/jboss-cli.sh --file=/opt/jboss/wildfly/bin/setup.cli
 
 # Desplegar como ROOT.war
 COPY --from=build /app/CapaServicio/target/chat-empresarial.war /opt/jboss/wildfly/standalone/deployments/ROOT.war

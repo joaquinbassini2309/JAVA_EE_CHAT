@@ -1,3 +1,4 @@
+embed-server --server-config=standalone.xml
 batch
 # Añadir driver PostgreSQL como módulo
 module add --name=org.postgresql --resources=/tmp/postgresql-42.7.3.jar --dependencies=javax.api,javax.transaction.api
@@ -16,3 +17,4 @@ data-source add --name=ChatDS --jndi-name=java:/ChatDS --driver-name=postgres \
 /subsystem=undertow/server=default-server/host=default-host:write-attribute(name=default-web-module, value=ROOT.war)
 
 run-batch
+stop-embedded-server
