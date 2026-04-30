@@ -79,7 +79,7 @@ class ServicioAPI {
   async crearConversacionPrivada(idOtroUsuario) {
     const { data } = await this.cliente.post('/conversaciones', {
       tipo: 'PRIVADA',
-      participanteIds: [idOtroUsuario]
+      idOtroUsuario: Number(idOtroUsuario)
     })
     return data
   }
@@ -98,26 +98,9 @@ class ServicioAPI {
     return data
   }
 
-  async actualizarConversacion(idConversacion, nombre) {
-    const { data } = await this.cliente.put(`/conversaciones/${idConversacion}`, { nombre })
-    return data
-  }
-
   async añadirParticipante(idConversacion, idUsuario) {
     const { data } = await this.cliente.post(`/conversaciones/${idConversacion}/participantes`, {
       usuarioId: idUsuario
-    })
-    return data
-  }
-
-  async eliminarParticipante(idConversacion, idParticipante) {
-    const { data } = await this.cliente.delete(`/conversaciones/${idConversacion}/participantes/${idParticipante}`)
-    return data
-  }
-
-  async actualizarRolParticipante(idConversacion, idParticipante, nuevoRol) {
-    const { data } = await this.cliente.put(`/conversaciones/${idConversacion}/participantes/${idParticipante}/rol`, {
-      rol: nuevoRol
     })
     return data
   }
@@ -126,28 +109,6 @@ class ServicioAPI {
 
   async enviarMensaje(nuevoMensaje) {
     const { data } = await this.cliente.post('/mensajes', nuevoMensaje)
-    return data
-  }
-
-  // Nuevo: subir archivo en Base64
-  async uploadFile(filename, contentBase64) {
-    const { data } = await this.cliente.post('/archivos/upload', {
-      filename: filename,
-      contentBase64: contentBase64
-    })
-
-    // Asegurar que la URL devuelta sea absoluta para que el frontend pueda mostrar/descargar correctamente
-    try {
-      // Usar el origin (protocolo + host + puerto) para no duplicar el contexto de aplicación
-      const origin = window.location.origin
-      if (data && data.url && data.url.startsWith('/')) {
-        data.url = origin + data.url
-      }
-    } catch (e) {
-      // si algo falla, seguimos devolviendo lo que venga del servidor
-      console.warn('No se pudo normalizar URL de archivo:', e.message)
-    }
-
     return data
   }
 
@@ -172,24 +133,11 @@ class ServicioAPI {
     return data
   }
 
-  async eliminarMensaje(idMensaje) {
-    const { data } = await this.cliente.delete(`/mensajes/${idMensaje}`)
-    return data
-  }
-
-  async obtenerInfoMensaje(idMensaje) {
-    const { data } = await this.cliente.get(`/mensajes/${idMensaje}/info`)
-    return data
-  }
-
   // ========== WEBSOCKET ==========
 
   conectarWebSocket(idConversacion, idUsuario, token) {
-    // Aceptar token como string o ref (Pinia)
-    const rawToken = (token && token.value) ? token.value : token;
-    const encoded = rawToken ? encodeURIComponent(rawToken) : '';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const url = `${protocol}//${window.location.host}/ws/conversacion/${idConversacion}/usuario/${idUsuario}` + (encoded ? `?token=${encoded}` : '')
+    const url = `${protocol}//${window.location.host}/ws/conversacion/${idConversacion}/usuario/${idUsuario}?token=${token}`
     console.log('Intentando conectar WebSocket a:', url)
 
     const ws = new WebSocket(url)
@@ -203,10 +151,6 @@ class ServicioAPI {
 
     ws.onerror = (error) => {
       console.error('Error WebSocket:', error)
-    }
-
-    ws.onclose = (ev) => {
-      console.log('WebSocket cerrado', ev.code, ev.reason)
     }
 
     return ws

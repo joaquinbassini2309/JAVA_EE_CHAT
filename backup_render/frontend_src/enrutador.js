@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
+
 import LoginVista from '../vistas/LoginVista.vue'
 import ChatVista from '../vistas/ChatVista.vue'
 import RegistroVista from '../vistas/RegistroVista.vue'
+
 
 const routes = [
   {
@@ -10,17 +12,18 @@ const routes = [
   },
   {
     path: '/login',
-    name: 'login',
+    name: 'Login',
     component: LoginVista
   },
   {
     path: '/chat',
-    name: 'chat',
+    name: 'Chat',
     component: ChatVista
+    // La protección de ruta se ha movido a la propia vista
   },
   {
     path: '/registro',
-    name: 'registro',
+    name: 'Registro',
     component: RegistroVista
   }
 ]
