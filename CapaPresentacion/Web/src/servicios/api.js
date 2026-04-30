@@ -1,7 +1,7 @@
 // Servicios API para la aplicación Vue.js
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:8080/chat-empresarial/api/v1'
+const API_BASE_URL = '/api/v1'
 
 class ServicioAPI {
   constructor() {
@@ -30,7 +30,7 @@ class ServicioAPI {
           // Token expirado o inválido
           localStorage.removeItem('token')
           localStorage.removeItem('usuario')
-          window.location.href = '/chat-empresarial/login'
+          window.location.href = '/login'
         }
         return Promise.reject(error)
       }
@@ -136,7 +136,8 @@ class ServicioAPI {
   // ========== WEBSOCKET ==========
 
   conectarWebSocket(idConversacion, idUsuario, token) {
-    const url = `ws://localhost:8080/chat-empresarial/ws/conversacion/${idConversacion}/usuario/${idUsuario}?token=${token}`
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const url = `${protocol}//${window.location.host}/ws/conversacion/${idConversacion}/usuario/${idUsuario}?token=${token}`
     console.log('Intentando conectar WebSocket a:', url)
 
     const ws = new WebSocket(url)

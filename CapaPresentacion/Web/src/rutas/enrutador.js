@@ -29,7 +29,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory('/chat-empresarial/'),
+  history: createWebHistory('/'),
   routes
 })
 
