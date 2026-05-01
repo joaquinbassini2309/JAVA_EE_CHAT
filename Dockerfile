@@ -37,6 +37,11 @@ RUN /opt/jboss/wildfly/bin/add-user.sh admin admin --silent && \
 # Desplegar como ROOT.war
 COPY --from=build /app/CapaServicio/target/chat-empresarial.war /opt/jboss/wildfly/standalone/deployments/ROOT.war
 
+USER root
+RUN mkdir -p /opt/jboss/chat-empresarial-uploads && \
+    chown -R jboss:jboss /opt/jboss/chat-empresarial-uploads
+
+USER jboss
 EXPOSE 8080
 
 CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-Djboss.http.port=${PORT}"]
