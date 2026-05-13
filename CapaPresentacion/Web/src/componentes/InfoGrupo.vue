@@ -47,8 +47,8 @@
     <!-- Cuerpo scrolleable -->
     <div class="info-cuerpo">
 
-      <!-- Sección integrantes -->
-      <div class="seccion">
+      <!-- Sección integrantes (solo grupos) -->
+      <div v-if="esGrupo" class="seccion">
         <div class="seccion-titulo">
           <v-icon size="16" color="#406D73" class="mr-1">mdi-account-group</v-icon>
           Integrantes
@@ -90,6 +90,33 @@
           </div>
         </div>
       </div>
+
+      <!-- Sección de perfil de usuario (solo chat privado) -->
+      <div v-else-if="otroUsuario" class="seccion-perfil">
+        <div class="seccion">
+          <div class="seccion-titulo">
+            <v-icon size="16" color="#406D73" class="mr-1">mdi-account-details</v-icon>
+            Descripción
+          </div>
+          <p class="descripcion-usuario">{{ otroUsuario.descripcion || 'Sin descripción' }}</p>
+        </div>
+
+        <div class="seccion" style="margin-top: 16px;">
+          <div class="seccion-titulo">
+            <v-icon size="16" color="#406D73" class="mr-1">mdi-account-group</v-icon>
+            Grupos en común
+          </div>
+          <div class="lista-miembros" v-if="gruposEnComun.length > 0">
+            <div v-for="grupo in gruposEnComun" :key="grupo.id" class="item-miembro">
+              <div class="avatar-mini">{{ grupo.nombre.charAt(0).toUpperCase() }}</div>
+              <div class="info-usuario">
+                <span class="nombre">{{ grupo.nombre }}</span>
+              </div>
+            </div>
+          </div>
+          <p v-else class="descripcion-usuario">No hay grupos en común</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -113,6 +140,22 @@ const editandoNombre = ref(false)
 const nuevoNombre = ref(props.conversacion.nombre)
 
 const usuarioActual = computed(() => almacen.usuarioActual)
+
+const esGrupo = computed(() => props.conversacion.tipo === 'GRUPO')
+
+const otroUsuario = computed(() => {
+  const participante = props.conversacion.participantes?.find(p => p.usuario.id !== usuarioActual.value?.id)
+  return participante?.usuario
+})
+
+const gruposEnComun = computed(() => {
+  const convs = almacen.conversaciones || [];
+  return convs.filter(c => 
+     c.tipo === 'GRUPO' && 
+     c.participanteIds?.includes(usuarioActual.value?.id) && 
+     c.participanteIds?.includes(otroUsuario.value?.id)
+  );
+})
 
 const rolUsuarioActual = computed(() => {
   const participante = props.conversacion.participantes?.find(p => p.usuario.id === usuarioActual.value?.id)
@@ -182,4 +225,5 @@ async function eliminarMiembro(participanteId) {
 .info-usuario { display: flex; flex-direction: column; overflow: hidden; flex-grow: 1; }
 .info-usuario .nombre { font-weight: 600; font-size: 14px; color: #2f4a4f; }
 .roles-wrapper { display: flex; gap: 4px; margin-top: 2px; }
+.descripcion-usuario { font-size: 13px; color: #5a8a94; line-height: 1.5; }
 </style>

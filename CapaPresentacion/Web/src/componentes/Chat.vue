@@ -318,11 +318,26 @@ const enviarMensaje = async () => {
   if (!contenidoNuevo.value.trim() || !conversacionActual.value) return
   const texto = contenidoNuevo.value.trim()
   contenidoNuevo.value = ''
+  
+  const esPrimerMensaje = mensajes.value.length === 0 && !esGrupo.value;
+  
   try {
     if (ws.value && ws.value.readyState === WebSocket.OPEN) {
       // Si WebSocket está abierto, enviar por WebSocket
-      // El servidor responderá con el mensaje en el mismo canal
       ws.value.send(JSON.stringify({ contenido: texto, tipoMensaje: 'TEXTO' }))
+      
+      // Si es el primer mensaje, esperamos un poquito y enviamos por HTTP
+      if (esPrimerMensaje) {
+        setTimeout(async () => {
+          try {
+            await servicioApi.enviarMensaje({
+              conversacionId: conversacionActual.value.id,
+              contenido: 'Los mensajes están cifrados de extremo a extremo',
+              tipoMensaje: 'TEXTO'
+            })
+          } catch(e) {}
+        }, 300);
+      }
     } else {
       // Si no hay WebSocket, enviar por HTTP y agregar localmente
       const m = await servicioApi.enviarMensaje({
@@ -332,6 +347,17 @@ const enviarMensaje = async () => {
       })
       almacen.agregarMensaje(m)
       scrollToBottom()
+      
+      if (esPrimerMensaje) {
+        // Enviar cifrado inmediatamente después, usando await
+        const cifradoMsg = await servicioApi.enviarMensaje({
+          conversacionId: conversacionActual.value.id,
+          contenido: 'Los mensajes están cifrados de extremo a extremo',
+          tipoMensaje: 'TEXTO'
+        })
+        almacen.agregarMensaje(cifradoMsg)
+        scrollToBottom()
+      }
     }
   } catch (error) {
     console.error('Error al enviar mensaje:', error)

@@ -60,11 +60,8 @@ class ServicioAPI {
     return data
   }
 
-  async actualizarPerfil(fotoUrl, estado) {
-    const { data } = await this.cliente.put('/usuarios/perfil', {
-      fotoUrl: fotoUrl,
-      estado: estado
-    })
+  async actualizarPerfil(payload) {
+    const { data } = await this.cliente.put('/usuarios/perfil', payload)
     return data
   }
 

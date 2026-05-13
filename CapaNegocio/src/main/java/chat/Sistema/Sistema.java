@@ -128,8 +128,8 @@ public class Sistema implements ISistema {
     }
 
     @Override
-    public void actualizarPerfilUsuario(Long usuarioId, String fotoUrl, EstadoUsuario estado) {
-        usuarioHandler().actualizarPerfil(usuarioId, fotoUrl, estado);
+    public void actualizarPerfilUsuario(Long usuarioId, chat.Datatype.DtUsuario.ActualizarUsuarioDTO dto) {
+        usuarioHandler().actualizarPerfil(usuarioId, dto);
     }
 
     // ========== IMPLEMENTACIÓN: CONVERSACIONES ==========

@@ -3,12 +3,38 @@
 
     <!-- Panel usuario con banner + avatar cuadrado -->
     <div class="panel-usuario">
-      <div class="profile-banner profile-banner--default" />
+      <div 
+        class="profile-banner profile-banner--default"
+        :style="usuarioActual?.imagenBanner ? { backgroundImage: 'url(' + usuarioActual.imagenBanner + ')' } : {}"
+      />
       <div class="profile-lower">
         <div class="profile-avatar-wrap">
-          <div class="avatar-cuadrado">
-            {{ usuarioActual?.username?.charAt(0).toUpperCase() }}
-          </div>
+          <v-menu offset-y>
+            <template v-slot:activator="{ props }">
+              <div class="avatar-cuadrado cursor-pointer" v-bind="props" v-ripple>
+                <img v-if="usuarioActual?.fotoUrl" :src="usuarioActual.fotoUrl" class="avatar-img" />
+                <span v-else>{{ usuarioActual?.username?.charAt(0).toUpperCase() }}</span>
+              </div>
+            </template>
+            <v-list class="bg-surface menu-perfil" density="compact">
+              <v-list-item @click="abrirEdicionPerfil('username')" prepend-icon="mdi-account-edit">
+                <v-list-item-title>Cambiar nombre de usuario</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="abrirEdicionPerfil('fotoUrl')" prepend-icon="mdi-image-account">
+                <v-list-item-title>Cambiar Foto de perfil</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="abrirEdicionPerfil('imagenBanner')" prepend-icon="mdi-image-area">
+                <v-list-item-title>Colocar imagen de banner</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="abrirEdicionPerfil('descripcion')" prepend-icon="mdi-text-account">
+                <v-list-item-title>Cambiar descripción</v-list-item-title>
+              </v-list-item>
+              <v-divider class="my-1" />
+              <v-list-item @click="cerrarSesionLocal" class="text-error" prepend-icon="mdi-logout">
+                <v-list-item-title>Cerrar Sesión</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
         </div>
         <div class="profile-title-row">
           <span class="profile-name text-truncate">{{ usuarioActual?.username }}</span>
@@ -17,7 +43,7 @@
             <v-btn icon="mdi-plus-circle" variant="flat" color="accent" size="small" density="comfortable" @click="abrirNuevaConversacion" title="Nueva conversación" />
           </div>
         </div>
-        <div class="profile-subtitle">En línea</div>
+        <!-- profile subtitle removed -->
 
         <!-- Buscador -->
         <div class="campo-busqueda">
@@ -125,6 +151,40 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Modal Editar Perfil -->
+    <v-dialog v-model="mostrarModalPerfil" max-width="400">
+      <v-card rounded="lg">
+        <v-card-title class="modal-titulo">
+          {{ tituloModalPerfil }}
+          <v-spacer />
+          <v-btn icon="cerrar" variant="text" size="small" color="white" @click="mostrarModalPerfil = false" />
+        </v-card-title>
+        <v-card-text class="pa-4 pt-6 bg-surface">
+          <div v-if="tipoEdicionPerfil === 'username'">
+            <label class="label-input">Nuevo nombre de usuario</label>
+            <input v-model="valorEdicionPerfil" type="text" class="input-modal" placeholder="Ej: JuanPerez" />
+          </div>
+          <div v-else-if="tipoEdicionPerfil === 'descripcion'">
+            <label class="label-input">Nueva descripción</label>
+            <textarea v-model="valorEdicionPerfil" class="input-modal" placeholder="Cuenta algo sobre ti..." rows="3"></textarea>
+          </div>
+          <div v-else-if="tipoEdicionPerfil === 'fotoUrl'">
+            <label class="label-input">URL de la foto de perfil</label>
+            <input v-model="valorEdicionPerfil" type="text" class="input-modal" placeholder="https://ejemplo.com/mifoto.jpg" />
+          </div>
+          <div v-else-if="tipoEdicionPerfil === 'imagenBanner'">
+            <label class="label-input">URL de la imagen de banner</label>
+            <input v-model="valorEdicionPerfil" type="text" class="input-modal" placeholder="https://ejemplo.com/mibanner.jpg" />
+          </div>
+        </v-card-text>
+        <v-card-actions class="pa-4 pt-0 bg-surface">
+          <v-spacer />
+          <v-btn color="accent" variant="flat" rounded="lg" prepend-icon="mdi-content-save" @click="guardarPerfil" :loading="guardandoPerfil">Guardar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </div>
 </template>
 
@@ -133,8 +193,10 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
+import { useRouter } from 'vue-router'
 
 const almacen = useAlmacen()
+const router = useRouter()
 const termino = ref('')
 const terminoUsuario = ref('')
 const mostrarModal = ref(false)
@@ -144,6 +206,13 @@ const seleccionados = ref([])
 const usuarios = ref([])
 const tabActivo = ref('canales')
 let intervaloRefresco = null
+
+// Edición de perfil
+const mostrarModalPerfil = ref(false)
+const tipoEdicionPerfil = ref('')
+const valorEdicionPerfil = ref('')
+const tituloModalPerfil = ref('')
+const guardandoPerfil = ref(false)
 
 const usuarioActual = computed(() => almacen.usuarioActual)
 const conversacionesActuales = computed(() => almacen.conversacionesOrdenadas)
@@ -225,18 +294,6 @@ const crearChatPrivado = async (idUsuario) => {
     if (!existe) almacen.agregarConversacion(nuevaConv)
     almacen.establecerConversacionActual(nuevaConv)
     
-    // Enviar mensaje automático de cifrado
-    try {
-      const mensajeAutomatico = await servicioApi.enviarMensaje({
-        conversacionId: nuevaConv.id,
-        contenido: 'Los mensajes están cifrados de extremo a extremo',
-        tipoMensaje: 'TEXTO'
-      })
-      almacen.agregarMensaje(mensajeAutomatico)
-    } catch (error) {
-      console.error('Error al enviar mensaje automático:', error)
-    }
-    
     cerrarModal()
   } catch (error) {
     console.error('Error al crear conversación:', error)
@@ -265,6 +322,52 @@ const crearGrupo = async () => {
   } catch (error) {
     console.error('Error al crear grupo:', error)
   }
+}
+
+// Logica perfil
+const abrirEdicionPerfil = (tipo) => {
+  tipoEdicionPerfil.value = tipo
+  valorEdicionPerfil.value = usuarioActual.value[tipo] || ''
+  
+  if (tipo === 'username') tituloModalPerfil.value = 'Cambiar nombre de usuario'
+  else if (tipo === 'fotoUrl') tituloModalPerfil.value = 'Cambiar foto de perfil'
+  else if (tipo === 'imagenBanner') tituloModalPerfil.value = 'Colocar imagen de banner'
+  else if (tipo === 'descripcion') tituloModalPerfil.value = 'Cambiar descripción'
+
+  mostrarModalPerfil.value = true
+}
+
+const guardarPerfil = async () => {
+  guardandoPerfil.value = true
+  try {
+    const data = {}
+    data[tipoEdicionPerfil.value] = valorEdicionPerfil.value
+    
+    // El servicio espera un DTO con fotoUrl, estado, username, descripcion, imagenBanner
+    // Mantenemos los datos actuales por defecto
+    const payload = {
+      username: usuarioActual.value.username,
+      fotoUrl: usuarioActual.value.fotoUrl,
+      descripcion: usuarioActual.value.descripcion,
+      imagenBanner: usuarioActual.value.imagenBanner,
+      estado: usuarioActual.value.estado,
+      ...data
+    }
+
+    const usrActualizado = await servicioApi.actualizarPerfil(payload)
+    almacen.establecerUsuario(usrActualizado)
+    localStorage.setItem('usuario', JSON.stringify(usrActualizado))
+    mostrarModalPerfil.value = false
+  } catch(error) {
+    console.error('Error actualizando perfil', error)
+  } finally {
+    guardandoPerfil.value = false
+  }
+}
+
+const cerrarSesionLocal = () => {
+  almacen.cerrarSesion()
+  router.push('/login')
 }
 </script>
 
@@ -328,6 +431,18 @@ const crearGrupo = async () => {
   justify-content: center;
   font-size: 26px;
   font-weight: 700;
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.avatar-cuadrado:hover {
+  transform: scale(1.05);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .profile-title-row {
@@ -534,6 +649,15 @@ const crearGrupo = async () => {
   margin-bottom: 14px;
   outline: none;
   color: #2f4a4f;
+  resize: vertical;
+}
+
+.label-input {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #406D73;
+  margin-bottom: 6px;
 }
 
 .input-modal:focus {
