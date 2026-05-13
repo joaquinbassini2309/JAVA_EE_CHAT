@@ -1,6 +1,6 @@
 # ========================================
 # Arranque completo de entorno (Windows)
-# Adaptado de run.sh, sin Docker
+# Adaptado de run.sh, con Docker
 # ========================================
 
 param(
@@ -57,6 +57,7 @@ $wildFlyDeploy = Join-Path $WildFlyDir "standalone\deployments"
 $warFile = Join-Path $ProjectRoot "CapaServicio\target\chat-empresarial.war"
 $frontendDir = Join-Path $ProjectRoot "CapaPresentacion\Web"
 $backendDir = Join-Path $ProjectRoot "CapaServicio"
+$dockerName = "postgres-chat"
 
 if (-not (Test-Path $wildFlyBin)) {
     Write-Error-Custom "[!] No se encontro WildFly en: $wildFlyBin"
@@ -88,32 +89,54 @@ try {
     }
     Pop-Location
 
+    Invoke-Step "Copiando frontend compilado a backend..." {
+        $distDir = Join-Path $frontendDir "dist"
+        $webappDir = Join-Path $backendDir "src\main\webapp"
+        if (Test-Path $distDir) {
+            Copy-Item -Path "$distDir\*" -Destination $webappDir -Recurse -Force
+        } else {
+            throw "No se encontro directorio dist"
+        }
+    }
+
     Push-Location $ProjectRoot
     Invoke-Step "Compilando proyecto con Maven..." {
         mvn clean package
-        if ($LASTEXITCODE -ne 0) { throw "mvn clean package fallo" }
+    }
+    if ($LASTEXITCODE -eq 0) {
+        Write-Success "[OK] Compilación exitosa."
+        # Limpiar y copiar el .war nuevo
+        Invoke-Step "Copiando WAR a WildFly deployments..." {
+            if (-not (Test-Path $wildFlyDeploy)) {
+                throw "No existe carpeta deployments: $wildFlyDeploy"
+            }
+
+            Remove-Item "$wildFlyDeploy\*" -Force -Recurse -ErrorAction SilentlyContinue
+            Copy-Item $warFile -Destination $wildFlyDeploy -Force
+            New-Item -Path "$wildFlyDeploy\chat-empresarial.war.dodeploy" -ItemType File -Force | Out-Null
+        }
+    } else {
+        Write-Error-Custom "[!] Error en la compilación. Se intentará arrancar igual..."
     }
     Pop-Location
-
-    if (-not (Test-Path $warFile)) {
-        throw "No se encontro WAR generado en $warFile"
-    }
-
-    Invoke-Step "Copiando WAR a WildFly deployments..." {
-        if (-not (Test-Path $wildFlyDeploy)) {
-            throw "No existe carpeta deployments: $wildFlyDeploy"
-        }
-
-        Remove-Item "$wildFlyDeploy\chat-empresarial.war*" -Force -Recurse -ErrorAction SilentlyContinue
-        Copy-Item $warFile -Destination $wildFlyDeploy -Force
-        New-Item -Path "$wildFlyDeploy\chat-empresarial.war.dodeploy" -ItemType File -Force | Out-Null
-    }
 
 } catch {
     Write-Error-Custom "[!] Error durante build/deploy: $($_.Exception.Message)"
     try { Pop-Location } catch {}
     try { Pop-Location } catch {}
     exit 1
+}
+
+Write-Host ""
+Write-Info "--- INICIANDO SERVICIOS ---"
+
+Invoke-Step "Reiniciando contenedor Docker: $dockerName" {
+    $containerId = docker ps -a --filter name=$dockerName -q 2>$null
+    if (-not $containerId) {
+        throw "El contenedor $dockerName no existe. Asegúrate de crearlo primero con: docker run -d --name $dockerName -e POSTGRES_DB=chatdb -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:15-alpine"
+    }
+    docker stop $dockerName 2>$null >$null
+    docker start $dockerName
 }
 
 Write-Host ""
@@ -139,7 +162,7 @@ Write-Info "App: http://localhost:8080/chat-empresarial/"
 [void](Read-Host -Prompt "Presiona ENTER para cerrar")
 
 Write-Host ""
-Write-Info "--- CERRANDO WILDFLY ---"
+Write-Info "--- CERRANDO SERVICIOS ---"
 
 try {
     $jbossCli = Join-Path $WildFlyDir "bin\jboss-cli.bat"
@@ -157,4 +180,9 @@ if ($wfProcess -and -not $wfProcess.HasExited) {
     } catch {}
 }
 
+Invoke-Step "Deteniendo contenedor Docker: $dockerName" {
+    docker stop $dockerName
+}
+
+Write-Host ""
 Write-Success "Entorno cerrado."
