@@ -3,7 +3,10 @@ import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 export default defineConfig({
-  base: process.env.VITE_CONTEXT_PATH || '/chat-empresarial/',
+  // Use VITE_CONTEXT_PATH to build for a specific context (e.g. '/chat-empresarial/').
+  // Fallback to relative paths ('./') so the built SPA works when deployed either
+  // at root or under a subpath without requiring absolute references.
+  base: process.env.VITE_CONTEXT_PATH || './',
 
   plugins: [vue()],
   resolve: {

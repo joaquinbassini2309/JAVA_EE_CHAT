@@ -22,6 +22,16 @@ try
 catch
 end-try
 
+# Crear ExampleDS como alias si alguna parte del despliegue lo requiere
+try
+    data-source add --name=ExampleDS --jndi-name=java:jboss/datasources/ExampleDS --driver-name=postgres \
+        --connection-url=${env.DB_URL} \
+        --user-name=${env.DB_USER} \
+        --password=${env.DB_PASSWORD} \
+        --check-valid-connection-sql="SELECT 1" --background-validation=true --enabled=true
+catch
+end-try
+
 # Opcional: Eliminar bienvenida de WildFly para usar ROOT.war
 try
     /subsystem=undertow/server=default-server/host=default-host:write-attribute(name=default-web-module, value=ROOT.war)
