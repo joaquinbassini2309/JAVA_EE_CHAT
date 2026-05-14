@@ -26,6 +26,12 @@ public class Usuario {
     @Column(name = "foto_url", length = 255)
     private String fotoUrl;
 
+    @Column(name = "descripcion", length = 500)
+    private String descripcion;
+
+    @Column(name = "imagen_banner", length = 255)
+    private String imagenBanner;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", length = 20)
     private EstadoUsuario estado = EstadoUsuario.OFFLINE;
@@ -62,6 +68,12 @@ public class Usuario {
 
     public String getFotoUrl() { return fotoUrl; }
     public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+
+    public String getDescripcion() { return descripcion; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+
+    public String getImagenBanner() { return imagenBanner; }
+    public void setImagenBanner(String imagenBanner) { this.imagenBanner = imagenBanner; }
 
     public EstadoUsuario getEstado() { return estado; }
     public void setEstado(EstadoUsuario estado) { this.estado = estado; }

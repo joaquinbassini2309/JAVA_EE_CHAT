@@ -3,11 +3,19 @@
 
     <!-- Encabezado con banner + avatar cuadrado (mismo patrón que Chat.vue) -->
     <div class="info-header">
-      <div class="profile-banner profile-banner--default" />
+      <div 
+        class="profile-banner profile-banner--default"
+        :style="esGrupo ? {} : (otroUsuario?.imagenBanner ? { backgroundImage: `url('${otroUsuario.imagenBanner}')` } : {})"
+      />
       <div class="profile-lower">
         <div class="profile-avatar-wrap">
           <div class="avatar-cuadrado">
-            {{ conversacion.nombre?.charAt(0).toUpperCase() || 'G' }}
+            <template v-if="!esGrupo && otroUsuario?.fotoUrl">
+              <img :src="otroUsuario.fotoUrl" class="avatar-img" />
+            </template>
+            <template v-else>
+              {{ conversacion.nombre?.charAt(0).toUpperCase() || 'G' }}
+            </template>
           </div>
         </div>
         <div class="profile-title-row">
@@ -47,8 +55,8 @@
     <!-- Cuerpo scrolleable -->
     <div class="info-cuerpo">
 
-      <!-- Sección integrantes -->
-      <div class="seccion">
+      <!-- Sección integrantes (solo grupos) -->
+      <div v-if="esGrupo" class="seccion">
         <div class="seccion-titulo">
           <v-icon size="16" color="#406D73" class="mr-1">mdi-account-group</v-icon>
           Integrantes
@@ -90,6 +98,33 @@
           </div>
         </div>
       </div>
+
+      <!-- Sección de perfil de usuario (solo chat privado) -->
+      <div v-else-if="otroUsuario" class="seccion-perfil">
+        <div class="seccion">
+          <div class="seccion-titulo">
+            <v-icon size="16" color="#406D73" class="mr-1">mdi-account-details</v-icon>
+            Descripción
+          </div>
+          <p class="descripcion-usuario">{{ otroUsuario.descripcion || 'Sin descripción' }}</p>
+        </div>
+
+        <div class="seccion" style="margin-top: 16px;">
+          <div class="seccion-titulo">
+            <v-icon size="16" color="#406D73" class="mr-1">mdi-account-group</v-icon>
+            Grupos en común
+          </div>
+          <div class="lista-miembros" v-if="gruposEnComun.length > 0">
+            <div v-for="grupo in gruposEnComun" :key="grupo.id" class="item-miembro">
+              <div class="avatar-mini">{{ grupo.nombre.charAt(0).toUpperCase() }}</div>
+              <div class="info-usuario">
+                <span class="nombre">{{ grupo.nombre }}</span>
+              </div>
+            </div>
+          </div>
+          <p v-else class="descripcion-usuario">No hay grupos en común</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -113,6 +148,22 @@ const editandoNombre = ref(false)
 const nuevoNombre = ref(props.conversacion.nombre)
 
 const usuarioActual = computed(() => almacen.usuarioActual)
+
+const esGrupo = computed(() => props.conversacion.tipo === 'GRUPO')
+
+const otroUsuario = computed(() => {
+  const participante = props.conversacion.participantes?.find(p => p.usuario.id !== usuarioActual.value?.id)
+  return participante?.usuario
+})
+
+const gruposEnComun = computed(() => {
+  const convs = almacen.conversaciones || [];
+  return convs.filter(c => 
+     c.tipo === 'GRUPO' && 
+     c.participanteIds?.includes(usuarioActual.value?.id) && 
+     c.participanteIds?.includes(otroUsuario.value?.id)
+  );
+})
 
 const rolUsuarioActual = computed(() => {
   const participante = props.conversacion.participantes?.find(p => p.usuario.id === usuarioActual.value?.id)
@@ -163,10 +214,11 @@ async function eliminarMiembro(participanteId) {
 <style scoped>
 .info-grupo { display: flex; flex-direction: column; height: 100%; background: #f7fcfd; overflow: hidden; }
 .info-header { flex-shrink: 0; }
-.profile-banner { height: 76px; background-color: #B3EBF2; background-image: linear-gradient(135deg, rgba(64,109,115,0.22) 0%, transparent 55%), linear-gradient(225deg, rgba(255,255,255,0.45) 0%, transparent 48%), radial-gradient(ellipse 90% 140% at 15% 0%, rgba(64,109,115,0.15), transparent); background-size: cover; }
+.profile-banner { height: 76px; background-color: #B3EBF2; background-image: linear-gradient(135deg, rgba(64,109,115,0.22) 0%, transparent 55%), linear-gradient(225deg, rgba(255,255,255,0.45) 0%, transparent 48%), radial-gradient(ellipse 90% 140% at 15% 0%, rgba(64,109,115,0.15), transparent); background-size: cover; background-position: center; }
 .profile-lower { position: relative; background: #f0f7f8; padding: 8px 14px 14px; padding-left: 100px; min-height: 72px; }
 .profile-avatar-wrap { position: absolute; left: 14px; top: -32px; z-index: 2; }
-.avatar-cuadrado { width: 64px; height: 64px; background: #B2C5C8; color: #2f4a4f; border-radius: 10px; border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(64,109,115,0.22); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; }
+.avatar-cuadrado { width: 64px; height: 64px; background: #B2C5C8; color: #2f4a4f; border-radius: 10px; border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(64,109,115,0.22); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; overflow: hidden; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .profile-title-row { display: flex; align-items: center; gap: 8px; }
 .btn-atras { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0; transition: background 0.15s; }
 .btn-atras:hover { background: rgba(64,109,115,0.1); }
@@ -182,4 +234,5 @@ async function eliminarMiembro(participanteId) {
 .info-usuario { display: flex; flex-direction: column; overflow: hidden; flex-grow: 1; }
 .info-usuario .nombre { font-weight: 600; font-size: 14px; color: #2f4a4f; }
 .roles-wrapper { display: flex; gap: 4px; margin-top: 2px; }
+.descripcion-usuario { font-size: 13px; color: #5a8a94; line-height: 1.5; }
 </style>

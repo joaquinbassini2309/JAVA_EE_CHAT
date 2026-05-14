@@ -1,5 +1,8 @@
 <template>
-  <div class="burbuja-wrap" :class="{ propio }">
+  <div v-if="esMensajeCifrado" class="mensaje-sistema">
+    {{ mensaje.contenido }}
+  </div>
+  <div v-else class="burbuja-wrap" :class="{ propio }">
     <div class="burbuja" :class="propio ? 'burbuja-me' : 'burbuja-them'">
       <span v-if="mostrarNombre" class="nombre-emisor">{{ mensaje.emisorNombre }}</span>
       <p class="contenido" :class="{ eliminado: mensaje.eliminado }">
@@ -64,6 +67,10 @@ const usuarioActual = computed(() => almacen.usuarioActual)
 
 const propio = computed(() => props.mensaje.emisorId === usuarioActual.value?.id)
 
+const esMensajeCifrado = computed(() => {
+  return props.mensaje.contenido === 'Los mensajes están cifrados de extremo a extremo'
+})
+
 const mostrarNombre = computed(
     () => !propio.value && almacen.conversacionActual?.tipo === 'GRUPO'
 )
@@ -100,6 +107,17 @@ const esSoloAdjunto = computed(() => {
 .burbuja-wrap.propio {
   align-self: flex-end;
   flex-direction: row-reverse;
+}
+
+.mensaje-sistema {
+  width: 100%;
+  text-align: center;
+  font-size: 11px;
+  color: #7f9ea4;
+  margin: 12px 0;
+  font-weight: 600;
+  display: flex;
+  justify-content: center;
 }
 
 @keyframes slideIn {

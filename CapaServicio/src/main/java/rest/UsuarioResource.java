@@ -128,7 +128,7 @@ public class UsuarioResource {
         return sistema.buscarUsuarioPorId(usuarioId).map(usuario -> {
             // Si hay datos para actualizar, se actualizan.
             if (actualizarDto != null) {
-                sistema.actualizarPerfilUsuario(usuarioId, actualizarDto.getFotoUrl(), actualizarDto.getEstado());
+                sistema.actualizarPerfilUsuario(usuarioId, actualizarDto);
             }
 
             // Se obtiene el usuario (potencialmente actualizado) y se devuelve.

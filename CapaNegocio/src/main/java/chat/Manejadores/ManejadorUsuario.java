@@ -60,14 +60,23 @@ public class ManejadorUsuario {
         }
     }
 
-    public void actualizarPerfil(Long usuarioId, String fotoUrl, EstadoUsuario estado) {
+    public void actualizarPerfil(Long usuarioId, chat.Datatype.DtUsuario.ActualizarUsuarioDTO dto) {
         Usuario u = em.find(Usuario.class, usuarioId);
-        if (u != null) {
-            if (fotoUrl != null && !fotoUrl.isBlank()) {
-                u.setFotoUrl(fotoUrl);
+        if (u != null && dto != null) {
+            if (dto.getUsername() != null && !dto.getUsername().isBlank()) {
+                u.setUsername(dto.getUsername());
             }
-            if (estado != null) {
-                u.setEstado(estado);
+            if (dto.getFotoUrl() != null && !dto.getFotoUrl().isBlank()) {
+                u.setFotoUrl(dto.getFotoUrl());
+            }
+            if (dto.getDescripcion() != null) {
+                u.setDescripcion(dto.getDescripcion());
+            }
+            if (dto.getImagenBanner() != null && !dto.getImagenBanner().isBlank()) {
+                u.setImagenBanner(dto.getImagenBanner());
+            }
+            if (dto.getEstado() != null) {
+                u.setEstado(dto.getEstado());
             }
             em.merge(u);
         }

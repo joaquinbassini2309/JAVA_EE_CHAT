@@ -54,8 +54,8 @@ public interface ISistema {
     //Actualiza el estado de conexión del usuario
     void actualizarEstadoUsuario(Long usuarioId, chat.Enum.EstadoUsuario estado);
 
-    //Actualiza el perfil del usuario (foto y estado)
-    void actualizarPerfilUsuario(Long usuarioId, String fotoUrl, chat.Enum.EstadoUsuario estado);
+    //Actualiza el perfil del usuario
+    void actualizarPerfilUsuario(Long usuarioId, chat.Datatype.DtUsuario.ActualizarUsuarioDTO dto);
 
     // ========== CASOS DE USO: CONVERSACIONES ==========
     
