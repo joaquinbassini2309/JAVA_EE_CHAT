@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/CapaPresentacion/Web/vite.config.js">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/CapaPresentacion/Web/vite.config.js" />
+              <option name="originalContent" value="import { defineConfig } from 'vite'&#10;import vue from '@vitejs/plugin-vue'&#10;import path from 'path'&#10;&#10;export default defineConfig({&#10;  base: process.env.VITE_CONTEXT_PATH || '/chat-empresarial/',&#10;&#10;  plugins: [vue()],&#10;  resolve: {&#10;    alias: {&#10;      '@': path.resolve(__dirname, './src')&#10;    }&#10;  },&#10;  server: {&#10;    port: 5173,&#10;    proxy: {&#10;      '/api': {&#10;        target: 'http://localhost:8080/chat-empresarial',&#10;        changeOrigin: true,&#10;        rewrite: (path) =&gt; path&#10;      }&#10;    }&#10;  },&#10;  build: {&#10;    outDir: 'dist',&#10;    emptyOutDir: true,&#10;    sourcemap: false,&#10;    rollupOptions: {&#10;      output: {&#10;        manualChunks: {&#10;          'vuetify': ['vuetify']&#10;        }&#10;      }&#10;    }&#10;  },&#10;  css: {&#10;    preprocessorOptions: {&#10;      scss: {&#10;        additionalData: '@import &quot;@/recursos/estilos.scss&quot;;'&#10;      }&#10;    }&#10;  }&#10;})&#10;" />
+              <option name="updatedContent" value="import { defineConfig } from 'vite'&#10;import vue from '@vitejs/plugin-vue'&#10;import path from 'path'&#10;&#10;export default defineConfig({&#10;  // Use VITE_CONTEXT_PATH to build for a specific context (e.g. '/chat-empresarial/').&#10;  // Fallback to relative paths ('./') so the built SPA works when deployed either&#10;  // at root or under a subpath without requiring absolute references.&#10;  base: process.env.VITE_CONTEXT_PATH || './',&#10;&#10;  plugins: [vue()],&#10;  resolve: {&#10;    alias: {&#10;      '@': path.resolve(__dirname, './src')&#10;    }&#10;  },&#10;  server: {&#10;    port: 5173,&#10;    proxy: {&#10;      '/api': {&#10;        target: 'http://localhost:8080/chat-empresarial',&#10;        changeOrigin: true,&#10;        rewrite: (path) =&gt; path&#10;      }&#10;    }&#10;  },&#10;  build: {&#10;    outDir: 'dist',&#10;    emptyOutDir: true,&#10;    sourcemap: false,&#10;    rollupOptions: {&#10;      output: {&#10;        manualChunks: {&#10;          'vuetify': ['vuetify']&#10;        }&#10;      }&#10;    }&#10;  },&#10;  css: {&#10;    preprocessorOptions: {&#10;      scss: {&#10;        additionalData: '@import &quot;@/recursos/estilos.scss&quot;;'&#10;      }&#10;    }&#10;  }&#10;})&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
