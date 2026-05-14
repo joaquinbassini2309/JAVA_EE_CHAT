@@ -815,35 +815,37 @@ onUnmounted(() => {
   }
 
   .entrada-mensaje {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
     padding: 10px;
-    flex-wrap: wrap;
   }
 
   .btn-adjunto {
-    grid-column: 1 / -1;
-    padding: 6px 10px;
+    flex: 1;
+    padding: 8px 10px;
     font-size: 11px;
     gap: 3px;
     width: 100%;
     justify-content: center;
+    order: 1;
   }
 
   .input-mensaje {
-    grid-column: 1 / -1;
-    padding: 8px 10px;
-    font-size: 12px;
+    flex: 1;
+    padding: 10px 10px;
+    font-size: 13px;
+    order: 2;
   }
 
   .btn-enviar {
-    grid-column: 1 / -1;
+    flex: 1;
     width: 100%;
-    padding: 8px 12px;
-    font-size: 11px;
+    padding: 10px 12px;
+    font-size: 12px;
     gap: 4px;
     justify-content: center;
+    order: 3;
   }
 
   .adjunto-imagen {
