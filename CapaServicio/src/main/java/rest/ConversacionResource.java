@@ -156,12 +156,12 @@ public class ConversacionResource {
 
     @POST
     @Path("/{id}/participantes")
-    public Response addParticipant(@PathParam("id") Long id, Map<String, Long> body, @Context SecurityContext securityContext) {
+    public Response addParticipant(@PathParam("id") Long id, AddParticipantDTO dto, @Context SecurityContext securityContext) {
         Long currentUserId = authService.getAuthenticatedUserId(securityContext);
         if (currentUserId == null) return Response.status(Response.Status.UNAUTHORIZED).build();
 
-        Long newUserId = body.get("usuarioId");
-        if (newUserId == null) return Response.status(Response.Status.BAD_REQUEST).build();
+        if (dto == null || dto.getUsuarioId() == null) return Response.status(Response.Status.BAD_REQUEST).build();
+        Long newUserId = dto.getUsuarioId();
 
         try {
             sistema.agregarMiembroAGrupo(id, newUserId, currentUserId);
@@ -228,5 +228,11 @@ public class ConversacionResource {
         private RolParticipante rol;
         public RolParticipante getRol() { return rol; }
         public void setRol(RolParticipante rol) { this.rol = rol; }
+    }
+
+    public static class AddParticipantDTO {
+        private Long usuarioId;
+        public Long getUsuarioId() { return usuarioId; }
+        public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
     }
 }

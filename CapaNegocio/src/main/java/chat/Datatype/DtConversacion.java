@@ -14,14 +14,15 @@ public class DtConversacion {
     private String nombre;
     private TipoConversacion tipo;
     private LocalDateTime fechaCreacion;
-    private List<DtParticipante> participantes; // CAMBIO: De DtUsuario a DtParticipante
+    private String fotoUrl; // Para el avatar en la lista de chats
+    private List<DtParticipante> participantes;
     private String ultimoMensaje;
     private LocalDateTime fechaUltimoMensaje;
     private Integer noLeidos;
 
     public DtConversacion() {}
 
-    public DtConversacion(Long id, String nombre, TipoConversacion tipo, LocalDateTime fechaCreacion, List<DtParticipante> participantes, String ultimoMensaje, LocalDateTime fechaUltimoMensaje, Integer noLeidos) {
+    public DtConversacion(Long id, String nombre, TipoConversacion tipo, LocalDateTime fechaCreacion, List<DtParticipante> participantes, String ultimoMensaje, LocalDateTime fechaUltimoMensaje, Integer noLeidos, String fotoUrl) {
         this.id = id;
         this.nombre = nombre;
         this.tipo = tipo;
@@ -30,6 +31,7 @@ public class DtConversacion {
         this.ultimoMensaje = ultimoMensaje;
         this.fechaUltimoMensaje = fechaUltimoMensaje;
         this.noLeidos = noLeidos;
+        this.fotoUrl = fotoUrl;
     }
 
     public static DtConversacion from(Conversacion conversacion) {
@@ -61,13 +63,19 @@ public class DtConversacion {
         }
 
         String nombreVisible = conversacion.getNombre();
+        String fotoVisible = null; // Podría ser una imagen de grupo por defecto
+
         if (conversacion.getTipo() == TipoConversacion.PRIVADA && usuarioActualId != null) {
-            nombreVisible = conversacion.getParticipantes().stream()
+            Usuario otro = conversacion.getParticipantes().stream()
                     .map(Participante::getUsuario)
-                    .filter(usuario -> usuario != null && !usuarioActualId.equals(usuario.getId()))
-                    .map(Usuario::getUsername)
+                    .filter(u -> u != null && !usuarioActualId.equals(u.getId()))
                     .findFirst()
-                    .orElse(conversacion.getNombre());
+                    .orElse(null);
+            
+            if (otro != null) {
+                nombreVisible = otro.getUsername();
+                fotoVisible = otro.getFotoUrl();
+            }
         }
 
         return new DtConversacion(
@@ -75,10 +83,11 @@ public class DtConversacion {
                 nombreVisible,
                 conversacion.getTipo(),
                 conversacion.getFechaCreacion(),
-                participantesDtos, // Se pasa la nueva lista
+                participantesDtos,
                 ultimoContenido,
                 ultimaFecha,
-                0 // Default no leidos
+                0, // Default no leidos
+                fotoVisible
         );
     }
 
@@ -99,4 +108,6 @@ public class DtConversacion {
     public void setFechaUltimoMensaje(LocalDateTime fechaUltimoMensaje) { this.fechaUltimoMensaje = fechaUltimoMensaje; }
     public Integer getNoLeidos() { return noLeidos; }
     public void setNoLeidos(Integer noLeidos) { this.noLeidos = noLeidos; }
+    public String getFotoUrl() { return fotoUrl; }
+    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
 }

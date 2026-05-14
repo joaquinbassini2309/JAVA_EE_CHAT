@@ -15,6 +15,7 @@ public class DtMensaje {
     private Boolean leido;
     private LocalDateTime fechaEnvio;
     private String emisorNombre; // Added for convenience in DTO
+    private String emisorFoto;   // Added for avatars
 
     public DtMensaje() {
     }
@@ -33,6 +34,7 @@ public class DtMensaje {
         dto.setLeido(mensaje.getLeido());
         dto.setFechaEnvio(mensaje.getFechaEnvio());
         dto.setEmisorNombre(mensaje.getEmisor() != null ? mensaje.getEmisor().getUsername() : null);
+        dto.setEmisorFoto(mensaje.getEmisor() != null ? mensaje.getEmisor().getFotoUrl() : null);
         return dto;
     }
 
@@ -55,4 +57,6 @@ public class DtMensaje {
     public void setFechaEnvio(LocalDateTime fechaEnvio) { this.fechaEnvio = fechaEnvio; }
     public String getEmisorNombre() { return emisorNombre; }
     public void setEmisorNombre(String emisorNombre) { this.emisorNombre = emisorNombre; }
+    public String getEmisorFoto() { return emisorFoto; }
+    public void setEmisorFoto(String emisorFoto) { this.emisorFoto = emisorFoto; }
 }

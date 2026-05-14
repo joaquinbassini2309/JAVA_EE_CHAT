@@ -40,7 +40,7 @@ public class ArchivoResource {
 
     // Directorio donde se guardarán los archivos subidos
     private static final String STORAGE_DIR = System.getProperty("user.home") + File.separator + "chat-empresarial-uploads";
-    private static final long MAX_BYTES = 10L * 1024L * 1024L; // 10 MB
+    private static final long MAX_BYTES = 25L * 1024L * 1024L; // 25 MB
 
     public static class UploadDTO {
         public String filename;
