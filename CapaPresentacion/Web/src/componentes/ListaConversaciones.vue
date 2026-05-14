@@ -5,11 +5,11 @@
     <div class="panel-usuario">
       <div 
         class="profile-banner profile-banner--default"
-        :style="usuarioActual?.imagenBanner ? { backgroundImage: 'url(' + usuarioActual.imagenBanner + ')' } : {}"
+        :style="usuarioActual?.imagenBanner ? { backgroundImage: `url('${usuarioActual.imagenBanner}')` } : {}"
       />
       <div class="profile-lower">
         <div class="profile-avatar-wrap">
-          <v-menu offset-y>
+          <v-menu offset-y content-class="menu-perfil-flotante" transition="slide-y-transition">
             <template v-slot:activator="{ props }">
               <div class="avatar-cuadrado cursor-pointer" v-bind="props" v-ripple>
                 <img v-if="usuarioActual?.fotoUrl" :src="usuarioActual.fotoUrl" class="avatar-img" />
@@ -740,5 +740,68 @@ const cerrarSesionLocal = () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+</style>
+
+<style>
+/* Estilos globales para el menú flotante del perfil */
+.menu-perfil-flotante {
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  box-shadow: 0 6px 20px rgba(64,109,115,0.18) !important;
+  border: 1px solid rgba(64,109,115,0.1) !important;
+}
+
+.menu-perfil-flotante .v-list {
+  padding: 6px 0 !important;
+  background-color: #ffffff !important;
+}
+
+.menu-perfil-flotante .v-list-item {
+  min-height: 38px !important;
+  padding: 0 16px !important;
+  transition: background 0.2s;
+}
+
+.menu-perfil-flotante .v-list-item:hover {
+  background-color: #f0f7f8 !important;
+}
+
+.menu-perfil-flotante .v-list-item-title {
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  color: #2f4a4f !important;
+}
+
+.menu-perfil-flotante .text-error .v-list-item-title {
+  color: #e57373 !important;
+}
+
+.menu-perfil-flotante .v-list-item__prepend {
+  margin-right: 12px !important;
+}
+
+.menu-perfil-flotante .v-icon {
+  font-size: 18px !important;
+  color: #5a8a94;
+}
+
+.menu-perfil-flotante .text-error .v-icon {
+  color: #e57373 !important;
+}
+
+/* Scrollbar para la lista en general */
+.lista-conversaciones ::-webkit-scrollbar {
+  width: 6px;
+}
+.lista-conversaciones ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.lista-conversaciones ::-webkit-scrollbar-thumb {
+  background: rgba(64,109,115,0.2);
+  border-radius: 10px;
+}
+.lista-conversaciones ::-webkit-scrollbar-thumb:hover {
+  background: rgba(64,109,115,0.4);
 }
 </style>

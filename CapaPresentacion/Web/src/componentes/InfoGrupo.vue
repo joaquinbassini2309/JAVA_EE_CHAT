@@ -3,11 +3,19 @@
 
     <!-- Encabezado con banner + avatar cuadrado (mismo patrón que Chat.vue) -->
     <div class="info-header">
-      <div class="profile-banner profile-banner--default" />
+      <div 
+        class="profile-banner profile-banner--default"
+        :style="esGrupo ? {} : (otroUsuario?.imagenBanner ? { backgroundImage: `url('${otroUsuario.imagenBanner}')` } : {})"
+      />
       <div class="profile-lower">
         <div class="profile-avatar-wrap">
           <div class="avatar-cuadrado">
-            {{ conversacion.nombre?.charAt(0).toUpperCase() || 'G' }}
+            <template v-if="!esGrupo && otroUsuario?.fotoUrl">
+              <img :src="otroUsuario.fotoUrl" class="avatar-img" />
+            </template>
+            <template v-else>
+              {{ conversacion.nombre?.charAt(0).toUpperCase() || 'G' }}
+            </template>
           </div>
         </div>
         <div class="profile-title-row">
@@ -206,10 +214,11 @@ async function eliminarMiembro(participanteId) {
 <style scoped>
 .info-grupo { display: flex; flex-direction: column; height: 100%; background: #f7fcfd; overflow: hidden; }
 .info-header { flex-shrink: 0; }
-.profile-banner { height: 76px; background-color: #B3EBF2; background-image: linear-gradient(135deg, rgba(64,109,115,0.22) 0%, transparent 55%), linear-gradient(225deg, rgba(255,255,255,0.45) 0%, transparent 48%), radial-gradient(ellipse 90% 140% at 15% 0%, rgba(64,109,115,0.15), transparent); background-size: cover; }
+.profile-banner { height: 76px; background-color: #B3EBF2; background-image: linear-gradient(135deg, rgba(64,109,115,0.22) 0%, transparent 55%), linear-gradient(225deg, rgba(255,255,255,0.45) 0%, transparent 48%), radial-gradient(ellipse 90% 140% at 15% 0%, rgba(64,109,115,0.15), transparent); background-size: cover; background-position: center; }
 .profile-lower { position: relative; background: #f0f7f8; padding: 8px 14px 14px; padding-left: 100px; min-height: 72px; }
 .profile-avatar-wrap { position: absolute; left: 14px; top: -32px; z-index: 2; }
-.avatar-cuadrado { width: 64px; height: 64px; background: #B2C5C8; color: #2f4a4f; border-radius: 10px; border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(64,109,115,0.22); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; }
+.avatar-cuadrado { width: 64px; height: 64px; background: #B2C5C8; color: #2f4a4f; border-radius: 10px; border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(64,109,115,0.22); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; overflow: hidden; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .profile-title-row { display: flex; align-items: center; gap: 8px; }
 .btn-atras { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0; transition: background 0.15s; }
 .btn-atras:hover { background: rgba(64,109,115,0.1); }
