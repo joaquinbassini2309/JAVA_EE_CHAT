@@ -93,7 +93,7 @@
 
     <!-- Modal Nueva Conversación / Grupo -->
     <v-dialog v-model="mostrarModal" max-width="420">
-      <v-card rounded="xl" class="modal-nueva-conv">
+      <v-card rounded="2xl" class="modal-nueva-conv">
         <v-card-title class="modal-titulo-conv">
           <v-icon size="18" color="white" class="mr-2">
             {{ esGrupo ? 'mdi-account-multiple-plus' : 'mdi-message-plus' }}
@@ -164,7 +164,7 @@
 
     <!-- Modal Editar Perfil -->
     <v-dialog v-model="mostrarModalPerfil" max-width="420">
-      <v-card rounded="xl" class="modal-editar-perfil">
+      <v-card rounded="2xl" class="modal-editar-perfil">
         <v-card-title class="modal-titulo-perfil">
           <v-icon size="18" color="white" class="mr-2">
             {{ tipoEdicionPerfil === 'username' ? 'mdi-account' : tipoEdicionPerfil === 'fotoUrl' ? 'mdi-image-account' : tipoEdicionPerfil === 'imagenBanner' ? 'mdi-image-area' : tipoEdicionPerfil === 'descripcion' ? 'mdi-text-account' : 'mdi-account-edit' }}
@@ -792,7 +792,7 @@ const cerrarSesionLocal = () => {
   display: flex !important;
   align-items: center !important;
   padding: 12px 16px !important;
-  border-radius: 16px 16px 0 0 !important;
+  border-radius: 24px 24px 0 0 !important;
 }
 
 .modal-contenido-conv {
@@ -801,6 +801,7 @@ const cerrarSesionLocal = () => {
   display: flex !important;
   flex-direction: column !important;
   gap: 12px !important;
+  border-radius: 0 0 24px 24px !important;
 }
 
 .modal-seccion-mejorada {
@@ -1084,20 +1085,21 @@ const cerrarSesionLocal = () => {
 <style>
 /* Estilos globales para el menú flotante del perfil */
 .menu-perfil-flotante {
-  border-radius: 14px !important;
+  border-radius: 20px !important;
   overflow: hidden !important;
-  box-shadow: 0 6px 20px rgba(64,109,115,0.18) !important;
-  border: 1px solid rgba(64,109,115,0.1) !important;
+  box-shadow: 0 8px 32px rgba(64, 109, 115, 0.18) !important;
+  border: 1px solid rgba(64, 109, 115, 0.1) !important;
+  min-width: 220px !important;
 }
 
 .menu-perfil-flotante .v-list {
-  padding: 6px 0 !important;
+  padding: 8px 0 !important;
   background-color: #ffffff !important;
 }
 
 .menu-perfil-flotante .v-list-item {
-  min-height: 38px !important;
-  padding: 0 16px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
   transition: background 0.2s;
 }
 
@@ -1106,26 +1108,32 @@ const cerrarSesionLocal = () => {
 }
 
 .menu-perfil-flotante .v-list-item-title {
-  font-size: 13.5px !important;
+  font-size: 12px !important;
   font-weight: 500 !important;
   color: #2f4a4f !important;
 }
 
 .menu-perfil-flotante .text-error .v-list-item-title {
   color: #e57373 !important;
+  font-weight: 600 !important;
 }
 
 .menu-perfil-flotante .v-list-item__prepend {
-  margin-right: 12px !important;
+  margin-right: 10px !important;
 }
 
 .menu-perfil-flotante .v-icon {
-  font-size: 18px !important;
+  font-size: 16px !important;
   color: #5a8a94;
 }
 
 .menu-perfil-flotante .text-error .v-icon {
   color: #e57373 !important;
+}
+
+.menu-perfil-flotante .v-divider {
+  margin: 4px 0 !important;
+  opacity: 0.2 !important;
 }
 
 /* Scrollbar para la lista en general */
@@ -1157,13 +1165,16 @@ const cerrarSesionLocal = () => {
   display: flex !important;
   align-items: center !important;
   padding: 12px 16px !important;
-  border-radius: 16px 16px 0 0 !important;
+  border-radius: 24px 24px 0 0 !important;
 }
 
 .modal-contenido-perfil {
   padding: 16px !important;
   background: #f7fcfd !important;
-  border-radius: 0 0 16px 16px !important;
+  border-radius: 0 0 24px 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
 }
 
 .campo-edicion {
@@ -1187,7 +1198,7 @@ const cerrarSesionLocal = () => {
   width: 100% !important;
   padding: 10px 12px !important;
   border: 1px solid rgba(64, 109, 115, 0.2) !important;
-  border-radius: 10px !important;
+  border-radius: 12px !important;
   font-size: 12px !important;
   color: #2f4a4f !important;
   background: #ffffff !important;

@@ -4,11 +4,15 @@
 
       <!-- Encabezado con banner + avatar cuadrado -->
       <div class="chat-encabezado" @click="mostrandoInfo = true">
-        <div class="profile-banner profile-banner--default" />
+        <div class="profile-banner profile-banner--default"
+          :style="esGrupo ? {} : (otroUsuario?.imagenBanner ? { backgroundImage: `url('${otroUsuario.imagenBanner}')` } : {})"
+          style="background-size: cover; background-position: center;"
+        />
         <div class="profile-lower">
           <div class="profile-avatar-wrap">
             <div class="avatar-cuadrado">
-              {{ destinatario.iniciales }}
+              <img v-if="!esGrupo && otroUsuario?.fotoUrl" :src="otroUsuario.fotoUrl" class="avatar-img" alt="avatar" />
+              <span v-else>{{ destinatario.iniciales }}</span>
             </div>
           </div>
           <div class="profile-title-row">
@@ -25,7 +29,7 @@
 
       <!-- Modal Añadir Miembro -->
       <v-dialog v-model="mostrarModalAñadir" max-width="420">
-        <v-card rounded="xl" class="modal-anadir-miembro">
+        <v-card rounded="2xl" class="modal-anadir-miembro">
           <v-card-title class="modal-titulo-anadir">
             <v-icon size="18" color="white" class="mr-2">mdi-account-plus</v-icon>
             Añadir al Grupo
@@ -57,7 +61,7 @@
 
       <!-- Modal Info Mensaje -->
       <v-dialog v-model="mostrarModalInfo" max-width="420">
-        <v-card v-if="mensajeParaInfo" rounded="xl" class="modal-info-mensaje">
+        <v-card v-if="mensajeParaInfo" rounded="2xl" class="modal-info-mensaje">
           <v-card-title class="modal-titulo-mejorado">
             <v-icon size="18" color="white" class="mr-2">mdi-information-outline</v-icon>
             Información del Mensaje
@@ -201,6 +205,12 @@ const destinatario = computed(() => {
     nombre: nombreVisible,
     iniciales: nombreVisible?.charAt(0).toUpperCase() || '?',
   }
+})
+
+const otroUsuario = computed(() => {
+  if (esGrupo.value) return null
+  const participante = conversacionActual.value?.participantes?.find(p => p.usuario.id !== usuarioActual.value?.id)
+  return participante?.usuario
 })
 
 const usuariosFiltrados = computed(() => {
@@ -497,6 +507,13 @@ onUnmounted(() => {
   justify-content: center;
   font-size: 26px;
   font-weight: 700;
+  overflow: hidden;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .profile-title-row {
@@ -566,11 +583,31 @@ onUnmounted(() => {
 .contenedor-mensajes {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   background: rgba(179, 235, 242, 0.28);
+}
+
+/* Scrollbar mejorada para mensajes */
+.contenedor-mensajes::-webkit-scrollbar {
+  width: 8px;
+}
+
+.contenedor-mensajes::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.contenedor-mensajes::-webkit-scrollbar-thumb {
+  background: rgba(64, 109, 115, 0.25);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.contenedor-mensajes::-webkit-scrollbar-thumb:hover {
+  background: rgba(64, 109, 115, 0.45);
 }
 
 .mensaje-wrap {
@@ -765,7 +802,7 @@ onUnmounted(() => {
   display: flex !important;
   align-items: center !important;
   padding: 12px 16px !important;
-  border-radius: 16px 16px 0 0 !important;
+  border-radius: 24px 24px 0 0 !important;
 }
 
 .modal-contenido-mejorado {
@@ -781,7 +818,7 @@ onUnmounted(() => {
   gap: 4px !important;
   padding: 10px 12px !important;
   background: rgba(179, 235, 242, 0.15) !important;
-  border-radius: 10px !important;
+  border-radius: 12px !important;
   border-left: 3px solid #406D73 !important;
 }
 
@@ -816,7 +853,7 @@ onUnmounted(() => {
   display: flex !important;
   align-items: center !important;
   padding: 12px 16px !important;
-  border-radius: 16px 16px 0 0 !important;
+  border-radius: 24px 24px 0 0 !important;
 }
 
 .modal-contenido-anadir {
@@ -825,7 +862,7 @@ onUnmounted(() => {
   display: flex !important;
   flex-direction: column !important;
   gap: 10px !important;
-  border-radius: 0 0 16px 16px !important;
+  border-radius: 0 0 24px 24px !important;
 }
 
 .modal-busqueda-anadir {
