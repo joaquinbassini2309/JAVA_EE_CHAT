@@ -25,9 +25,25 @@ const routes = [
   }
 ]
 
+import { useAlmacen } from '../almacenes/almacen'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
+})
+
+// Guardia de navegación
+router.beforeEach((to, from, next) => {
+  const almacen = useAlmacen()
+  const autenticado = almacen.estaAutenticado
+
+  if (to.path === '/chat' && !autenticado) {
+    next('/login')
+  } else if (to.path === '/login' && autenticado) {
+    next('/chat')
+  } else {
+    next()
+  }
 })
 
 export default router

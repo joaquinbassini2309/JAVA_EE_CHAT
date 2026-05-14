@@ -53,7 +53,19 @@ public class ManejadorMensaje {
         q.setParameter("cid", conversacionId);
         q.setFirstResult(offset);
         q.setMaxResults(limite > 0 ? limite : 50);
-        return q.getResultList();
+        List<Mensaje> res = q.getResultList();
+        // Invertir para que el frontend los reciba en orden cronológico (viejo -> nuevo)
+        java.util.Collections.reverse(res);
+        return res;
+    }
+
+    public Optional<Mensaje> buscarUltimoMensaje(Long conversacionId) {
+        TypedQuery<Mensaje> q = em.createQuery(
+                "SELECT m FROM Mensaje m WHERE m.conversacion.id = :cid ORDER BY m.fechaEnvio DESC",
+                Mensaje.class);
+        q.setParameter("cid", conversacionId);
+        q.setMaxResults(1);
+        return q.getResultList().stream().findFirst();
     }
 
     public void marcarTodosComoLeidos(Long conversacionId, Long usuarioId) {

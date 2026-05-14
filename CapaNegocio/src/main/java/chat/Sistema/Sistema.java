@@ -384,6 +384,11 @@ public class Sistema implements ISistema {
     }
 
     @Override
+    public Optional<Mensaje> buscarUltimoMensaje(Long conversacionId) {
+        return mensajeHandler().buscarUltimoMensaje(conversacionId);
+    }
+
+    @Override
     public void marcarMensajeComoLeido(Long mensajeId, Long usuarioId) {
         // TODO: Validar que el mensaje pertenece a una conversación donde el usuario participa
         mensajeHandler().marcarMensajeLeido(mensajeId);

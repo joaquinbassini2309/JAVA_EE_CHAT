@@ -1,5 +1,5 @@
 <template>
-  <div class="componente-chat">
+  <div class="componente-chat" style="display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; width: 100%; overflow: hidden;">
     <template v-if="!mostrandoInfo">
 
       <!-- Encabezado con banner + avatar cuadrado -->
@@ -119,6 +119,21 @@
 
       <!-- Área de mensajes -->
       <div ref="contenedorMensajes" class="contenedor-mensajes">
+        <!-- Botón Cargar Más -->
+        <div v-if="!todosCargados" class="d-flex justify-center my-3">
+          <v-btn
+            variant="flat"
+            color="#455A64"
+            class="text-white btn-cargar-mas"
+            size="small"
+            rounded="pill"
+            :loading="cargandoAnteriores"
+            prepend-icon="mdi-history"
+            @click="cargarMasMensajes"
+          >
+            Cargar mensajes anteriores
+          </v-btn>
+        </div>
         <div
             v-for="mensaje in mensajesFiltrados"
             :key="mensaje.id"
@@ -192,6 +207,8 @@ const mensajeParaInfo = ref(null)
 // Nuevo: input de archivo y estado de subida
 const fileInput = ref(null)
 const subiendoArchivo = ref(false)
+const cargandoMas = ref(false)
+const offsetMensajes = ref(0)
 
 const conversacionActual = computed(() => almacen.conversacionActual)
 const usuarioActual = computed(() => almacen.usuarioActual)
@@ -237,12 +254,30 @@ const scrollToBottom = async () => {
 const cargarMensajes = async () => {
   if (!conversacionActual.value) return
   try {
-    const mensajesObtenidos = await servicioApi.obtenerMensajes(conversacionActual.value.id)
+    offsetMensajes.value = 0
+    const mensajesObtenidos = await servicioApi.obtenerMensajes(conversacionActual.value.id, 6, 0)
     almacen.establecerMensajes(mensajesObtenidos)
     scrollToBottom()
     await servicioApi.marcarConversacionLeida(conversacionActual.value.id)
   } catch (error) {
     console.error('Error al cargar mensajes:', error)
+  }
+}
+
+const cargarMasMensajes = async () => {
+  if (!conversacionActual.value || cargandoMas.value) return
+  try {
+    cargandoMas.value = true
+    offsetMensajes.value += 6
+    const anteriores = await servicioApi.obtenerMensajes(conversacionActual.value.id, 6, offsetMensajes.value)
+    if (anteriores.length > 0) {
+      // Agregar al principio del almacén (el almacén debe soportar esto o lo hacemos manual)
+      almacen.establecerMensajes([...anteriores, ...mensajes.value])
+    }
+  } catch (error) {
+    console.error('Error al cargar más mensajes:', error)
+  } finally {
+    cargandoMas.value = false
   }
 }
 
@@ -456,17 +491,21 @@ onUnmounted(() => {
 <style scoped>
 /* ---- Raíz ---- */
 .componente-chat {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100%;
+  width: 100%;
   background: #f7fcfd;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* ---- Encabezado tipo banner ---- */
 .chat-encabezado {
   flex-shrink: 0;
   cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 .profile-banner {
@@ -591,25 +630,7 @@ onUnmounted(() => {
   background: rgba(179, 235, 242, 0.28);
 }
 
-/* Scrollbar mejorada para mensajes */
-.contenedor-mensajes::-webkit-scrollbar {
-  width: 8px;
-}
-
-.contenedor-mensajes::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.contenedor-mensajes::-webkit-scrollbar-thumb {
-  background: rgba(64, 109, 115, 0.25);
-  border-radius: 10px;
-  transition: background 0.2s;
-}
-
-.contenedor-mensajes::-webkit-scrollbar-thumb:hover {
-  background: rgba(64, 109, 115, 0.45);
-}
-
+/* Scrollbar MUY visible para mensajes movido a global */
 .mensaje-wrap {
   display: flex;
   animation: fadeIn 0.25s ease-out;
@@ -630,8 +651,10 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background: #f7fcfd;
+  background: #ffffff;
   flex-shrink: 0;
+  z-index: 10;
+  border-top: 1px solid rgba(64,109,115,0.1);
 }
 
 .btn-adjunto {

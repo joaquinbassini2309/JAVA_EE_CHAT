@@ -35,6 +35,11 @@ export const useAlmacen = defineStore('principal', () => {
 
   function establecerUsuario(usuario) {
     usuarioActual.value = usuario
+    if (usuario) {
+      localStorage.setItem('usuario', JSON.stringify(usuario))
+    } else {
+      localStorage.removeItem('usuario')
+    }
   }
 
   function establecerToken(nuevoToken) {

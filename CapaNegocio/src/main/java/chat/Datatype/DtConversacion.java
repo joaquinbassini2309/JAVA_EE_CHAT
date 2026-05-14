@@ -35,32 +35,32 @@ public class DtConversacion {
     }
 
     public static DtConversacion from(Conversacion conversacion) {
-        return from(conversacion, null);
+        return from(conversacion, null, null);
     }
 
     public static DtConversacion from(Conversacion conversacion, Long usuarioActualId) {
+        return from(conversacion, usuarioActualId, null);
+    }
+
+    public static DtConversacion from(Conversacion conversacion, Long usuarioActualId, chat.clases.Mensaje ultimoM) {
         if (conversacion == null) {
             return null;
         }
 
-        // AHORA SE TRANSFORMAN LOS PARTICIPANTES COMPLETOS
         List<DtParticipante> participantesDtos = conversacion.getParticipantes().stream()
                 .map(DtParticipante::from)
                 .collect(Collectors.toList());
 
-        String ultimoContenido = null;
-        LocalDateTime ultimaFecha = null;
+        String ultimoContenido = "..."; 
+        LocalDateTime ultimaFecha = LocalDateTime.now();
         
-        ultimoContenido = "..."; 
-        ultimaFecha = LocalDateTime.now();
-        
-        /* 
-        COMENTADO PARA EVITAR TIMEOUT:
-        No cargar todos los mensajes en memoria.
-        */
+        if (ultimoM != null) {
+            ultimoContenido = ultimoM.getContenido();
+            ultimaFecha = ultimoM.getFechaEnvio();
+        }
 
         String nombreVisible = conversacion.getNombre();
-        String fotoVisible = null; // Podría ser una imagen de grupo por defecto
+        String fotoVisible = null; 
 
         if (conversacion.getTipo() == TipoConversacion.PRIVADA && usuarioActualId != null) {
             Usuario otro = conversacion.getParticipantes().stream()

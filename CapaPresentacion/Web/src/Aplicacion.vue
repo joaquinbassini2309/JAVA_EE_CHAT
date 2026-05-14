@@ -57,4 +57,30 @@ body {
     font-size: 12px;
   }
 }
+/* Forzar barras de scroll visibles en toda la app */
+::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+  display: block !important;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #406D73 !important;
+  border-radius: 5px !important;
+  border: 1px solid white !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2f4a4f !important;
+}
+
+/* Para Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #406D73 rgba(0, 0, 0, 0.05);
+}
 </style>

@@ -144,6 +144,9 @@ public interface ISistema {
     
     //Obtiene el historial de mensajes de una conversación
     List<chat.clases.Mensaje> obtenerMensajesDeConversacion(Long conversacionId, Long usuarioId, int limite, int offset);
+
+    // Obtiene el último mensaje de una conversación de forma eficiente
+    Optional<chat.clases.Mensaje> buscarUltimoMensaje(Long conversacionId);
     
     //Marca un mensaje como leído
     void marcarMensajeComoLeido(Long mensajeId, Long usuarioId);

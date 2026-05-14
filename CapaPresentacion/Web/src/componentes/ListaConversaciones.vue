@@ -79,7 +79,8 @@
           @click="seleccionarConversacion(conversacion)"
       >
         <div class="avatar-mini-lista">
-          {{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id).charAt(0).toUpperCase() }}
+          <img v-if="conversacion.fotoUrl" :src="conversacion.fotoUrl" class="avatar-img-lista" alt="avatar" />
+          <span v-else>{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id).charAt(0).toUpperCase() }}</span>
         </div>
         <div class="info-conversacion">
           <span class="nombre">{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id) }}</span>
@@ -413,6 +414,7 @@ const cerrarSesionLocal = () => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0; /* Crucial para scroll */
   background: #ffffff;
   position: relative;
   overflow: hidden;
@@ -594,6 +596,7 @@ const cerrarSesionLocal = () => {
 .listado {
   flex: 1;
   overflow-y: auto;
+  min-height: 0; /* Crucial para scroll */
   background: #ffffff;
 }
 
@@ -627,7 +630,15 @@ const cerrarSesionLocal = () => {
   justify-content: center;
   font-weight: 700;
   font-size: 15px;
+  overflow: hidden;
 }
+
+.avatar-img-lista {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 
 .info-conversacion {
   display: flex;
@@ -1071,21 +1082,7 @@ const cerrarSesionLocal = () => {
   opacity: 0.2 !important;
 }
 
-/* Scrollbar para la lista en general */
-.lista-conversaciones ::-webkit-scrollbar {
-  width: 6px;
-}
-.lista-conversaciones ::-webkit-scrollbar-track {
-  background: transparent;
-}
-.lista-conversaciones ::-webkit-scrollbar-thumb {
-  background: rgba(64,109,115,0.2);
-  border-radius: 10px;
-}
-.lista-conversaciones ::-webkit-scrollbar-thumb:hover {
-  background: rgba(64,109,115,0.4);
-}
-
+/* Scrollbar para la lista movido a global */
 /* ---- Estilos Mejorados Modal Editar Perfil ---- */
 .modal-editar-perfil {
   box-shadow: 0 10px 40px rgba(64, 109, 115, 0.15) !important;

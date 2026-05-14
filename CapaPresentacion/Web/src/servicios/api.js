@@ -152,9 +152,9 @@ class ServicioAPI {
     return data
   }
 
-  async obtenerMensajes(idConversacion, limite = 50) {
+  async obtenerMensajes(idConversacion, limite = 6, offset = 0) {
     const { data } = await this.cliente.get(
-      `/mensajes/conversacion/${idConversacion}?limite=${limite}`
+      `/mensajes/conversacion/${idConversacion}?limite=${limite}&offset=${offset}`
     )
     return data
   }

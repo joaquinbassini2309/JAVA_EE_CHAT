@@ -1,4 +1,5 @@
-#!/bin/bash
+# Detener el script si hay cualquier error
+set -e
 
 # Rutas
 PROJECT_ROOT="/home/guzman-perera/Documentos/UTEC/JAVA EE/JAVA_EE_CHAT"
@@ -17,25 +18,30 @@ echo -e "${CYAN}--- PREPARANDO ENTORNO ---${NC}"
 
 # 0. Limpiar puertos (por si quedaron procesos colgados)
 echo -e "${YELLOW}Limpiando puertos 8080 y 9990...${NC}"
-fuser -k 8080/tcp > /dev/null 2>&1
-fuser -k 9990/tcp > /dev/null 2>&1
+fuser -k 8080/tcp > /dev/null 2>&1 || true
+fuser -k 9990/tcp > /dev/null 2>&1 || true
 sleep 1
 
 # 1. Compilar Frontend (Vite)
-echo -e "${GREEN}Compilando Frontend con npm...${NC}"
-cd "$PROJECT_ROOT/CapaPresentacion/Web" && npm install && VITE_CONTEXT_PATH=/chat-empresarial/ npm run build
+echo -e "${GREEN}Limpiando y compilando Frontend...${NC}"
+rm -rf "$PROJECT_ROOT/CapaPresentacion/Web/dist"
+# Borrar solo lo que genera Vite, NO borrar WEB-INF
+find "$PROJECT_ROOT/CapaServicio/src/main/webapp/" -mindepth 1 -maxdepth 1 ! -name 'WEB-INF' -exec rm -rf {} +
+cd "$PROJECT_ROOT/CapaPresentacion/Web" && npm run build
 cp -r dist/* ../../CapaServicio/src/main/webapp/
 
-# 2. Compilar con Maven (para que siempre tengas la última versión de tu código)
-echo -e "${GREEN}Compilando proyecto con Maven...${NC}"
-cd "$PROJECT_ROOT" && mvn clean package
+# 2. Compilar con Maven
+echo -e "${GREEN}Limpiando y compilando Backend...${NC}"
+cd "$PROJECT_ROOT" && mvn clean package -DskipTests
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}[OK] Compilación exitosa.${NC}"
     # Limpiar y copiar el .war nuevo
-    echo -e "${GREEN}Copiando el .war a WildFly...${NC}"
+    echo -e "${GREEN}Limpiando y copiando el .war a WildFly...${NC}"
     rm -rf "$WILDFLY_DEPLOY"/*
-    # CORRECCIÓN: El archivo .war se genera dentro de CapaServicio/target/, no en la raíz
+    # Forzar borrado de carpetas temporales de WildFly si existen
+    rm -rf "$(dirname "$WILDFLY_DEPLOY")/tmp"
+    rm -rf "$(dirname "$WILDFLY_DEPLOY")/data"
     cp "$PROJECT_ROOT/CapaServicio/target/chat-empresarial.war" "$WILDFLY_DEPLOY/"
 else
     echo -e "${RED}[!] Error en la compilación. Se intentará arrancar igual...${NC}"

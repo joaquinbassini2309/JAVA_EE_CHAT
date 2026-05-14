@@ -1,48 +1,36 @@
 <template>
   <v-app class="chat-app-root">
-    <v-main class="chat-main-fill bg-background pa-0">
-      <v-container fluid class="chat-container-fill pa-2 pa-sm-3 pa-md-4">
-        <v-sheet class="chat-shell bg-surface d-flex flex-column flex-grow-1" elevation="0">
-          <!-- Vista móvil: condicional para mostrar lista o chat -->
-          <div v-if="esModoMovil && !conversacionActual" class="chat-movil-lista">
+    <v-main style="height: 100vh; overflow: hidden; display: flex; flex-direction: column;">
+      <v-container fluid class="pa-2 pa-md-4" style="height: 100%; display: flex; flex-direction: column; min-height: 0;">
+        <v-sheet elevation="0" rounded="xl" border style="height: 100%; display: flex; flex-direction: column; overflow: hidden; min-height: 0;">
+          
+          <!-- Vista móvil -->
+          <div v-if="esModoMovil && !conversacionActual" style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
             <ListaConversaciones />
           </div>
 
-          <!-- Vista móvil: chat con botón atrás -->
-          <div v-if="esModoMovil && conversacionActual" class="chat-movil-completo">
-            <!-- Botón volver atrás -->
+          <div v-if="esModoMovil && conversacionActual" style="flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-rows: auto 1fr;">
             <div class="header-retroceso">
-              <v-btn
-                icon="mdi-arrow-left"
-                variant="flat"
-                color="accent"
-                size="small"
-                density="comfortable"
-                @click="volverALista"
-                title="Volver a conversaciones"
-              />
+              <v-btn icon="mdi-arrow-left" variant="flat" color="accent" size="small" @click="volverALista" />
               <span class="titulo-conversacion">{{ obtenerNombreConversacion }}</span>
             </div>
-            <Chat v-if="conversacionActual" />
+            <Chat />
           </div>
 
-          <!-- Vista desktop: diseño original de dos columnas -->
-          <div v-if="!esModoMovil" class="chat-desktop">
-            <v-row no-gutters class="chat-main-row" style="flex:1 1 auto; min-height:0;">
-              <!-- Sidebar -->
-              <v-col cols="12" md="4" class="sidebar-col border-e">
-                <ListaConversaciones />
-              </v-col>
-              <!-- Área de chat -->
-              <v-col cols="12" md="8" class="chat-col">
-                <Chat v-if="conversacionActual" />
-                <div v-else class="sin-conversacion d-flex flex-column align-center justify-center h-100">
-                  <v-icon size="80" color="accent" class="mb-4" style="opacity:0.45">mdi-message-text-outline</v-icon>
-                  <p class="sin-conv-text">Selecciona una conversación para empezar</p>
-                </div>
-              </v-col>
-            </v-row>
+          <!-- Vista desktop -->
+          <div v-if="!esModoMovil" style="display: grid; grid-template-columns: 350px 1fr; height: 100%; min-height: 0; overflow: hidden;">
+            <div style="border-right: 1px solid rgba(0,0,0,0.1); height: 100%; overflow: hidden; display: flex; flex-direction: column; min-height: 0;">
+              <ListaConversaciones />
+            </div>
+            <div style="height: 100%; overflow: hidden; display: flex; flex-direction: column; min-height: 0; position: relative;">
+              <Chat v-if="conversacionActual" />
+              <div v-else class="sin-conversacion d-flex flex-column align-center justify-center h-100">
+                <v-icon size="80" color="accent" style="opacity:0.3">mdi-message-text-outline</v-icon>
+                <p>Selecciona un chat</p>
+              </div>
+            </div>
           </div>
+
         </v-sheet>
       </v-container>
     </v-main>
@@ -113,49 +101,48 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.chat-app-root {
+.chat-vista-root {
   height: 100vh;
+  width: 100%;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-}
-
-.chat-main-fill {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.chat-container-fill {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  height: 100%;
-}
-
-.chat-shell {
-  border: 2px solid rgba(64, 109, 115, 0.28);
-  border-radius: 12px;
   overflow: hidden;
-  flex: 1 1 auto;
+  box-sizing: border-box;
+}
+
+.chat-shell-plain {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid rgba(64, 109, 115, 0.2);
+  overflow: hidden;
   min-height: 0;
+}
+
+.chat-desktop-grid {
+  display: grid;
+  grid-template-columns: 350px 1fr;
   height: 100%;
+  overflow: hidden;
 }
 
-.sidebar-col {
-  min-height: 0;
+.sidebar-container {
+  border-right: 1px solid rgba(64, 109, 115, 0.1);
+  height: 100%;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(64, 109, 115, 0.18);
 }
 
-.chat-col {
-  min-height: 0;
+.chat-container {
+  height: 100%;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .sin-conversacion {
@@ -180,10 +167,12 @@ onUnmounted(() => {
 
 .chat-movil-completo {
   flex: 1;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr;
   min-height: 0;
+  height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 
 .header-retroceso {
