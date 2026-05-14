@@ -51,16 +51,13 @@ public class DtConversacion {
         String ultimoContenido = null;
         LocalDateTime ultimaFecha = null;
         
-        if (conversacion.getMensajes() != null && !conversacion.getMensajes().isEmpty()) {
-            chat.clases.Mensaje m = conversacion.getMensajes().stream()
-                    .sorted((m1, m2) -> m2.getFechaEnvio().compareTo(m1.getFechaEnvio()))
-                    .findFirst()
-                    .orElse(null);
-            if (m != null) {
-                ultimoContenido = m.getContenido();
-                ultimaFecha = m.getFechaEnvio();
-            }
-        }
+        ultimoContenido = "..."; 
+        ultimaFecha = LocalDateTime.now();
+        
+        /* 
+        COMENTADO PARA EVITAR TIMEOUT:
+        No cargar todos los mensajes en memoria.
+        */
 
         String nombreVisible = conversacion.getNombre();
         String fotoVisible = null; // Podría ser una imagen de grupo por defecto

@@ -124,7 +124,8 @@ public class MensajeResource {
     @Path("/conversacion/{conversacionId}")
     public Response getMensajesDeConversacion(
             @PathParam("conversacionId") Long conversacionId,
-            @QueryParam("limite") Integer limite) {
+            @QueryParam("limite") Integer limite,
+            @QueryParam("offset") @DefaultValue("0") int offset) {
 
         Long usuarioId = authService.getAuthenticatedUserId(securityContext);
         if (usuarioId == null) {
@@ -146,8 +147,8 @@ public class MensajeResource {
         }
 
         try {
-            int lim = limite != null && limite > 0 ? limite : 50;
-            List<Mensaje> mensajes = sistema.obtenerMensajesDeConversacion(conversacionId, usuarioId, lim);
+            int lim = limite != null && limite > 0 ? limite : 6;
+            List<Mensaje> mensajes = sistema.obtenerMensajesDeConversacion(conversacionId, usuarioId, lim, offset);
             List<DtMensaje> respuesta = mensajes.stream()
                     .map(DtMensaje::from)
                     .collect(Collectors.toList());

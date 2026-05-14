@@ -135,7 +135,9 @@ public class ConversacionResource {
     @GET
     @Path("/{id}/mensajes")
     public Response getMensajesConversacion(@PathParam("id") Long id,
-            @QueryParam("limit") @DefaultValue("50") int limit, @Context SecurityContext securityContext) {
+            @QueryParam("limit") @DefaultValue("6") int limit, 
+            @QueryParam("offset") @DefaultValue("0") int offset,
+            @Context SecurityContext securityContext) {
         Long userId = authService.getAuthenticatedUserId(securityContext);
 
         if (userId == null) {
@@ -148,7 +150,7 @@ public class ConversacionResource {
                     .entity(new ErrorResponse(403, "Access denied to conversation")).build();
         }
 
-        List<chat.clases.Mensaje> mensajes = sistema.obtenerMensajesDeConversacion(id, userId, limit);
+        List<chat.clases.Mensaje> mensajes = sistema.obtenerMensajesDeConversacion(id, userId, limit, offset);
         List<DtMensaje> dtos = mensajes.stream().map(DtMensaje::from).collect(Collectors.toList());
 
         return Response.ok(dtos).build();
