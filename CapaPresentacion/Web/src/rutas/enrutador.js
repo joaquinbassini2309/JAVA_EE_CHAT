@@ -25,9 +25,8 @@ const routes = [
   }
 ]
 
-const basePath = import.meta.env.VITE_BASE_PATH || '/'
 const router = createRouter({
-  history: createWebHistory(basePath),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
 

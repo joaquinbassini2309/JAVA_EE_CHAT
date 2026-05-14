@@ -35,6 +35,9 @@ public class Mensaje {
     @Column(name = "leido")
     private Boolean leido = false;
 
+    @Column(name = "eliminado")
+    private Boolean eliminado = false;
+
     @Column(name = "fecha_envio")
     private LocalDateTime fechaEnvio;
 
@@ -64,6 +67,9 @@ public class Mensaje {
 
     public Boolean getLeido() { return leido; }
     public void setLeido(Boolean leido) { this.leido = leido; }
+
+    public Boolean getEliminado() { return eliminado; }
+    public void setEliminado(Boolean eliminado) { this.eliminado = eliminado; }
 
     public LocalDateTime getFechaEnvio() { return fechaEnvio; }
     public void setFechaEnvio(LocalDateTime fechaEnvio) { this.fechaEnvio = fechaEnvio; }

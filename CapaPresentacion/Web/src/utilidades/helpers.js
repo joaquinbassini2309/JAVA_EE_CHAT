@@ -153,9 +153,9 @@ export function obtenerNombreVisibleConversacion(conversacion, usuarioActualId) 
   
   // Si es privado y tenemos el ID del usuario actual, extraer el nombre del otro
   if (conversacion.tipo === 'PRIVADA' && usuarioActualId && conversacion.participantes) {
-    const otro = conversacion.participantes.find(p => p.id !== usuarioActualId)
-    if (otro && otro.username) {
-      return otro.username
+    const otro = conversacion.participantes.find(p => p.usuario && p.usuario.id !== usuarioActualId)
+    if (otro && otro.usuario && otro.usuario.username) {
+      return otro.usuario.username
     }
   }
   

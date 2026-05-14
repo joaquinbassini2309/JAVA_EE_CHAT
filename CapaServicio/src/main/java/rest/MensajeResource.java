@@ -223,6 +223,75 @@ public class MensajeResource {
     }
 
     /**
+     * DELETE /api/v1/mensajes/{id}
+     * Elimina un mensaje. Solo el emisor puede hacerlo.
+     */
+    @DELETE
+    @Path("/{id}")
+    public Response eliminarMensaje(@PathParam("id") Long mensajeId) {
+        Long usuarioId = authService.getAuthenticatedUserId(securityContext);
+        if (usuarioId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
+        }
+
+        if (mensajeId == null || mensajeId <= 0) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(400, "Invalid message ID")).build();
+        }
+
+        try {
+            sistema.eliminarMensaje(mensajeId, usuarioId);
+            return Response.ok().build();
+        } catch (IllegalArgumentException e) {
+            // This exception is thrown by Sistema for "Not found" or "Not allowed"
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(new ErrorResponse(403, "Error deleting message", e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(500, "Could not delete message", e.getMessage())).build();
+        }
+    }
+
+    /**
+     * GET /api/v1/mensajes/{id}/info
+     * Obtiene información detallada de un mensaje.
+     */
+    @GET
+    @Path("/{id}/info")
+    public Response getInfoMensaje(@PathParam("id") Long mensajeId) {
+        Long usuarioId = authService.getAuthenticatedUserId(securityContext);
+        if (usuarioId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
+        }
+
+        if (mensajeId == null || mensajeId <= 0) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(400, "Invalid message ID")).build();
+        }
+
+        try {
+            Optional<Mensaje> mensajeOpt = sistema.obtenerInfoMensaje(mensajeId, usuarioId);
+
+            if (mensajeOpt.isEmpty()) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity(new ErrorResponse(404, "Message not found or access denied")).build();
+            }
+
+            DtMensaje respuesta = DtMensaje.from(mensajeOpt.get());
+            return Response.ok(respuesta).build();
+
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(new ErrorResponse(403, "Access denied", e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(500, "Error getting message info", e.getMessage())).build();
+        }
+    }
+
+    /**
      * DTO para enviar mensajes
      */
     public static class EnviarMensajeDTO {

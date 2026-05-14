@@ -51,4 +51,12 @@ public class ManejadorConversacion {
         q.setParameter("u2", usuario2Id);
         return q.getResultList().stream().findFirst();
     }
+
+    public void actualizarNombre(Long conversacionId, String nuevoNombre) {
+        Conversacion c = em.find(Conversacion.class, conversacionId);
+        if (c != null) {
+            c.setNombre(nuevoNombre);
+            em.merge(c);
+        }
+    }
 }

@@ -41,6 +41,8 @@ public final class DtUsuario {
         private String username;
         private String email;
         private String fotoUrl;
+        private String descripcion;
+        private String imagenBanner;
         private EstadoUsuario estado;
         private LocalDateTime fechaRegistro;
 
@@ -51,6 +53,8 @@ public final class DtUsuario {
                 String username,
                 String email,
                 String fotoUrl,
+                String descripcion,
+                String imagenBanner,
                 EstadoUsuario estado,
                 LocalDateTime fechaRegistro
         ) {
@@ -58,6 +62,8 @@ public final class DtUsuario {
             this.username = username;
             this.email = email;
             this.fotoUrl = fotoUrl;
+            this.descripcion = descripcion;
+            this.imagenBanner = imagenBanner;
             this.estado = estado;
             this.fechaRegistro = fechaRegistro;
         }
@@ -70,6 +76,8 @@ public final class DtUsuario {
             dto.username = usuario.getUsername();
             dto.email = usuario.getEmail();
             dto.fotoUrl = usuario.getFotoUrl();
+            dto.descripcion = usuario.getDescripcion();
+            dto.imagenBanner = usuario.getImagenBanner();
             dto.estado = usuario.getEstado();
             dto.fechaRegistro = usuario.getFechaRegistro();
             return dto;
@@ -87,6 +95,12 @@ public final class DtUsuario {
         public String getFotoUrl() { return fotoUrl; }
         public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
 
+        public String getDescripcion() { return descripcion; }
+        public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+
+        public String getImagenBanner() { return imagenBanner; }
+        public void setImagenBanner(String imagenBanner) { this.imagenBanner = imagenBanner; }
+
         public EstadoUsuario getEstado() { return estado; }
         public void setEstado(EstadoUsuario estado) { this.estado = estado; }
 
@@ -99,18 +113,33 @@ public final class DtUsuario {
 
     // DTO para actualizar perfil
     public static class ActualizarUsuarioDTO {
+        private String username;
         private String fotoUrl;
+        private String descripcion;
+        private String imagenBanner;
         private EstadoUsuario estado;
 
         public ActualizarUsuarioDTO() {}
 
-        public ActualizarUsuarioDTO(String fotoUrl, EstadoUsuario estado) {
+        public ActualizarUsuarioDTO(String username, String fotoUrl, String descripcion, String imagenBanner, EstadoUsuario estado) {
+            this.username = username;
             this.fotoUrl = fotoUrl;
+            this.descripcion = descripcion;
+            this.imagenBanner = imagenBanner;
             this.estado = estado;
         }
 
+        public String getUsername() { return username; }
+        public void setUsername(String username) { this.username = username; }
+
         public String getFotoUrl() { return fotoUrl; }
         public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+
+        public String getDescripcion() { return descripcion; }
+        public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+
+        public String getImagenBanner() { return imagenBanner; }
+        public void setImagenBanner(String imagenBanner) { this.imagenBanner = imagenBanner; }
 
         public EstadoUsuario getEstado() { return estado; }
         public void setEstado(EstadoUsuario estado) { this.estado = estado; }

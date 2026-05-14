@@ -1,17 +1,17 @@
 // Servicios API para la aplicación Vue.js
 import axios from 'axios'
 
-// Rutas relativas: toda la app está bajo /chat-empresarial
-const API_BASE_URL = '/chat-empresarial/api/v1'
-console.log('[API] URL Base configurada:', API_BASE_URL)
-console.log('[API] import.meta.env.VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL)
+const contextPath = window.location.pathname.includes('/chat-empresarial') 
+  ? '/chat-empresarial' 
+  : ''
+
+const API_BASE_URL = `${contextPath}/api/v1`
 
 class ServicioAPI {
   constructor() {
     this.cliente = axios.create({
       baseURL: API_BASE_URL,
-      // Render (plan free) puede tardar >10s en arrancar en frío.
-      timeout: 30000
+      timeout: 10000
     })
 
     // Interceptor para agregar token JWT
@@ -30,22 +30,11 @@ class ServicioAPI {
     this.cliente.interceptors.response.use(
       (response) => response,
       (error) => {
-        const requestUrl = error?.config?.baseURL
-          ? `${error.config.baseURL}${error?.config?.url || ''}`
-          : error?.config?.url
-        console.error('[API] Error en respuesta:', {
-          code: error?.code,
-          status: error?.response?.status,
-          method: error?.config?.method,
-          url: requestUrl,
-          message: error?.message
-        })
-
         if (error.response?.status === 401) {
           // Token expirado o inválido
           localStorage.removeItem('token')
           localStorage.removeItem('usuario')
-          window.location.href = '/login'
+          window.location.href = `${contextPath}/login`
         }
         return Promise.reject(error)
       }
@@ -71,11 +60,8 @@ class ServicioAPI {
     return data
   }
 
-  async actualizarPerfil(fotoUrl, estado) {
-    const { data } = await this.cliente.put('/usuarios/perfil', {
-      fotoUrl: fotoUrl,
-      estado: estado
-    })
+  async actualizarPerfil(payload) {
+    const { data } = await this.cliente.put('/usuarios/perfil', payload)
     return data
   }
 
@@ -113,9 +99,26 @@ class ServicioAPI {
     return data
   }
 
+  async actualizarConversacion(idConversacion, nombre) {
+    const { data } = await this.cliente.put(`/conversaciones/${idConversacion}`, { nombre })
+    return data
+  }
+
   async añadirParticipante(idConversacion, idUsuario) {
     const { data } = await this.cliente.post(`/conversaciones/${idConversacion}/participantes`, {
       usuarioId: idUsuario
+    })
+    return data
+  }
+
+  async eliminarParticipante(idConversacion, idParticipante) {
+    const { data } = await this.cliente.delete(`/conversaciones/${idConversacion}/participantes/${idParticipante}`)
+    return data
+  }
+
+  async actualizarRolParticipante(idConversacion, idParticipante, nuevoRol) {
+    const { data } = await this.cliente.put(`/conversaciones/${idConversacion}/participantes/${idParticipante}/rol`, {
+      rol: nuevoRol
     })
     return data
   }
@@ -124,6 +127,28 @@ class ServicioAPI {
 
   async enviarMensaje(nuevoMensaje) {
     const { data } = await this.cliente.post('/mensajes', nuevoMensaje)
+    return data
+  }
+
+  // Nuevo: subir archivo en Base64
+  async uploadFile(filename, contentBase64) {
+    const { data } = await this.cliente.post('/archivos/upload', {
+      filename: filename,
+      contentBase64: contentBase64
+    })
+
+    // Asegurar que la URL devuelta sea absoluta para que el frontend pueda mostrar/descargar correctamente
+    try {
+      // Usar el origin (protocolo + host + puerto) para no duplicar el contexto de aplicación
+      const origin = window.location.origin
+      if (data && data.url && data.url.startsWith('/')) {
+        data.url = origin + data.url
+      }
+    } catch (e) {
+      // si algo falla, seguimos devolviendo lo que venga del servidor
+      console.warn('No se pudo normalizar URL de archivo:', e.message)
+    }
+
     return data
   }
 
@@ -148,12 +173,24 @@ class ServicioAPI {
     return data
   }
 
+  async eliminarMensaje(idMensaje) {
+    const { data } = await this.cliente.delete(`/mensajes/${idMensaje}`)
+    return data
+  }
+
+  async obtenerInfoMensaje(idMensaje) {
+    const { data } = await this.cliente.get(`/mensajes/${idMensaje}/info`)
+    return data
+  }
+
   // ========== WEBSOCKET ==========
 
   conectarWebSocket(idConversacion, idUsuario, token) {
-    const wsBaseFromEnv = import.meta.env.VITE_WS_BASE_URL
-    const base = wsBaseFromEnv || (window.location.origin + '/chat-empresarial').replace(/^http/, 'ws')
-    const url = `${base}/ws/conversacion/${idConversacion}/usuario/${idUsuario}?token=${token}`
+    // Aceptar token como string o ref (Pinia)
+    const rawToken = (token && token.value) ? token.value : token;
+    const encoded = rawToken ? encodeURIComponent(rawToken) : '';
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const url = `${protocol}//${window.location.host}${contextPath}/ws/conversacion/${idConversacion}/usuario/${idUsuario}` + (encoded ? `?token=${encoded}` : '')
     console.log('Intentando conectar WebSocket a:', url)
 
     const ws = new WebSocket(url)
@@ -167,6 +204,10 @@ class ServicioAPI {
 
     ws.onerror = (error) => {
       console.error('Error WebSocket:', error)
+    }
+
+    ws.onclose = (ev) => {
+      console.log('WebSocket cerrado', ev.code, ev.reason)
     }
 
     return ws

@@ -2,6 +2,8 @@ package rest;
 
 import chat.Datatype.DtConversacion;
 import chat.Datatype.DtMensaje;
+import chat.Enum.RolParticipante;
+import chat.Enum.TipoConversacion;
 import chat.Sistema.ISistema;
 import exceptions.ErrorResponse;
 import seguridad.AuthService;
@@ -52,7 +54,7 @@ public class ConversacionResource {
     }
 
     @POST
-    public Response createConversacion(DtConversacion dto, @Context SecurityContext securityContext) {
+    public Response createConversacion(CreateConversacionDTO dto, @Context SecurityContext securityContext) {
         Long userId = authService.getAuthenticatedUserId(securityContext);
 
         if (userId == null) {
@@ -66,7 +68,7 @@ public class ConversacionResource {
         }
 
         // Conversacion privada: Se espera exactamente 1 participante adicional
-        if (dto.getTipo() == chat.Enum.TipoConversacion.PRIVADA) {
+        if (dto.getTipo() == TipoConversacion.PRIVADA) {
             List<Long> participantes = dto.getParticipanteIds();
 
             if (participantes == null || participantes.size() != 1) {
@@ -114,6 +116,22 @@ public class ConversacionResource {
         return Response.ok(dto).build();
     }
 
+    @PUT
+    @Path("/{id}")
+    public Response updateConversacion(@PathParam("id") Long id, UpdateConversacionDTO dto, @Context SecurityContext securityContext) {
+        Long userId = authService.getAuthenticatedUserId(securityContext);
+        if (userId == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        try {
+            sistema.actualizarInfoGrupo(id, dto.getNombre(), userId);
+            return Response.ok().build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(new ErrorResponse(403, e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ErrorResponse(500, "Error updating group", e.getMessage())).build();
+        }
+    }
+
     @GET
     @Path("/{id}/mensajes")
     public Response getMensajesConversacion(@PathParam("id") Long id,
@@ -125,9 +143,7 @@ public class ConversacionResource {
                     .entity(new ErrorResponse(401, "Authentication required")).build();
         }
 
-        System.out.println("DEBUG: getMensajesConversacion - userId: " + userId + ", conversacionId: " + id);
         if (!sistema.usuarioEstaEnConversacion(userId, id)) {
-            System.out.println("DEBUG: Acceso denegado para usuario " + userId + " en conversacion " + id);
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(new ErrorResponse(403, "Access denied to conversation")).build();
         }
@@ -148,14 +164,69 @@ public class ConversacionResource {
         if (newUserId == null) return Response.status(Response.Status.BAD_REQUEST).build();
 
         try {
-            System.out.println("DEBUG: Añadiendo usuario " + newUserId + " a conversacion " + id + " por admin " + currentUserId);
             sistema.agregarMiembroAGrupo(id, newUserId, currentUserId);
             return Response.ok().build();
         } catch (Exception e) {
-            System.err.println("ERROR al añadir participante: " + e.getMessage());
-            e.printStackTrace();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(new ErrorResponse(500, "Error adding participant", e.getMessage())).build();
         }
+    }
+
+    @DELETE
+    @Path("/{id}/participantes/{participanteId}")
+    public Response removeParticipant(@PathParam("id") Long conversacionId, @PathParam("participanteId") Long participanteId, @Context SecurityContext securityContext) {
+        Long userId = authService.getAuthenticatedUserId(securityContext);
+        if (userId == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        try {
+            sistema.removerMiembroDeGrupo(conversacionId, participanteId, userId);
+            return Response.ok().build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(new ErrorResponse(403, e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ErrorResponse(500, "Error removing participant", e.getMessage())).build();
+        }
+    }
+
+    @PUT
+    @Path("/{id}/participantes/{participanteId}/rol")
+    public Response updateParticipantRole(@PathParam("id") Long conversacionId, @PathParam("participanteId") Long participanteId, UpdateRoleDTO dto, @Context SecurityContext securityContext) {
+        Long userId = authService.getAuthenticatedUserId(securityContext);
+        if (userId == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        try {
+            sistema.cambiarRolParticipante(conversacionId, participanteId, dto.getRol(), userId);
+            return Response.ok().build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(new ErrorResponse(403, e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ErrorResponse(500, "Error updating role", e.getMessage())).build();
+        }
+    }
+
+    // --- DTOs ---
+    public static class CreateConversacionDTO {
+        private String nombre;
+        private TipoConversacion tipo;
+        private List<Long> participanteIds;
+
+        public String getNombre() { return nombre; }
+        public void setNombre(String nombre) { this.nombre = nombre; }
+        public TipoConversacion getTipo() { return tipo; }
+        public void setTipo(TipoConversacion tipo) { this.tipo = tipo; }
+        public List<Long> getParticipanteIds() { return participanteIds; }
+        public void setParticipanteIds(List<Long> participanteIds) { this.participanteIds = participanteIds; }
+    }
+
+    public static class UpdateConversacionDTO {
+        private String nombre;
+        public String getNombre() { return nombre; }
+        public void setNombre(String nombre) { this.nombre = nombre; }
+    }
+
+    public static class UpdateRoleDTO {
+        private RolParticipante rol;
+        public RolParticipante getRol() { return rol; }
+        public void setRol(RolParticipante rol) { this.rol = rol; }
     }
 }

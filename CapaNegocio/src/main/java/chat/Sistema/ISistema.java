@@ -54,8 +54,8 @@ public interface ISistema {
     //Actualiza el estado de conexión del usuario
     void actualizarEstadoUsuario(Long usuarioId, chat.Enum.EstadoUsuario estado);
 
-    //Actualiza el perfil del usuario (foto y estado)
-    void actualizarPerfilUsuario(Long usuarioId, String fotoUrl, chat.Enum.EstadoUsuario estado);
+    //Actualiza el perfil del usuario
+    void actualizarPerfilUsuario(Long usuarioId, chat.Datatype.DtUsuario.ActualizarUsuarioDTO dto);
 
     // ========== CASOS DE USO: CONVERSACIONES ==========
     
@@ -85,6 +85,12 @@ public interface ISistema {
     //Verifica si un usuario pertenece a una conversación
     boolean usuarioEstaEnConversacion(Long usuarioId, Long conversacionId);
 
+    /**
+     * Actualiza la información de un grupo (nombre, etc.)
+     * - Valida permisos (ADMIN o MODERADOR)
+     */
+    void actualizarInfoGrupo(Long grupoId, String nombre, Long adminId);
+
     // ========== CASOS DE USO: PARTICIPANTES ==========
     
     /**
@@ -109,6 +115,12 @@ public interface ISistema {
     
     //Cambia el rol de un participante en un grupo
     void cambiarRolParticipante(Long grupoId, Long usuarioId, RolParticipante nuevoRol, Long adminId);
+
+    /**
+     * Silencia a un participante en un grupo
+     * - Valida permisos (ADMIN o MODERADOR)
+     */
+    void silenciarParticipante(Long grupoId, Long usuarioId, Long adminId);
 
     // ========== CASOS DE USO: MENSAJERÍA ==========
     
@@ -138,6 +150,12 @@ public interface ISistema {
     
     //Marca todos los mensajes de una conversación como leídos
     void marcarConversacionComoLeida(Long conversacionId, Long usuarioId);
+
+    //Elimina un mensaje (solo el emisor puede eliminarlo)
+    void eliminarMensaje(Long mensajeId, Long usuarioId);
+
+    //Obtiene información detallada de un mensaje
+    Optional<Mensaje> obtenerInfoMensaje(Long mensajeId, Long usuarioId);
 
     // Observadores
     void registrarObservador(ChatObserver observer);

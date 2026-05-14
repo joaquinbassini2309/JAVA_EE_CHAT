@@ -62,6 +62,12 @@ export const useAlmacen = defineStore('principal', () => {
   }
 
   function agregarMensaje(nuevoMensaje) {
+    // Verificar si el mensaje ya existe para evitar duplicados
+    const yaExiste = mensajes.value.some(m => m.id === nuevoMensaje.id)
+    if (yaExiste) {
+      return // No agregar si ya existe
+    }
+
     mensajes.value = [...mensajes.value, nuevoMensaje]
     
     // Actualizar el último mensaje en la lista de conversaciones
@@ -88,6 +94,42 @@ export const useAlmacen = defineStore('principal', () => {
         }
       }
     })
+  }
+
+  function actualizarNombreConversacion(conversacionId, nombre) {
+    const conv = conversaciones.value.find(c => c.id === conversacionId)
+    if (conv) {
+      conv.nombre = nombre
+    }
+    if (conversacionActual.value?.id === conversacionId) {
+      conversacionActual.value.nombre = nombre
+    }
+  }
+
+  function actualizarRolParticipante(conversacionId, participanteId, nuevoRol) {
+    const conv = conversaciones.value.find(c => c.id === conversacionId)
+    if (conv?.participantes) {
+      const participante = conv.participantes.find(p => p.id === participanteId)
+      if (participante) {
+        participante.rol = nuevoRol
+      }
+    }
+    if (conversacionActual.value?.id === conversacionId) {
+      const participante = conversacionActual.value.participantes.find(p => p.id === participanteId)
+      if (participante) {
+        participante.rol = nuevoRol
+      }
+    }
+  }
+
+  function eliminarParticipante(conversacionId, participanteId) {
+    const conv = conversaciones.value.find(c => c.id === conversacionId)
+    if (conv?.participantes) {
+      conv.participantes = conv.participantes.filter(p => p.id !== participanteId)
+    }
+    if (conversacionActual.value?.id === conversacionId) {
+      conversacionActual.value.participantes = conversacionActual.value.participantes.filter(p => p.id !== participanteId)
+    }
   }
 
   function establecerCargando(valor) {
@@ -153,6 +195,9 @@ export const useAlmacen = defineStore('principal', () => {
     agregarMensaje,
     agregarConversacion,
     actualizarEstadoUsuario,
+    actualizarNombreConversacion,
+    actualizarRolParticipante,
+    eliminarParticipante,
     establecerCargando,
     establecerError,
     limpiarError,

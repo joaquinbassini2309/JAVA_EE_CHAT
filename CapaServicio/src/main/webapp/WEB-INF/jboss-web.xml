@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jboss-web>
-    <!-- Descriptor válido y mínimo para evitar errores de parseo en WildFly. -->
-</jboss-web>

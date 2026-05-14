@@ -28,11 +28,11 @@
           <v-card-title class="modal-titulo">
             Añadir al Grupo
             <v-spacer />
-            <v-btn icon="cerrar" variant="text" size="small" color="white" @click="cerrarModalAñadir" />
+            <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="cerrarModalAñadir" />
           </v-card-title>
           <v-card-text class="pa-0">
             <div class="modal-busqueda-input">
-              <v-icon size="16" color="#406D73" style="opacity:0.6">buscar</v-icon>
+              <v-icon size="16" color="#406D73" style="opacity:0.6">mdi-magnify</v-icon>
               <input v-model="terminoUsuario" type="text" placeholder="Buscar usuario..." />
             </div>
             <div class="modal-listado">
@@ -53,6 +53,27 @@
         </v-card>
       </v-dialog>
 
+      <!-- Modal Info Mensaje -->
+      <v-dialog v-model="mostrarModalInfo" max-width="400">
+        <v-card v-if="mensajeParaInfo" rounded="lg">
+          <v-card-title class="modal-titulo">
+            Información del Mensaje
+            <v-spacer />
+            <v-btn icon="mdi-close" variant="text" size="small" @click="mostrarModalInfo = false" />
+          </v-card-title>
+          <v-card-text class="py-4">
+            <p class="mb-2"><strong>Contenido:</strong><br><em>"{{ mensajeParaInfo.contenido }}"</em></p>
+            <p class="mb-2"><strong>Enviado por:</strong> {{ esPropio(mensajeParaInfo) ? 'Tú' : (mensajeParaInfo.emisorNombre || 'Desconocido') }}</p>
+            <p class="mb-2"><strong>Fecha:</strong> {{ formatearFecha(mensajeParaInfo.fechaEnvio) }}</p>
+            <p><strong>Estado:</strong> {{ mensajeParaInfo.leido ? 'Leído' : 'Entregado' }}</p>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn text @click="mostrarModalInfo = false">Cerrar</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <!-- Área de mensajes -->
       <div ref="contenedorMensajes" class="contenedor-mensajes">
         <div
@@ -61,7 +82,11 @@
             class="mensaje-wrap"
             :class="{ propio: esPropio(mensaje) }"
         >
-          <Mensaje :mensaje="mensaje" />
+          <Mensaje
+              :mensaje="mensaje"
+              @ver-info="mostrarInfoMensaje"
+              @eliminar="eliminarMensaje"
+          />
         </div>
       </div>
 
@@ -69,8 +94,16 @@
 
       <!-- Barra de entrada -->
       <div class="entrada-mensaje">
-        <button class="btn-adjunto" title="Archivos adjunto">
-          <v-icon size="18" color="#406D73" style="opacity:0.75">adjuntar</v-icon>
+        <!-- Nuevo: input de archivo oculto -->
+        <input
+            ref="fileInput"
+            type="file"
+            accept="image/*,application/pdf"
+            @change="handleFileSelected"
+            style="display:none"
+        />
+        <button class="btn-adjunto" title="Archivos adjunto" @click="seleccionarArchivo">
+          <v-icon size="18" color="#406D73" style="opacity:0.75">mdi-paperclip</v-icon>
           <span>Archivos adjunto</span>
         </button>
         <input
@@ -81,7 +114,7 @@
             @keyup.enter="enviarMensaje"
         />
         <button class="btn-enviar" @click="enviarMensaje" :disabled="!contenidoNuevo.trim()">
-          <v-icon size="16">enviar</v-icon>
+          <v-icon size="16">mdi-send</v-icon>
           Enviar mensaje
         </button>
       </div>
@@ -99,6 +132,7 @@ import { servicioApi } from '@/servicios/api'
 import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
 import Mensaje from './Mensaje.vue'
 import InfoGrupo from './InfoGrupo.vue'
+import { formatearFecha } from '@/utilidades/formateoFechas'
 
 const almacen = useAlmacen()
 const contenidoNuevo = ref('')
@@ -109,6 +143,12 @@ const mostrarModalAñadir = ref(false)
 const mostrandoInfo = ref(false)
 const terminoUsuario = ref('')
 const usuariosDisponibles = ref([])
+const mostrarModalInfo = ref(false)
+const mensajeParaInfo = ref(null)
+
+// Nuevo: input de archivo y estado de subida
+const fileInput = ref(null)
+const subiendoArchivo = ref(false)
 
 const conversacionActual = computed(() => almacen.conversacionActual)
 const usuarioActual = computed(() => almacen.usuarioActual)
@@ -166,6 +206,78 @@ const abrirModalAñadir = async () => {
   }
 }
 
+// Nuevo: abrir selector de archivos
+const seleccionarArchivo = () => {
+  if (fileInput.value) fileInput.value.click()
+}
+
+const handleFileSelected = async (event) => {
+  const f = event.target.files && event.target.files[0]
+  if (!f) return
+
+  // Tamaño máximo consistente con backend (10 MB)
+  const MAX_BYTES = 10 * 1024 * 1024
+  if (f.size > MAX_BYTES) {
+    console.error('Archivo demasiado grande')
+    alert('El archivo supera el tamaño máximo permitido (10 MB).')
+    return
+  }
+
+  try {
+    subiendoArchivo.value = true
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        let base64 = e.target.result
+        // El método uploadFile espera base64 posiblemente con prefijo data:...; lo aceptamos
+        const nombre = f.name
+        const resp = await servicioApi.uploadFile(nombre, base64)
+        // resp.url contiene la ruta pública
+        const urlAdjunto = resp.url
+
+        // Determinar tipoMensaje
+        const tipo = f.type.startsWith('image/') ? 'IMAGEN' : 'DOCUMENTO'
+
+        // Enviar mensaje con adjunto
+        if (ws.value && ws.value.readyState === WebSocket.OPEN) {
+          // Si WebSocket está abierto, enviar por WebSocket
+          // El servidor responderá con el mensaje en el mismo canal
+          ws.value.send(JSON.stringify({
+            contenido: nombre,
+            tipoMensaje: tipo,
+            urlAdjunto: urlAdjunto
+          }))
+        } else {
+          // Si no hay WebSocket, enviar por HTTP y agregar localmente
+          const m = await servicioApi.enviarMensaje({
+            conversacionId: conversacionActual.value.id,
+            contenido: nombre,
+            tipoMensaje: tipo,
+            urlAdjunto: urlAdjunto
+          })
+          almacen.agregarMensaje(m)
+          scrollToBottom()
+        }
+      } catch (err) {
+        console.error('Error al subir o enviar archivo:', err)
+        alert('Error al subir el archivo. Intenta de nuevo.')
+      } finally {
+        subiendoArchivo.value = false
+        // limpiar input
+        if (fileInput.value) fileInput.value.value = null
+      }
+    }
+    reader.onerror = (err) => {
+      console.error('Error leyendo archivo:', err)
+      subiendoArchivo.value = false
+    }
+    reader.readAsDataURL(f)
+  } catch (err) {
+    console.error('Error procesando archivo:', err)
+    subiendoArchivo.value = false
+  }
+}
+
 const cerrarModalAñadir = () => {
   mostrarModalAñadir.value = false
   terminoUsuario.value = ''
@@ -206,10 +318,28 @@ const enviarMensaje = async () => {
   if (!contenidoNuevo.value.trim() || !conversacionActual.value) return
   const texto = contenidoNuevo.value.trim()
   contenidoNuevo.value = ''
+  
+  const esPrimerMensaje = mensajes.value.length === 0 && !esGrupo.value;
+  
   try {
     if (ws.value && ws.value.readyState === WebSocket.OPEN) {
+      // Si WebSocket está abierto, enviar por WebSocket
       ws.value.send(JSON.stringify({ contenido: texto, tipoMensaje: 'TEXTO' }))
+      
+      // Si es el primer mensaje, esperamos un poquito y enviamos por HTTP
+      if (esPrimerMensaje) {
+        setTimeout(async () => {
+          try {
+            await servicioApi.enviarMensaje({
+              conversacionId: conversacionActual.value.id,
+              contenido: 'Los mensajes están cifrados de extremo a extremo',
+              tipoMensaje: 'TEXTO'
+            })
+          } catch(e) {}
+        }, 300);
+      }
     } else {
+      // Si no hay WebSocket, enviar por HTTP y agregar localmente
       const m = await servicioApi.enviarMensaje({
         conversacionId: conversacionActual.value.id,
         contenido: texto,
@@ -217,10 +347,37 @@ const enviarMensaje = async () => {
       })
       almacen.agregarMensaje(m)
       scrollToBottom()
+      
+      if (esPrimerMensaje) {
+        // Enviar cifrado inmediatamente después, usando await
+        const cifradoMsg = await servicioApi.enviarMensaje({
+          conversacionId: conversacionActual.value.id,
+          contenido: 'Los mensajes están cifrados de extremo a extremo',
+          tipoMensaje: 'TEXTO'
+        })
+        almacen.agregarMensaje(cifradoMsg)
+        scrollToBottom()
+      }
     }
   } catch (error) {
     console.error('Error al enviar mensaje:', error)
     contenidoNuevo.value = texto
+  }
+}
+
+const mostrarInfoMensaje = (mensaje) => {
+  mensajeParaInfo.value = mensaje
+  mostrarModalInfo.value = true
+}
+
+const eliminarMensaje = async (mensaje) => {
+  try {
+    await servicioApi.eliminarMensaje(mensaje.id)
+    // Marcar el mensaje como eliminado
+    mensaje.eliminado = true
+    mensaje.contenido = 'Mensaje eliminado'
+  } catch (error) {
+    console.error('Error al eliminar mensaje:', error)
   }
 }
 
@@ -541,4 +698,14 @@ onUnmounted(() => {
   font-size: 14px;
   color: #2f4a4f;
 }
+
+/* Adjuntos */
+.adjunto-imagen {
+  max-width: 280px;
+  max-height: 280px;
+  border-radius: 8px;
+  display: block;
+  margin-top: 8px;
+}
 </style>
+

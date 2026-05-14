@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module version="4">
-  <component name="AdditionalModuleElements">
-    <content url="file://$MODULE_DIR$/CapaNegocio/src/main/resources" />
-    <content url="file://$MODULE_DIR$" dumb="true">
-      <sourceFolder url="file://$MODULE_DIR$/CapaNegocio" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/CapaNegocio/src/main/java" isTestSource="false" />
-    </content>
-  </component>
+  <!-- Removed nested content roots that belonged to submodules (CapaNegocio etc.).
+       Keeping this .iml minimal avoids IntelliJ assigning source roots from child modules
+       into the aggregator module 'chat-empresarial', which caused the "belongs to
+       content of nested module" errors. After this change, re-import the Maven project
+       (or restart IntelliJ) so each module gets its correct content roots from pom.xml.
+  -->
 </module>
