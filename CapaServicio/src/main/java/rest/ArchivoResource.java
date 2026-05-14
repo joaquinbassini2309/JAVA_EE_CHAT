@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import jakarta.ws.rs.core.UriInfo;
 
 import jakarta.transaction.Transactional;
 
@@ -33,6 +34,9 @@ public class ArchivoResource {
 
     @Context
     private SecurityContext securityContext;
+
+    @Context
+    private UriInfo uriInfo;
 
     // Directorio donde se guardarán los archivos subidos
     private static final String STORAGE_DIR = System.getProperty("user.home") + File.separator + "chat-empresarial-uploads";
@@ -100,8 +104,11 @@ public class ArchivoResource {
             }
 
             Map<String, String> resp = new HashMap<>();
-            // URL para descargar el archivo a través del API REST
-            resp.put("url", "/chat-empresarial/api/v1/archivos/descargar/" + storedName);
+            // Generar URL dinámica basada en la petición actual
+            String baseUrl = uriInfo.getBaseUri().getPath();
+            if (!baseUrl.endsWith("/")) baseUrl += "/";
+            
+            resp.put("url", baseUrl + "archivos/descargar/" + storedName);
             resp.put("storedName", storedName);
             resp.put("originalName", dto.filename);
             return Response.status(Response.Status.CREATED).entity(resp).build();
