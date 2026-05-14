@@ -132,4 +132,42 @@ onMounted(async () => {
     flex: 1 1 auto;
   }
 }
+
+@media (max-width: 768px) {
+  .chat-container-fill {
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  .chat-shell {
+    border-radius: 8px;
+    border: 1px solid rgba(64, 109, 115, 0.15);
+  }
+
+  .sidebar-col {
+    max-height: min(42vh, 380px);
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-container-fill {
+    padding: 0.25rem !important;
+  }
+
+  .chat-shell {
+    border-radius: 4px;
+    border: none;
+  }
+
+  .sidebar-col {
+    max-height: min(35vh, 280px);
+  }
+
+  .sin-conversacion {
+    background: rgba(179, 235, 242, 0.1);
+  }
+
+  .sin-conv-text {
+    font-size: 13px;
+  }
+}
 </style>

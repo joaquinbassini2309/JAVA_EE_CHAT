@@ -107,6 +107,7 @@ const iniciarSesion = async () => {
 
 .tarjeta-login {
   display: flex;
+  flex-direction: row;
   background: #f7fcfd; /* surface from temaProyecto */
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -114,6 +115,15 @@ const iniciarSesion = async () => {
   max-width: 800px;
   height: 500px;
   overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .tarjeta-login {
+    flex-direction: column;
+    max-width: 100%;
+    height: auto;
+    border-radius: 0;
+  }
 }
 
 .panel-formulario {
@@ -203,5 +213,70 @@ a {
   color: #406D73;
   text-decoration: none;
   font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .panel-formulario {
+    padding: 20px;
+  }
+
+  .panel-bienvenida h1 {
+    font-size: 32px;
+  }
+
+  .tarjeta-login {
+    height: auto;
+  }
+
+  .panel-bienvenida {
+    padding: 30px 20px;
+    min-height: 200px;
+  }
+
+  form {
+    gap: 12px;
+  }
+
+  .btn-iniciar {
+    padding: 12px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contenedor-login {
+    padding: 10px;
+  }
+
+  .panel-formulario {
+    padding: 15px;
+  }
+
+  .circulo-gris {
+    width: 60px;
+    height: 60px;
+  }
+
+  .panel-bienvenida h1 {
+    font-size: 24px;
+  }
+
+  label {
+    font-size: 12px;
+  }
+
+  input {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .btn-iniciar {
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  .pie-login {
+    font-size: 12px;
+  }
 }
 </style>

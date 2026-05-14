@@ -41,6 +41,7 @@
           <div class="acciones-perfil">
             <v-btn icon="mdi-account-multiple-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirNuevoGrupo" title="Nuevo grupo" />
             <v-btn icon="mdi-plus-circle" variant="flat" color="accent" size="small" density="comfortable" @click="abrirNuevaConversacion" title="Nueva conversación" />
+            <v-btn icon="mdi-logout" variant="flat" color="error" size="small" density="comfortable" @click="cerrarSesionLocal" title="Cerrar sesión" />
           </div>
         </div>
         <!-- profile subtitle removed -->
@@ -740,6 +741,178 @@ const cerrarSesionLocal = () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ---- Media Queries para Responsividad ---- */
+@media (max-width: 768px) {
+  .profile-lower {
+    padding: 8px 10px 12px;
+    padding-left: 80px;
+    min-height: 80px;
+  }
+
+  .profile-avatar-wrap {
+    left: 10px;
+    top: -28px;
+  }
+
+  .avatar-cuadrado {
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+  }
+
+  .profile-banner {
+    height: 70px;
+  }
+
+  .profile-name {
+    font-size: 0.9rem;
+  }
+
+  .acciones-perfil {
+    gap: 2px;
+  }
+
+  .campo-busqueda {
+    margin-top: 8px;
+    padding: 4px 8px;
+  }
+
+  .campo-busqueda input {
+    font-size: 12px;
+  }
+
+  .tabs-row {
+    gap: 0;
+  }
+
+  .tab-btn {
+    font-size: 11px;
+    padding: 8px 2px;
+  }
+
+  .item-conversacion {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .avatar-mini-lista {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .info-conversacion .nombre {
+    font-size: 13px;
+  }
+
+  .info-conversacion .ultimo-msg {
+    font-size: 11px;
+  }
+
+  .seccion-titulo {
+    font-size: 10px;
+    padding: 6px 12px 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-lower {
+    padding: 6px 8px 10px;
+    padding-left: 70px;
+    min-height: 76px;
+  }
+
+  .profile-avatar-wrap {
+    left: 8px;
+    top: -24px;
+  }
+
+  .avatar-cuadrado {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+    border: 2px solid #ffffff;
+  }
+
+  .profile-banner {
+    height: 60px;
+  }
+
+  .profile-name {
+    font-size: 0.85rem;
+  }
+
+  .acciones-perfil {
+    gap: 2px;
+  }
+
+  .campo-busqueda {
+    margin-top: 6px;
+    padding: 3px 6px;
+    gap: 4px;
+  }
+
+  .campo-busqueda :deep(.v-icon) {
+    font-size: 14px !important;
+  }
+
+  .campo-busqueda input {
+    font-size: 11px;
+  }
+
+  .item-conversacion {
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .avatar-mini-lista {
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+  }
+
+  .info-conversacion .nombre {
+    font-size: 12px;
+  }
+
+  .info-conversacion .ultimo-msg {
+    font-size: 10px;
+  }
+
+  .seccion-titulo {
+    font-size: 9px;
+    padding: 4px 10px 3px;
+  }
+
+  .avatar-mini-modal {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .item-usuario-modal {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .info-usuario-modal .nombre {
+    font-size: 13px;
+  }
+
+  .info-usuario-modal .email {
+    font-size: 11px;
+  }
+
+  .input-modal {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+
+  .label-input {
+    font-size: 11px;
+  }
 }
 </style>
 

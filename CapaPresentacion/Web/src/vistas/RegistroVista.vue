@@ -114,6 +114,7 @@ const registrarse = async () => {
 
 .tarjeta-registro {
   display: flex;
+  flex-direction: row;
   background: #f7fcfd;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -121,6 +122,15 @@ const registrarse = async () => {
   max-width: 800px;
   height: 550px;
   overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .tarjeta-registro {
+    flex-direction: column;
+    max-width: 100%;
+    height: auto;
+    border-radius: 0;
+  }
 }
 
 .panel-formulario {
@@ -221,5 +231,95 @@ a {
   color: #406D73;
   text-decoration: none;
   font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .panel-formulario {
+    padding: 20px;
+  }
+
+  .panel-bienvenida h1 {
+    font-size: 36px;
+  }
+
+  .tarjeta-registro {
+    height: auto;
+  }
+
+  .panel-bienvenida {
+    padding: 30px 20px;
+    min-height: 200px;
+  }
+
+  form {
+    gap: 10px;
+  }
+
+  .btn-registro {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .circulo-gris {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contenedor-registro {
+    padding: 10px;
+  }
+
+  .panel-formulario {
+    padding: 15px;
+  }
+
+  .circulo-gris {
+    width: 50px;
+    height: 50px;
+  }
+
+  .avatar-placeholder {
+    margin-bottom: 16px;
+  }
+
+  .panel-bienvenida h1 {
+    font-size: 28px;
+  }
+
+  .panel-bienvenida {
+    padding: 25px 15px;
+    min-height: 180px;
+  }
+
+  label {
+    font-size: 12px;
+    margin-bottom: 3px;
+  }
+
+  input {
+    font-size: 14px;
+    padding: 9px;
+  }
+
+  .btn-registro {
+    margin-top: 10px;
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .pie-registro {
+    margin-top: 12px;
+    font-size: 12px;
+  }
+
+  form {
+    gap: 8px;
+  }
+
+  .grupo-campo {
+    gap: 2px;
+  }
 }
 </style>
