@@ -16,6 +16,7 @@
             <div class="encabezado-acciones" @click.stop>
               <v-btn icon="mdi-account-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirModalAñadir" title="Añadir miembro" />
               <span class="badge-estado" :class="estadoUsuario">{{ estadoUsuario }}</span>
+              <v-btn icon="mdi-close" variant="flat" color="error" size="small" density="comfortable" @click="cerrarConversacion" title="Cerrar conversación" />
             </div>
           </div>
           <div class="profile-subtitle">En conversación</div>
@@ -23,30 +24,31 @@
       </div>
 
       <!-- Modal Añadir Miembro -->
-      <v-dialog v-model="mostrarModalAñadir" max-width="400">
-        <v-card rounded="lg">
-          <v-card-title class="modal-titulo">
+      <v-dialog v-model="mostrarModalAñadir" max-width="420">
+        <v-card rounded="xl" class="modal-anadir-miembro">
+          <v-card-title class="modal-titulo-anadir">
+            <v-icon size="18" color="white" class="mr-2">mdi-account-plus</v-icon>
             Añadir al Grupo
             <v-spacer />
             <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="cerrarModalAñadir" />
           </v-card-title>
-          <v-card-text class="pa-0">
-            <div class="modal-busqueda-input">
+          <v-card-text class="modal-contenido-anadir">
+            <div class="modal-busqueda-anadir">
               <v-icon size="16" color="#406D73" style="opacity:0.6">mdi-magnify</v-icon>
               <input v-model="terminoUsuario" type="text" placeholder="Buscar usuario..." />
             </div>
-            <div class="modal-listado">
+            <div class="modal-listado-anadir">
               <div
                   v-for="usuario in usuariosFiltrados"
                   :key="usuario.id"
-                  class="item-usuario-modal"
+                  class="item-usuario-anadir"
                   @click="añadirMiembro(usuario.id)"
               >
                 <div class="avatar-mini-modal">{{ usuario.username.charAt(0).toUpperCase() }}</div>
                 <div class="info-usuario-modal">
                   <span class="nombre">{{ usuario.username }}</span>
                 </div>
-                <v-icon size="20" color="#406D73">mdi-plus</v-icon>
+                <v-icon size="18" color="#406D73" class="icon-plus-anadir">mdi-plus-circle</v-icon>
               </div>
             </div>
           </v-card-text>
@@ -54,23 +56,60 @@
       </v-dialog>
 
       <!-- Modal Info Mensaje -->
-      <v-dialog v-model="mostrarModalInfo" max-width="400">
-        <v-card v-if="mensajeParaInfo" rounded="lg">
-          <v-card-title class="modal-titulo">
+      <v-dialog v-model="mostrarModalInfo" max-width="420">
+        <v-card v-if="mensajeParaInfo" rounded="xl" class="modal-info-mensaje">
+          <v-card-title class="modal-titulo-mejorado">
+            <v-icon size="18" color="white" class="mr-2">mdi-information-outline</v-icon>
             Información del Mensaje
             <v-spacer />
-            <v-btn icon="mdi-close" variant="text" size="small" @click="mostrarModalInfo = false" />
+            <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="mostrarModalInfo = false" />
           </v-card-title>
-          <v-card-text class="py-4">
-            <p class="mb-2"><strong>Contenido:</strong><br><em>"{{ mensajeParaInfo.contenido }}"</em></p>
-            <p class="mb-2"><strong>Enviado por:</strong> {{ esPropio(mensajeParaInfo) ? 'Tú' : (mensajeParaInfo.emisorNombre || 'Desconocido') }}</p>
-            <p class="mb-2"><strong>Fecha:</strong> {{ formatearFecha(mensajeParaInfo.fechaEnvio) }}</p>
-            <p><strong>Estado:</strong> {{ mensajeParaInfo.leido ? 'Leído' : 'Entregado' }}</p>
+          <v-card-text class="modal-contenido-mejorado">
+            <!-- Contenido -->
+            <div class="info-item">
+              <div class="info-label">
+                <v-icon size="14" color="#406D73">mdi-message-text</v-icon>
+                Contenido
+              </div>
+              <p class="info-valor">{{ mensajeParaInfo.contenido }}</p>
+            </div>
+
+            <!-- Enviado por -->
+            <div class="info-item">
+              <div class="info-label">
+                <v-icon size="14" color="#406D73">mdi-account</v-icon>
+                Enviado por
+              </div>
+              <p class="info-valor">{{ esPropio(mensajeParaInfo) ? '👤 Tú' : (mensajeParaInfo.emisorNombre || 'Desconocido') }}</p>
+            </div>
+
+            <!-- Fecha -->
+            <div class="info-item">
+              <div class="info-label">
+                <v-icon size="14" color="#406D73">mdi-calendar-outline</v-icon>
+                Fecha
+              </div>
+              <p class="info-valor">{{ formatearFecha(mensajeParaInfo.fechaEnvio) }}</p>
+            </div>
+
+            <!-- Estado -->
+            <div class="info-item">
+              <div class="info-label">
+                <v-icon size="14" color="#406D73">{{ mensajeParaInfo.leido ? 'mdi-check-all' : 'mdi-check' }}</v-icon>
+                Estado
+              </div>
+              <p class="info-valor">
+                <v-chip
+                  :color="mensajeParaInfo.leido ? '#6A9E7D' : '#B2C5C8'"
+                  text-color="white"
+                  size="small"
+                  label
+                >
+                  {{ mensajeParaInfo.leido ? '✓✓ Leído' : '✓ Entregado' }}
+                </v-chip>
+              </p>
+            </div>
           </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text @click="mostrarModalInfo = false">Cerrar</v-btn>
-          </v-card-actions>
         </v-card>
       </v-dialog>
 
@@ -379,6 +418,10 @@ const eliminarMensaje = async (mensaje) => {
   } catch (error) {
     console.error('Error al eliminar mensaje:', error)
   }
+}
+
+const cerrarConversacion = () => {
+  almacen.establecerConversacionActual(null)
 }
 
 watch(conversacionActual, (nueva, vieja) => {
@@ -706,6 +749,58 @@ onUnmounted(() => {
   border-radius: 8px;
   display: block;
   margin-top: 8px;
+}
+
+/* ---- Estilos Mejorados Modal Info Mensaje ---- */
+.modal-info-mensaje {
+  box-shadow: 0 10px 40px rgba(64, 109, 115, 0.15) !important;
+  background: #ffffff !important;
+}
+
+.modal-titulo-mejorado {
+  background: linear-gradient(135deg, #406D73 0%, #5a8a94 100%) !important;
+  color: white !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 12px 16px !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.modal-contenido-mejorado {
+  padding: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.info-item {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  padding: 10px 12px !important;
+  background: rgba(179, 235, 242, 0.15) !important;
+  border-radius: 10px !important;
+  border-left: 3px solid #406D73 !important;
+}
+
+.info-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #406D73 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
+}
+
+.info-valor {
+  margin: 0 !important;
+  font-size: 12px !important;
+  color: #2f4a4f !important;
+  font-weight: 500 !important;
 }
 
 /* ---- Media Queries para Responsividad ---- */

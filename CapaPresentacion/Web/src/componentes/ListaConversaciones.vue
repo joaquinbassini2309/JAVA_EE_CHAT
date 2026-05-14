@@ -93,31 +93,38 @@
 
     <!-- Modal Nueva Conversación / Grupo -->
     <v-dialog v-model="mostrarModal" max-width="420">
-      <v-card rounded="lg">
-        <v-card-title class="modal-titulo">
+      <v-card rounded="xl" class="modal-nueva-conv">
+        <v-card-title class="modal-titulo-conv">
+          <v-icon size="18" color="white" class="mr-2">
+            {{ esGrupo ? 'mdi-account-multiple-plus' : 'mdi-message-plus' }}
+          </v-icon>
           {{ esGrupo ? 'Nuevo Grupo' : 'Nueva Conversación' }}
           <v-spacer />
-          <v-btn icon="cerrar" variant="text" size="small" color="white" @click="cerrarModal" />
+          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="cerrarModal" />
         </v-card-title>
 
-        <v-card-text class="pa-0">
-          <div v-if="esGrupo" class="modal-seccion">
+        <v-card-text class="modal-contenido-conv">
+          <div v-if="esGrupo" class="modal-seccion-mejorada">
+            <label class="label-input-conv">
+              <v-icon size="14" color="#406D73" class="mr-1">mdi-account-group</v-icon>
+              Nombre del grupo
+            </label>
             <input
                 v-model="nombreGrupo"
                 type="text"
-                placeholder="Nombre del grupo..."
-                class="input-modal"
+                placeholder="Ej: Proyecto 2024"
+                class="input-modal-conv"
             />
           </div>
-          <div class="modal-busqueda-input">
-            <v-icon size="16" color="#406D73" style="opacity:0.6">buscar</v-icon>
+          <div class="modal-busqueda-mejorada">
+            <v-icon size="16" color="#406D73" style="opacity:0.6">mdi-magnify</v-icon>
             <input v-model="terminoUsuario" type="text" placeholder="Buscar usuario..." />
           </div>
-          <div class="modal-listado">
+          <div class="modal-listado-mejorado">
             <div
                 v-for="usuario in usuariosFiltrados"
                 :key="usuario.id"
-                class="item-usuario-modal"
+                class="item-usuario-mejorado"
                 @click="toggleSeleccion(usuario.id)"
             >
               <div class="avatar-mini-modal">{{ usuario.username.charAt(0).toUpperCase() }}</div>
@@ -137,15 +144,17 @@
           </div>
         </v-card-text>
 
-        <v-card-actions v-if="esGrupo" class="pa-4 pt-2">
+        <v-card-actions v-if="esGrupo" class="modal-acciones-conv">
           <v-spacer />
           <v-btn
               color="accent"
               variant="flat"
               rounded="lg"
+              size="small"
               :disabled="!nombreGrupo || seleccionados.length === 0"
               prepend-icon="mdi-check-circle"
               @click="crearGrupo"
+              class="btn-crear-grupo"
           >
             Crear Grupo
           </v-btn>
@@ -154,34 +163,60 @@
     </v-dialog>
 
     <!-- Modal Editar Perfil -->
-    <v-dialog v-model="mostrarModalPerfil" max-width="400">
-      <v-card rounded="lg">
-        <v-card-title class="modal-titulo">
+    <v-dialog v-model="mostrarModalPerfil" max-width="420">
+      <v-card rounded="xl" class="modal-editar-perfil">
+        <v-card-title class="modal-titulo-perfil">
+          <v-icon size="18" color="white" class="mr-2">
+            {{ tipoEdicionPerfil === 'username' ? 'mdi-account' : tipoEdicionPerfil === 'fotoUrl' ? 'mdi-image-account' : tipoEdicionPerfil === 'imagenBanner' ? 'mdi-image-area' : tipoEdicionPerfil === 'descripcion' ? 'mdi-text-account' : 'mdi-account-edit' }}
+          </v-icon>
           {{ tituloModalPerfil }}
           <v-spacer />
-          <v-btn icon="cerrar" variant="text" size="small" color="white" @click="mostrarModalPerfil = false" />
+          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="mostrarModalPerfil = false" />
         </v-card-title>
-        <v-card-text class="pa-4 pt-6 bg-surface">
-          <div v-if="tipoEdicionPerfil === 'username'">
-            <label class="label-input">Nuevo nombre de usuario</label>
-            <input v-model="valorEdicionPerfil" type="text" class="input-modal" placeholder="Ej: JuanPerez" />
+        <v-card-text class="modal-contenido-perfil">
+          <div v-if="tipoEdicionPerfil === 'username'" class="campo-edicion">
+            <label class="label-input-mejorado">
+              <v-icon size="14" color="#406D73" class="mr-1">mdi-account-circle</v-icon>
+              Nuevo nombre de usuario
+            </label>
+            <input v-model="valorEdicionPerfil" type="text" class="input-modal-mejorado" placeholder="Ej: JuanPerez" />
           </div>
-          <div v-else-if="tipoEdicionPerfil === 'descripcion'">
-            <label class="label-input">Nueva descripción</label>
-            <textarea v-model="valorEdicionPerfil" class="input-modal" placeholder="Cuenta algo sobre ti..." rows="3"></textarea>
+          <div v-else-if="tipoEdicionPerfil === 'descripcion'" class="campo-edicion">
+            <label class="label-input-mejorado">
+              <v-icon size="14" color="#406D73" class="mr-1">mdi-text</v-icon>
+              Nueva descripción
+            </label>
+            <textarea v-model="valorEdicionPerfil" class="input-modal-mejorado" placeholder="Cuenta algo sobre ti..." rows="3"></textarea>
           </div>
-          <div v-else-if="tipoEdicionPerfil === 'fotoUrl'">
-            <label class="label-input">URL de la foto de perfil</label>
-            <input v-model="valorEdicionPerfil" type="text" class="input-modal" placeholder="https://ejemplo.com/mifoto.jpg" />
+          <div v-else-if="tipoEdicionPerfil === 'fotoUrl'" class="campo-edicion">
+            <label class="label-input-mejorado">
+              <v-icon size="14" color="#406D73" class="mr-1">mdi-link</v-icon>
+              URL de la foto de perfil
+            </label>
+            <input v-model="valorEdicionPerfil" type="text" class="input-modal-mejorado" placeholder="https://ejemplo.com/mifoto.jpg" />
           </div>
-          <div v-else-if="tipoEdicionPerfil === 'imagenBanner'">
-            <label class="label-input">URL de la imagen de banner</label>
-            <input v-model="valorEdicionPerfil" type="text" class="input-modal" placeholder="https://ejemplo.com/mibanner.jpg" />
+          <div v-else-if="tipoEdicionPerfil === 'imagenBanner'" class="campo-edicion">
+            <label class="label-input-mejorado">
+              <v-icon size="14" color="#406D73" class="mr-1">mdi-link</v-icon>
+              URL de la imagen de banner
+            </label>
+            <input v-model="valorEdicionPerfil" type="text" class="input-modal-mejorado" placeholder="https://ejemplo.com/mibanner.jpg" />
           </div>
         </v-card-text>
-        <v-card-actions class="pa-4 pt-0 bg-surface">
+        <v-card-actions class="modal-acciones-perfil">
           <v-spacer />
-          <v-btn color="accent" variant="flat" rounded="lg" prepend-icon="mdi-content-save" @click="guardarPerfil" :loading="guardandoPerfil">Guardar</v-btn>
+          <v-btn
+            color="accent"
+            variant="flat"
+            rounded="lg"
+            prepend-icon="mdi-content-save"
+            size="small"
+            @click="guardarPerfil"
+            :loading="guardandoPerfil"
+            class="btn-guardar-perfil"
+          >
+            Guardar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -743,6 +778,136 @@ const cerrarSesionLocal = () => {
   text-overflow: ellipsis;
 }
 
+/* ---- Estilos Mejorados Modal Nueva Conversación/Grupo ---- */
+.modal-nueva-conv {
+  box-shadow: 0 10px 40px rgba(64, 109, 115, 0.15) !important;
+  background: #ffffff !important;
+}
+
+.modal-titulo-conv {
+  background: linear-gradient(135deg, #406D73 0%, #5a8a94 100%) !important;
+  color: white !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 12px 16px !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.modal-contenido-conv {
+  padding: 16px !important;
+  background: #f7fcfd !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.modal-seccion-mejorada {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  padding: 12px !important;
+  background: #ffffff !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(64, 109, 115, 0.15) !important;
+}
+
+.label-input-conv {
+  display: flex !important;
+  align-items: center !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #406D73 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+}
+
+.input-modal-conv {
+  width: 100% !important;
+  padding: 10px 12px !important;
+  border: 1px solid rgba(64, 109, 115, 0.2) !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  color: #2f4a4f !important;
+  background: #ffffff !important;
+  outline: none !important;
+  transition: all 0.2s !important;
+  font-family: inherit !important;
+}
+
+.input-modal-conv:focus {
+  border-color: #406D73 !important;
+  box-shadow: 0 0 0 3px rgba(64, 109, 115, 0.1) !important;
+}
+
+.input-modal-conv::placeholder {
+  color: rgba(64, 109, 115, 0.4) !important;
+}
+
+.modal-busqueda-mejorada {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(64, 109, 115, 0.15) !important;
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
+}
+
+.modal-busqueda-mejorada input {
+  border: none !important;
+  background: transparent !important;
+  font-size: 12px !important;
+  color: #2f4a4f !important;
+  flex: 1 !important;
+  outline: none !important;
+}
+
+.modal-busqueda-mejorada input::placeholder {
+  color: rgba(64, 109, 115, 0.4) !important;
+}
+
+.modal-listado-mejorado {
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(64, 109, 115, 0.1) !important;
+}
+
+.item-usuario-mejorado {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 12px !important;
+  cursor: pointer !important;
+  transition: background 0.12s !important;
+  border-bottom: 1px solid rgba(64, 109, 115, 0.05) !important;
+}
+
+.item-usuario-mejorado:hover {
+  background: rgba(179, 235, 242, 0.15) !important;
+}
+
+.item-usuario-mejorado:last-child {
+  border-bottom: none !important;
+}
+
+.modal-acciones-conv {
+  padding: 12px 16px !important;
+  background: #ffffff !important;
+  border-top: 1px solid rgba(64, 109, 115, 0.08) !important;
+  border-radius: 0 0 16px 16px !important;
+}
+
+.btn-crear-grupo {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
+}
+
 /* ---- Media Queries para Responsividad ---- */
 @media (max-width: 768px) {
   .profile-lower {
@@ -976,5 +1141,82 @@ const cerrarSesionLocal = () => {
 }
 .lista-conversaciones ::-webkit-scrollbar-thumb:hover {
   background: rgba(64,109,115,0.4);
+}
+
+/* ---- Estilos Mejorados Modal Editar Perfil ---- */
+.modal-editar-perfil {
+  box-shadow: 0 10px 40px rgba(64, 109, 115, 0.15) !important;
+  background: #ffffff !important;
+}
+
+.modal-titulo-perfil {
+  background: linear-gradient(135deg, #406D73 0%, #5a8a94 100%) !important;
+  color: white !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 12px 16px !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.modal-contenido-perfil {
+  padding: 16px !important;
+  background: #f7fcfd !important;
+  border-radius: 0 0 16px 16px !important;
+}
+
+.campo-edicion {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.label-input-mejorado {
+  display: flex !important;
+  align-items: center !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #406D73 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 4px !important;
+}
+
+.input-modal-mejorado {
+  width: 100% !important;
+  padding: 10px 12px !important;
+  border: 1px solid rgba(64, 109, 115, 0.2) !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  color: #2f4a4f !important;
+  background: #ffffff !important;
+  outline: none !important;
+  transition: all 0.2s !important;
+  resize: vertical !important;
+  font-family: inherit !important;
+}
+
+.input-modal-mejorado:focus {
+  border-color: #406D73 !important;
+  box-shadow: 0 0 0 3px rgba(64, 109, 115, 0.1) !important;
+}
+
+.input-modal-mejorado::placeholder {
+  color: rgba(64, 109, 115, 0.4) !important;
+}
+
+.modal-acciones-perfil {
+  padding: 12px 16px !important;
+  background: #ffffff !important;
+  border-top: 1px solid rgba(64, 109, 115, 0.08) !important;
+  border-radius: 0 0 16px 16px !important;
+}
+
+.btn-guardar-perfil {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
 }
 </style>
