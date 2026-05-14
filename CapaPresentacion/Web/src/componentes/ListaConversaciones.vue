@@ -3,9 +3,9 @@
 
     <!-- Panel usuario con banner + avatar cuadrado -->
     <div class="panel-usuario">
-      <div 
-        class="profile-banner profile-banner--default"
-        :style="usuarioActual?.imagenBanner ? { backgroundImage: `url('${usuarioActual.imagenBanner}')` } : {}"
+      <div
+          class="profile-banner profile-banner--default"
+          :style="usuarioActual?.imagenBanner ? { backgroundImage: `url('${usuarioActual.imagenBanner}')` } : {}"
       />
       <div class="profile-lower">
         <div class="profile-avatar-wrap">
@@ -206,14 +206,14 @@
         <v-card-actions class="modal-acciones-perfil">
           <v-spacer />
           <v-btn
-            color="accent"
-            variant="flat"
-            rounded="lg"
-            prepend-icon="mdi-content-save"
-            size="small"
-            @click="guardarPerfil"
-            :loading="guardandoPerfil"
-            class="btn-guardar-perfil"
+              color="accent"
+              variant="flat"
+              rounded="lg"
+              prepend-icon="mdi-content-save"
+              size="small"
+              @click="guardarPerfil"
+              :loading="guardandoPerfil"
+              class="btn-guardar-perfil"
           >
             Guardar
           </v-btn>
@@ -329,7 +329,7 @@ const crearChatPrivado = async (idUsuario) => {
     const existe = almacen.conversaciones.find(c => c.id === nuevaConv.id)
     if (!existe) almacen.agregarConversacion(nuevaConv)
     almacen.establecerConversacionActual(nuevaConv)
-    
+
     cerrarModal()
   } catch (error) {
     console.error('Error al crear conversación:', error)
@@ -341,7 +341,7 @@ const crearGrupo = async () => {
     const nuevaConv = await servicioApi.crearGrupo(nombreGrupo.value, seleccionados.value)
     almacen.agregarConversacion(nuevaConv)
     almacen.establecerConversacionActual(nuevaConv)
-    
+
     // Enviar mensaje automático de bienvenida
     try {
       const mensajeAutomatico = await servicioApi.enviarMensaje({
@@ -353,7 +353,7 @@ const crearGrupo = async () => {
     } catch (error) {
       console.error('Error al enviar mensaje automático:', error)
     }
-    
+
     cerrarModal()
   } catch (error) {
     console.error('Error al crear grupo:', error)
@@ -364,7 +364,7 @@ const crearGrupo = async () => {
 const abrirEdicionPerfil = (tipo) => {
   tipoEdicionPerfil.value = tipo
   valorEdicionPerfil.value = usuarioActual.value[tipo] || ''
-  
+
   if (tipo === 'username') tituloModalPerfil.value = 'Cambiar nombre de usuario'
   else if (tipo === 'fotoUrl') tituloModalPerfil.value = 'Cambiar foto de perfil'
   else if (tipo === 'imagenBanner') tituloModalPerfil.value = 'Colocar imagen de banner'
@@ -378,7 +378,7 @@ const guardarPerfil = async () => {
   try {
     const data = {}
     data[tipoEdicionPerfil.value] = valorEdicionPerfil.value
-    
+
     // El servicio espera un DTO con fotoUrl, estado, username, descripcion, imagenBanner
     // Mantenemos los datos actuales por defecto
     const payload = {
@@ -912,7 +912,6 @@ const cerrarSesionLocal = () => {
 /* ---- Media Queries para Responsividad ---- */
 @media (max-width: 768px) {
   .profile-lower {
-    padding: 8px 10px 12px;
     padding-left: 80px;
     min-height: 80px;
   }
@@ -925,15 +924,10 @@ const cerrarSesionLocal = () => {
   .avatar-cuadrado {
     width: 56px;
     height: 56px;
-    font-size: 22px;
   }
 
   .profile-banner {
     height: 70px;
-  }
-
-  .profile-name {
-    font-size: 0.9rem;
   }
 
   .acciones-perfil {
@@ -942,11 +936,6 @@ const cerrarSesionLocal = () => {
 
   .campo-busqueda {
     margin-top: 8px;
-    padding: 4px 8px;
-  }
-
-  .campo-busqueda input {
-    font-size: 12px;
   }
 
   .tabs-row {
@@ -955,7 +944,6 @@ const cerrarSesionLocal = () => {
 
   .tab-btn {
     font-size: 11px;
-    padding: 8px 2px;
   }
 
   .item-conversacion {
@@ -966,26 +954,15 @@ const cerrarSesionLocal = () => {
   .avatar-mini-lista {
     width: 36px;
     height: 36px;
-    font-size: 14px;
-  }
-
-  .info-conversacion .nombre {
-    font-size: 13px;
-  }
-
-  .info-conversacion .ultimo-msg {
-    font-size: 11px;
   }
 
   .seccion-titulo {
     font-size: 10px;
-    padding: 6px 12px 4px;
   }
 }
 
 @media (max-width: 480px) {
   .profile-lower {
-    padding: 6px 8px 10px;
     padding-left: 70px;
     min-height: 76px;
   }
@@ -998,16 +975,11 @@ const cerrarSesionLocal = () => {
   .avatar-cuadrado {
     width: 48px;
     height: 48px;
-    font-size: 18px;
     border: 2px solid #ffffff;
   }
 
   .profile-banner {
     height: 60px;
-  }
-
-  .profile-name {
-    font-size: 0.85rem;
   }
 
   .acciones-perfil {
@@ -1016,16 +988,7 @@ const cerrarSesionLocal = () => {
 
   .campo-busqueda {
     margin-top: 6px;
-    padding: 3px 6px;
     gap: 4px;
-  }
-
-  .campo-busqueda :deep(.v-icon) {
-    font-size: 14px !important;
-  }
-
-  .campo-busqueda input {
-    font-size: 11px;
   }
 
   .item-conversacion {
@@ -1036,48 +999,20 @@ const cerrarSesionLocal = () => {
   .avatar-mini-lista {
     width: 34px;
     height: 34px;
-    font-size: 13px;
-  }
-
-  .info-conversacion .nombre {
-    font-size: 12px;
-  }
-
-  .info-conversacion .ultimo-msg {
-    font-size: 10px;
   }
 
   .seccion-titulo {
     font-size: 9px;
-    padding: 4px 10px 3px;
   }
 
   .avatar-mini-modal {
     width: 32px;
     height: 32px;
-    font-size: 13px;
   }
 
   .item-usuario-modal {
     padding: 8px 12px;
     gap: 10px;
-  }
-
-  .info-usuario-modal .nombre {
-    font-size: 13px;
-  }
-
-  .info-usuario-modal .email {
-    font-size: 11px;
-  }
-
-  .input-modal {
-    font-size: 13px;
-    padding: 8px 10px;
-  }
-
-  .label-input {
-    font-size: 11px;
   }
 }
 </style>

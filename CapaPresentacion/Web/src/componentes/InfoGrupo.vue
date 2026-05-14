@@ -3,9 +3,9 @@
 
     <!-- Encabezado con banner + avatar cuadrado (mismo patrón que Chat.vue) -->
     <div class="info-header">
-      <div 
-        class="profile-banner profile-banner--default"
-        :style="esGrupo ? {} : (otroUsuario?.imagenBanner ? { backgroundImage: `url('${otroUsuario.imagenBanner}')` } : {})"
+      <div
+          class="profile-banner profile-banner--default"
+          :style="esGrupo ? {} : (otroUsuario?.imagenBanner ? { backgroundImage: `url('${otroUsuario.imagenBanner}')` } : {})"
       />
       <div class="profile-lower">
         <div class="profile-avatar-wrap">
@@ -25,25 +25,25 @@
 
           <!-- Título editable -->
           <v-text-field
-            v-if="editandoNombre"
-            v-model="nuevoNombre"
-            variant="underlined"
-            density="compact"
-            autofocus
-            hide-details
-            @keyup.enter="guardarNuevoNombre"
-            @blur="guardarNuevoNombre"
-            class="input-nombre-grupo"
+              v-if="editandoNombre"
+              v-model="nuevoNombre"
+              variant="underlined"
+              density="compact"
+              autofocus
+              hide-details
+              @keyup.enter="guardarNuevoNombre"
+              @blur="guardarNuevoNombre"
+              class="input-nombre-grupo"
           />
           <span v-else class="profile-name text-truncate">{{ conversacion.nombre }}</span>
 
           <v-btn
-            v-if="puedeGestionar && !editandoNombre"
-            icon="mdi-pencil"
-            variant="text"
-            size="x-small"
-            @click="editandoNombre = true"
-            class="ml-1"
+              v-if="puedeGestionar && !editandoNombre"
+              icon="mdi-pencil"
+              variant="text"
+              size="x-small"
+              @click="editandoNombre = true"
+              class="ml-1"
           />
         </div>
         <div class="profile-subtitle">
@@ -162,10 +162,10 @@ const otroUsuario = computed(() => {
 
 const gruposEnComun = computed(() => {
   const convs = almacen.conversaciones || [];
-  return convs.filter(c => 
-     c.tipo === 'GRUPO' && 
-     c.participanteIds?.includes(usuarioActual.value?.id) && 
-     c.participanteIds?.includes(otroUsuario.value?.id)
+  return convs.filter(c =>
+      c.tipo === 'GRUPO' &&
+      c.participanteIds?.includes(usuarioActual.value?.id) &&
+      c.participanteIds?.includes(otroUsuario.value?.id)
   );
 })
 
@@ -326,6 +326,24 @@ async function eliminarMiembro(participanteId) {
   gap: 12px;
 }
 
+/* Scrollbar mejorada */
+.info-cuerpo::-webkit-scrollbar {
+  width: 8px;
+}
+
+.info-cuerpo::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.info-cuerpo::-webkit-scrollbar-thumb {
+  background: rgba(64, 109, 115, 0.25);
+  border-radius: 10px;
+}
+
+.info-cuerpo::-webkit-scrollbar-thumb:hover {
+  background: rgba(64, 109, 115, 0.45);
+}
+
 .seccion {
   background: #ffffff;
   border-radius: 14px;
@@ -410,5 +428,32 @@ async function eliminarMiembro(participanteId) {
   color: #5a8a94;
   line-height: 1.5;
   margin: 0;
+}
+
+/* Media Queries para Responsividad */
+@media (max-width: 768px) {
+  .profile-lower {
+    padding-left: 90px;
+  }
+  .avatar-cuadrado {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-lower {
+    padding-left: 76px;
+  }
+  .avatar-cuadrado {
+    width: 48px;
+    height: 48px;
+  }
+  .info-cuerpo {
+    padding: 12px;
+  }
+  .seccion {
+    padding: 12px;
+  }
 }
 </style>

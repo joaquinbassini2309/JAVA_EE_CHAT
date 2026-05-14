@@ -925,7 +925,6 @@ onUnmounted(() => {
 /* ---- Media Queries para Responsividad ---- */
 @media (max-width: 768px) {
   .profile-lower {
-    padding: 8px 12px 12px;
     padding-left: 90px;
     min-height: 68px;
   }
@@ -933,58 +932,10 @@ onUnmounted(() => {
   .avatar-cuadrado {
     width: 56px;
     height: 56px;
-    font-size: 22px;
-    border: 2px solid #ffffff;
-  }
-
-  .profile-name {
-    font-size: 0.9rem;
-  }
-
-  .profile-subtitle {
-    font-size: 11px;
-  }
-
-  .encabezado-acciones {
-    gap: 6px;
-  }
-
-  .badge-estado {
-    font-size: 10px;
-    padding: 2px 8px;
-  }
-
-  .contenedor-mensajes {
-    padding: 12px;
-    gap: 8px;
   }
 
   .entrada-mensaje {
-    gap: 6px;
-    padding: 10px 12px;
     flex-wrap: wrap;
-  }
-
-  .btn-adjunto {
-    padding: 6px 10px;
-    font-size: 11px;
-    gap: 3px;
-  }
-
-  .input-mensaje {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-
-  .btn-enviar {
-    padding: 8px 14px;
-    font-size: 12px;
-    gap: 4px;
-  }
-
-  .adjunto-imagen {
-    max-width: 220px;
-    max-height: 220px;
   }
 }
 
@@ -994,7 +945,6 @@ onUnmounted(() => {
   }
 
   .profile-lower {
-    padding: 6px 10px 10px;
     padding-left: 76px;
     min-height: 64px;
   }
@@ -1002,104 +952,15 @@ onUnmounted(() => {
   .avatar-cuadrado {
     width: 48px;
     height: 48px;
-    font-size: 18px;
-    border: 2px solid #ffffff;
-  }
-
-  .profile-name {
-    font-size: 0.85rem;
-  }
-
-  .profile-subtitle {
-    font-size: 10px;
-  }
-
-  .encabezado-acciones {
-    gap: 4px;
-  }
-
-  .badge-estado {
-    font-size: 9px;
-    padding: 2px 6px;
-  }
-
-  .contenedor-mensajes {
-    padding: 10px;
-    gap: 6px;
   }
 
   .entrada-mensaje {
-    display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 10px;
   }
 
-  .btn-adjunto {
-    flex: 1;
-    padding: 8px 10px;
-    font-size: 11px;
-    gap: 3px;
+  .btn-adjunto, .input-mensaje, .btn-enviar {
     width: 100%;
-    justify-content: center;
-    order: 1;
-  }
-
-  .input-mensaje {
-    flex: 1;
-    padding: 10px 10px;
-    font-size: 13px;
-    order: 2;
-  }
-
-  .btn-enviar {
-    flex: 1;
-    width: 100%;
-    padding: 10px 12px;
-    font-size: 12px;
-    gap: 4px;
-    justify-content: center;
-    order: 3;
-  }
-
-  .adjunto-imagen {
-    max-width: 200px;
-    max-height: 200px;
-  }
-
-  .modal-titulo {
-    font-size: 14px;
-    padding: 12px 14px;
-  }
-
-  .modal-busqueda-input {
-    margin: 10px 12px;
-    padding: 5px 8px;
-  }
-
-  .modal-busqueda-input input {
-    font-size: 12px;
-  }
-
-  .item-usuario-modal {
-    padding: 8px 12px;
-    gap: 10px;
-  }
-
-  .avatar-mini-modal {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    font-size: 13px;
-  }
-
-  .info-usuario-modal {
-    flex-direction: column;
-  }
-
-  .info-usuario-modal .nombre {
-    font-size: 12px;
   }
 }
 </style>
-
