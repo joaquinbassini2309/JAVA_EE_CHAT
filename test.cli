@@ -1,0 +1,6 @@
+embed-server --server-config=standalone.xml
+try
+ data-source remove --name=ChatDS
+catch
+end-try
+stop-embedded-server
