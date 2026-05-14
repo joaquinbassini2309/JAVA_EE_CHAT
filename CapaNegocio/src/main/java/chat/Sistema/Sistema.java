@@ -374,13 +374,13 @@ public class Sistema implements ISistema {
     }
 
     @Override
-    public List<Mensaje> obtenerMensajesDeConversacion(Long conversacionId, Long usuarioId, int limite) {
+    public List<Mensaje> obtenerMensajesDeConversacion(Long conversacionId, Long usuarioId, int limite, int offset) {
         // Validar que el usuario pertenece a la conversación
         if (!usuarioEstaEnConversacion(usuarioId, conversacionId)) {
             throw new IllegalArgumentException("No tienes acceso a esta conversación");
         }
 
-        return mensajeHandler().obtenerMensajes(conversacionId, limite);
+        return mensajeHandler().obtenerMensajes(conversacionId, limite, offset);
     }
 
     @Override

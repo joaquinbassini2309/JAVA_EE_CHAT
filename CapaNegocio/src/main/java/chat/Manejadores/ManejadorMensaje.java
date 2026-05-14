@@ -46,11 +46,12 @@ public class ManejadorMensaje {
         return Optional.ofNullable(em.find(Mensaje.class, id));
     }
 
-    public List<Mensaje> obtenerMensajes(Long conversacionId, int limite) {
+    public List<Mensaje> obtenerMensajes(Long conversacionId, int limite, int offset) {
         TypedQuery<Mensaje> q = em.createQuery(
-                "SELECT m FROM Mensaje m WHERE m.conversacion.id = :cid ORDER BY m.fechaEnvio ASC",
+                "SELECT m FROM Mensaje m WHERE m.conversacion.id = :cid ORDER BY m.fechaEnvio DESC",
                 Mensaje.class);
         q.setParameter("cid", conversacionId);
+        q.setFirstResult(offset);
         q.setMaxResults(limite > 0 ? limite : 50);
         return q.getResultList();
     }

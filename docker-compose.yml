@@ -17,6 +17,10 @@ services:
       retries: 5
     networks:
       - chat-net
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   app:
     build: .
@@ -33,6 +37,10 @@ services:
         condition: service_healthy
     networks:
       - chat-net
+    deploy:
+      resources:
+        limits:
+          memory: 600M
 
   nginx:
     image: nginx:alpine
@@ -45,6 +53,10 @@ services:
       - app
     networks:
       - chat-net
+    deploy:
+      resources:
+        limits:
+          memory: 64M
 
 networks:
   chat-net:

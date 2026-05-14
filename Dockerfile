@@ -44,4 +44,7 @@ RUN mkdir -p /opt/jboss/chat-empresarial-uploads && \
 USER jboss
 EXPOSE 8080
 
+# Limitar memoria para VM de 1GB
+ENV JAVA_OPTS="-Xms64m -Xmx512m -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=256m -Djava.net.preferIPv4Stack=true"
+
 CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-Djboss.http.port=${PORT}"]

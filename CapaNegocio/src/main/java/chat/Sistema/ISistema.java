@@ -143,7 +143,7 @@ public interface ISistema {
                                      TipoMensaje tipo, String urlAdjunto);
     
     //Obtiene el historial de mensajes de una conversación
-    List<Mensaje> obtenerMensajesDeConversacion(Long conversacionId, Long usuarioId, int limite);
+    List<chat.clases.Mensaje> obtenerMensajesDeConversacion(Long conversacionId, Long usuarioId, int limite, int offset);
     
     //Marca un mensaje como leído
     void marcarMensajeComoLeido(Long mensajeId, Long usuarioId);
