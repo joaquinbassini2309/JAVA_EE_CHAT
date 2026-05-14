@@ -12,7 +12,13 @@ try
 catch
 end-try
 
-# Crear el DataSource usando expresiones para evaluación en RUNTIME
+# Eliminar si ya existe para evitar conflictos de driver
+try
+    data-source remove --name=ChatDS
+catch
+end-try
+
+# Crear el DataSource usando el modulo org.postgresql
 try
     data-source add --name=ChatDS --jndi-name=java:/ChatDS --driver-name=postgres \
         --connection-url=${env.DB_URL} \
@@ -23,6 +29,11 @@ catch
 end-try
 
 # Crear ExampleDS como alias si alguna parte del despliegue lo requiere
+try
+    data-source remove --name=ExampleDS
+catch
+end-try
+
 try
     data-source add --name=ExampleDS --jndi-name=java:jboss/datasources/ExampleDS --driver-name=postgres \
         --connection-url=${env.DB_URL} \
