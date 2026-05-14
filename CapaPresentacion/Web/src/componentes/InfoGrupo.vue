@@ -63,7 +63,10 @@
         </div>
         <div class="lista-miembros">
           <div v-for="miembro in conversacion.participantes" :key="miembro.usuario.id" class="item-miembro">
-            <div class="avatar-mini">{{ miembro.usuario.username.charAt(0).toUpperCase() }}</div>
+            <div class="avatar-mini">
+              <img v-if="miembro.usuario.fotoUrl" :src="miembro.usuario.fotoUrl" alt="avatar" />
+              <span v-else>{{ miembro.usuario.username.charAt(0).toUpperCase() }}</span>
+            </div>
 
             <div class="info-usuario">
               <span class="nombre">{{ miembro.usuario.username }}</span>
@@ -119,6 +122,7 @@
               <div class="avatar-mini">{{ grupo.nombre.charAt(0).toUpperCase() }}</div>
               <div class="info-usuario">
                 <span class="nombre">{{ grupo.nombre }}</span>
+                <span class="email" style="font-size: 11px; color: #999;">{{ grupo.participantes?.length || 0 }} miembros</span>
               </div>
             </div>
           </div>
@@ -212,27 +216,199 @@ async function eliminarMiembro(participanteId) {
 </script>
 
 <style scoped>
-.info-grupo { display: flex; flex-direction: column; height: 100%; background: #f7fcfd; overflow: hidden; }
-.info-header { flex-shrink: 0; }
-.profile-banner { height: 76px; background-color: #B3EBF2; background-image: linear-gradient(135deg, rgba(64,109,115,0.22) 0%, transparent 55%), linear-gradient(225deg, rgba(255,255,255,0.45) 0%, transparent 48%), radial-gradient(ellipse 90% 140% at 15% 0%, rgba(64,109,115,0.15), transparent); background-size: cover; background-position: center; }
-.profile-lower { position: relative; background: #f0f7f8; padding: 8px 14px 14px; padding-left: 100px; min-height: 72px; }
-.profile-avatar-wrap { position: absolute; left: 14px; top: -32px; z-index: 2; }
-.avatar-cuadrado { width: 64px; height: 64px; background: #B2C5C8; color: #2f4a4f; border-radius: 10px; border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(64,109,115,0.22); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; overflow: hidden; }
-.avatar-img { width: 100%; height: 100%; object-fit: cover; }
-.profile-title-row { display: flex; align-items: center; gap: 8px; }
-.btn-atras { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0; transition: background 0.15s; }
-.btn-atras:hover { background: rgba(64,109,115,0.1); }
-.profile-name { font-size: 1rem; font-weight: 700; color: #2f4a4f; line-height: 1.25; letter-spacing: 0.01em; }
-.input-nombre-grupo { font-size: 1rem; font-weight: 700; color: #2f4a4f; }
-.profile-subtitle { font-size: 12px; color: #5a8a94; margin-top: 2px; }
-.info-cuerpo { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.seccion { background: #ffffff; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 4px rgba(64,109,115,0.08); border: 1px solid rgba(64,109,115,0.1); }
-.seccion-titulo { display: flex; align-items: center; font-size: 11px; font-weight: 700; color: #406D73; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; }
-.lista-miembros { display: flex; flex-direction: column; gap: 2px; }
-.item-miembro { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px; }
-.avatar-mini { width: 38px; height: 38px; min-width: 38px; background: #B2C5C8; color: #2f4a4f; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
-.info-usuario { display: flex; flex-direction: column; overflow: hidden; flex-grow: 1; }
-.info-usuario .nombre { font-weight: 600; font-size: 14px; color: #2f4a4f; }
-.roles-wrapper { display: flex; gap: 4px; margin-top: 2px; }
-.descripcion-usuario { font-size: 13px; color: #5a8a94; line-height: 1.5; }
+.info-grupo {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f7fcfd;
+  overflow: hidden;
+}
+
+.info-header {
+  flex-shrink: 0;
+}
+
+.profile-banner {
+  height: 76px;
+  background-color: #B3EBF2;
+  background-image: linear-gradient(135deg, rgba(64,109,115,0.22) 0%, transparent 55%), linear-gradient(225deg, rgba(255,255,255,0.45) 0%, transparent 48%), radial-gradient(ellipse 90% 140% at 15% 0%, rgba(64,109,115,0.15), transparent);
+  background-size: cover;
+  background-position: center;
+}
+
+.profile-lower {
+  position: relative;
+  background: #f0f7f8;
+  padding: 8px 14px 14px;
+  padding-left: 100px;
+  min-height: 72px;
+}
+
+.profile-avatar-wrap {
+  position: absolute;
+  left: 14px;
+  top: -32px;
+  z-index: 2;
+}
+
+.avatar-cuadrado {
+  width: 64px;
+  height: 64px;
+  background: #B2C5C8;
+  color: #2f4a4f;
+  border-radius: 10px;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(64,109,115,0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-atras {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.btn-atras:hover {
+  background: rgba(64,109,115,0.1);
+}
+
+.profile-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2f4a4f;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+}
+
+.input-nombre-grupo {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2f4a4f;
+}
+
+.profile-subtitle {
+  font-size: 12px;
+  color: #5a8a94;
+  margin-top: 2px;
+}
+
+.info-cuerpo {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.seccion {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(64,109,115,0.1);
+  border: 1px solid rgba(64,109,115,0.12);
+}
+
+.seccion-titulo {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #406D73;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.lista-miembros {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item-miembro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  transition: background 0.12s;
+}
+
+.item-miembro:hover {
+  background: rgba(179, 235, 242, 0.1);
+}
+
+.avatar-mini {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  background: #B2C5C8;
+  color: #2f4a4f;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar-mini img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.info-usuario {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-grow: 1;
+}
+
+.info-usuario .nombre {
+  font-weight: 600;
+  font-size: 13px;
+  color: #2f4a4f;
+}
+
+.roles-wrapper {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.descripcion-usuario {
+  font-size: 12px;
+  color: #5a8a94;
+  line-height: 1.5;
+  margin: 0;
+}
 </style>

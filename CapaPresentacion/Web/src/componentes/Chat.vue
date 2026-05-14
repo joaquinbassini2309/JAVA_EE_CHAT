@@ -803,6 +803,88 @@ onUnmounted(() => {
   font-weight: 500 !important;
 }
 
+/* ---- Estilos Mejorados Modal Añadir Miembro ---- */
+.modal-anadir-miembro {
+  box-shadow: 0 10px 40px rgba(64, 109, 115, 0.15) !important;
+}
+
+.modal-titulo-anadir {
+  background: linear-gradient(135deg, #406D73 0%, #5a8a94 100%) !important;
+  color: white !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 12px 16px !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.modal-contenido-anadir {
+  padding: 12px !important;
+  background: #f7fcfd !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  border-radius: 0 0 16px 16px !important;
+}
+
+.modal-busqueda-anadir {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(64, 109, 115, 0.15) !important;
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
+}
+
+.modal-busqueda-anadir input {
+  border: none !important;
+  background: transparent !important;
+  font-size: 12px !important;
+  color: #2f4a4f !important;
+  flex: 1 !important;
+  outline: none !important;
+}
+
+.modal-busqueda-anadir input::placeholder {
+  color: rgba(64, 109, 115, 0.4) !important;
+}
+
+.modal-listado-anadir {
+  max-height: 320px !important;
+  overflow-y: auto !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(64, 109, 115, 0.1) !important;
+}
+
+.item-usuario-anadir {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 12px !important;
+  cursor: pointer !important;
+  transition: background 0.12s !important;
+  border-bottom: 1px solid rgba(64, 109, 115, 0.05) !important;
+}
+
+.item-usuario-anadir:hover {
+  background: rgba(179, 235, 242, 0.15) !important;
+}
+
+.item-usuario-anadir:last-child {
+  border-bottom: none !important;
+}
+
+.icon-plus-anadir {
+  transition: transform 0.2s !important;
+}
+
+.item-usuario-anadir:hover .icon-plus-anadir {
+  transform: scale(1.2) !important;
+}
+
 /* ---- Media Queries para Responsividad ---- */
 @media (max-width: 768px) {
   .profile-lower {
