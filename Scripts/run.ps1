@@ -8,10 +8,28 @@
 # ========================================
 
 param(
-    [string]$ProjectRoot = "C:\Users\Curbe\IdeaProjects\JAVA_EE_CHAT",
-    [string]$WildFlyDir = "C:\wildfly-32.0.1.Final",
+    [string]$ProjectRoot = (Resolve-Path "$PSScriptRoot/..").Path,
+    [string]$WildFlyDir = $env:WILDFLY_HOME,
     [switch]$AutoCreatePostgres = $false
 )
+
+$IsWin = $IsWindows -or $env:OS -match "Windows"
+$Ext = if ($IsWin) { ".bat" } else { ".sh" }
+$BinDir = if ($IsWin) { "bin" } else { "bin" }
+$WfScript = if ($IsWin) { "standalone.bat" } else { "standalone.sh" }
+
+if (-not $WildFlyDir) {
+    $commonPaths = @(
+        "$ProjectRoot/wildfly",
+        "C:\wildfly-32.0.1.Final",
+        "C:\wildfly",
+        "/opt/wildfly",
+        "$HOME/wildfly"
+    )
+    foreach ($path in $commonPaths) {
+        if (Test-Path $path) { $WildFlyDir = $path; break }
+    }
+}
 
 $ErrorActionPreference = "Stop"
 
@@ -26,7 +44,7 @@ function Stop-PortProcess {
         $pids = @()
         try {
             $pids = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Stop |
-                Select-Object -ExpandProperty OwningProcess -Unique
+                    Select-Object -ExpandProperty OwningProcess -Unique
         } catch {
             $pids = netstat -ano | Select-String ":$Port " | ForEach-Object {
                 ($_ -split '\s+')[-1]
@@ -57,9 +75,9 @@ function Invoke-Step {
     Write-Success "[OK] $Title"
 }
 
-$wildFlyBin = Join-Path $WildFlyDir "bin\standalone.bat"
+$wildFlyBin = Join-Path (Join-Path $WildFlyDir "bin") $WfScript
 $wildFlyDeploy = Join-Path $WildFlyDir "standalone\deployments"
-$warFile = Join-Path $ProjectRoot "CapaServicio\target\chat-empresarial.war"
+$warFile = Join-Path (Join-Path $ProjectRoot "CapaServicio") "target\chat-empresarial.war"
 $frontendDir = Join-Path $ProjectRoot "CapaPresentacion\Web"
 $backendDir = Join-Path $ProjectRoot "CapaServicio"
 $dockerName = "postgres-chat"
@@ -112,7 +130,7 @@ try {
 
     Invoke-Step "Copiando frontend compilado a backend..." {
         $distDir = Join-Path $frontendDir "dist"
-        $webappDir = Join-Path $backendDir "src\main\webapp"
+        $webappDir = Join-Path (Join-Path $backendDir "src\main") "webapp"
         if (Test-Path $distDir) {
             Copy-Item -Path "$distDir\*" -Destination $webappDir -Recurse -Force
         } else {
@@ -147,7 +165,8 @@ try {
             $tempCli = Join-Path $env:TEMP "setup_temp.cli"
             $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
             [System.IO.File]::WriteAllText($tempCli, $setupCliContent, $utf8NoBom)
-            $jbossCli = Join-Path $WildFlyDir "bin\jboss-cli.bat"
+            $jbossCliScript = if ($IsWin) { "jboss-cli.bat" } else { "jboss-cli.sh" }
+            $jbossCli = Join-Path (Join-Path $WildFlyDir "bin") $jbossCliScript
             & $jbossCli --file=$tempCli
             if ($LASTEXITCODE -ne 0) { throw "Configuración de WildFly fallo" }
         }
@@ -201,7 +220,8 @@ Write-Host ""
 Write-Info "--- CERRANDO SERVICIOS ---"
 
 try {
-    $jbossCli = Join-Path $WildFlyDir "bin\jboss-cli.bat"
+    $jbossCliScript = if ($IsWin) { "jboss-cli.bat" } else { "jboss-cli.sh" }
+    $jbossCli = Join-Path (Join-Path $WildFlyDir "bin") $jbossCliScript
     if (Test-Path $jbossCli) {
         & $jbossCli --connect --command=":shutdown" 2>$null | Out-Null
         Start-Sleep -Seconds 2
