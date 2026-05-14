@@ -1,0 +1,41 @@
+embed-server --server-config=standalone.xml
+
+# Añadir driver PostgreSQL como módulo
+try
+    module add --name=org.postgresql --resources=/tmp/postgresql-42.7.3.jar --dependencies=javax.api,javax.transaction.api
+catch
+end-try
+
+# Registrar el driver
+try
+    /subsystem=datasources/jdbc-driver=postgres:add(driver-name=postgres,driver-module-name=org.postgresql,driver-class-name=org.postgresql.Driver)
+catch
+end-try
+
+# Crear el DataSource usando expresiones para evaluación en RUNTIME
+try
+    data-source add --name=ChatDS --jndi-name=java:/ChatDS --driver-name=postgres \
+        --connection-url=${env.DB_URL} \
+        --user-name=${env.DB_USER} \
+        --password=${env.DB_PASSWORD} \
+        --check-valid-connection-sql="SELECT 1" --background-validation=true --enabled=true
+catch
+end-try
+
+# Crear ExampleDS como alias si alguna parte del despliegue lo requiere
+try
+    data-source add --name=ExampleDS --jndi-name=java:jboss/datasources/ExampleDS --driver-name=postgres \
+        --connection-url=${env.DB_URL} \
+        --user-name=${env.DB_USER} \
+        --password=${env.DB_PASSWORD} \
+        --check-valid-connection-sql="SELECT 1" --background-validation=true --enabled=true
+catch
+end-try
+
+# Opcional: Eliminar bienvenida de WildFly para usar ROOT.war
+try
+    /subsystem=undertow/server=default-server/host=default-host:write-attribute(name=default-web-module, value=ROOT.war)
+catch
+end-try
+
+stop-embedded-server
