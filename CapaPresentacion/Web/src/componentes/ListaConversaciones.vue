@@ -404,7 +404,10 @@ const guardarPerfil = async () => {
 
 const cerrarSesionLocal = () => {
   almacen.cerrarSesion()
-  window.location.href = '/chat-empresarial/login'
+  const contextPath = window.location.pathname.includes('/chat-empresarial') 
+    ? '/chat-empresarial' 
+    : ''
+  window.location.href = `${contextPath}/login`
 }
 </script>
 
