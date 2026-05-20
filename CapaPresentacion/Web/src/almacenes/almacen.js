@@ -133,10 +133,16 @@ export const useAlmacen = defineStore('principal', () => {
   function eliminarParticipante(conversacionId, participanteId) {
     const conv = conversaciones.value.find(c => c.id === conversacionId)
     if (conv?.participantes) {
-      conv.participantes = conv.participantes.filter(p => p.usuario.id !== participanteId)
+      const pIndex = conv.participantes.findIndex(p => p.usuario.id === participanteId)
+      if (pIndex !== -1) {
+        conv.participantes.splice(pIndex, 1)
+      }
     }
     if (conversacionActual.value?.id === conversacionId) {
-      conversacionActual.value.participantes = conversacionActual.value.participantes.filter(p => p.usuario.id !== participanteId)
+      const pIndex = conversacionActual.value.participantes.findIndex(p => p.usuario.id === participanteId)
+      if (pIndex !== -1) {
+        conversacionActual.value.participantes.splice(pIndex, 1)
+      }
     }
   }
 

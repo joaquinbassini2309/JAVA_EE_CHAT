@@ -35,19 +35,22 @@ public class ManejadorParticipante {
 
     public List<Participante> removerParticipante(Long conversacionId, Long usuarioId) {
         List<Participante> removed = new ArrayList<>();
+        Conversacion c = em.find(Conversacion.class, conversacionId);
+        if (c == null) return removed;
+
         TypedQuery<Participante> q = em.createQuery(
                 "SELECT p FROM Participante p WHERE p.conversacion.id = :cid AND p.usuario.id = :uid",
                 Participante.class);
         q.setParameter("cid", conversacionId);
         q.setParameter("uid", usuarioId);
         List<Participante> encontrados = q.getResultList();
-        for (Participante p : new ArrayList<>(encontrados)) {
-            Participante managed = em.find(Participante.class, p.getId());
-            if (managed != null) {
-                removed.add(managed);
-                em.remove(managed);
-            }
+        
+        for (Participante p : encontrados) {
+            c.getParticipantes().remove(p);
+            em.remove(p);
+            removed.add(p);
         }
+        em.merge(c);
         return removed;
     }
 

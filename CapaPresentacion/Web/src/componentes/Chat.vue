@@ -5,13 +5,13 @@
       <!-- Encabezado con banner + avatar cuadrado -->
       <div class="chat-encabezado" @click="mostrandoInfo = true">
         <div class="profile-banner profile-banner--default"
-          :style="esGrupo ? {} : (otroUsuario?.imagenBanner ? { backgroundImage: `url('${otroUsuario.imagenBanner}')` } : {})"
+          :style="conversacionActual?.imagenBanner ? { backgroundImage: `url('${conversacionActual.imagenBanner}')` } : {}"
           style="background-size: cover; background-position: center;"
         />
         <div class="profile-lower">
           <div class="profile-avatar-wrap">
             <div class="avatar-cuadrado">
-              <img v-if="!esGrupo && otroUsuario?.fotoUrl" :src="otroUsuario.fotoUrl" class="avatar-img" alt="avatar" />
+              <img v-if="conversacionActual?.fotoUrl" :src="conversacionActual.fotoUrl" class="avatar-img" alt="avatar" />
               <span v-else>{{ destinatario.iniciales }}</span>
             </div>
           </div>
