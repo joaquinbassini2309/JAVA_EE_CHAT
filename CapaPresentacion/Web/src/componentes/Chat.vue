@@ -84,7 +84,7 @@
                 <v-icon size="14" color="#406D73">mdi-account</v-icon>
                 Enviado por
               </div>
-              <p class="info-valor">{{ esPropio(mensajeParaInfo) ? '👤 Tú' : (mensajeParaInfo.emisorNombre || 'Desconocido') }}</p>
+              <p class="info-valor">{{ esPropio(mensajeParaInfo) ? 'Tú' : (mensajeParaInfo.emisorNombre || 'Desconocido') }}</p>
             </div>
 
             <!-- Fecha -->

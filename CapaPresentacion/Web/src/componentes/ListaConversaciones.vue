@@ -20,13 +20,13 @@
               <v-list-item @click="abrirEdicionPerfil('username')" prepend-icon="mdi-account-edit">
                 <v-list-item-title>Cambiar nombre de usuario</v-list-item-title>
               </v-list-item>
-              <v-list-item @click="abrirEdicionPerfil('fotoUrl')" prepend-icon="mdi-image-account">
+              <v-list-item @click="abrirEdicionPerfil('fotoUrl')" prepend-icon="mdi-camera">
                 <v-list-item-title>Cambiar Foto de perfil</v-list-item-title>
               </v-list-item>
-              <v-list-item @click="abrirEdicionPerfil('imagenBanner')" prepend-icon="mdi-image-area">
+              <v-list-item @click="abrirEdicionPerfil('imagenBanner')" prepend-icon="mdi-wallpaper">
                 <v-list-item-title>Colocar imagen de banner</v-list-item-title>
               </v-list-item>
-              <v-list-item @click="abrirEdicionPerfil('descripcion')" prepend-icon="mdi-text-account">
+              <v-list-item @click="abrirEdicionPerfil('descripcion')" prepend-icon="mdi-card-text-outline">
                 <v-list-item-title>Cambiar descripción</v-list-item-title>
               </v-list-item>
               <v-divider class="my-1" />
@@ -793,6 +793,8 @@ const cerrarSesionLocal = () => {
 .modal-nueva-conv {
   box-shadow: 0 10px 40px rgba(64, 109, 115, 0.15) !important;
   background: #ffffff !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
 }
 
 .modal-titulo-conv {
@@ -1087,6 +1089,8 @@ const cerrarSesionLocal = () => {
 .modal-editar-perfil {
   box-shadow: 0 10px 40px rgba(64, 109, 115, 0.15) !important;
   background: #ffffff !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
 }
 
 .modal-titulo-perfil {
@@ -1161,5 +1165,46 @@ const cerrarSesionLocal = () => {
   font-weight: 600 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.02em !important;
+}
+</style>
+
+<style>
+/* Estilos globales para los menús flotantes para que no tengan barras de desplazamiento y se vean mejor */
+.menu-perfil-flotante, .menu-mensaje-flotante {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 8px 24px rgba(64, 109, 115, 0.15) !important;
+  border: 1px solid rgba(64, 109, 115, 0.08) !important;
+  background: white !important;
+}
+.menu-perfil-flotante .v-list, .menu-mensaje-flotante .v-list {
+  padding: 4px 0 !important;
+  overflow: hidden !important; /* quita el scrollbar */
+}
+.menu-perfil-flotante .v-list-item-title, .menu-mensaje-flotante .v-list-item-title {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #2f4a4f !important;
+}
+.menu-mensaje-flotante .v-list-item-title {
+  font-size: 12px !important;
+}
+.menu-perfil-flotante .v-list-item__prepend > .v-icon, .menu-mensaje-flotante .v-list-item__prepend > .v-icon {
+  font-size: 18px !important;
+  color: #406D73 !important;
+  opacity: 0.8 !important;
+  margin-inline-end: 12px !important;
+}
+.menu-perfil-flotante .text-error .v-list-item-title,
+.menu-perfil-flotante .text-error .v-icon,
+.menu-perfil-flotante .text-error .v-list-item__prepend > .v-icon,
+.menu-mensaje-flotante .text-error .v-list-item-title,
+.menu-mensaje-flotante .text-error .v-icon,
+.menu-mensaje-flotante .text-error .v-list-item__prepend > .v-icon {
+  color: #d32f2f !important;
+}
+.menu-perfil-flotante .v-list-item, .menu-mensaje-flotante .v-list-item {
+  min-height: 36px !important;
+  padding: 4px 16px !important;
 }
 </style>

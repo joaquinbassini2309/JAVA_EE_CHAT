@@ -25,7 +25,7 @@
     </div>
     <!-- Menú de 3 puntos (solo para mensajes propios) -->
     <div v-if="propio" class="menu-mensaje">
-      <v-menu>
+      <v-menu content-class="menu-mensaje-flotante" transition="scale-transition">
         <template v-slot:activator="{ props }">
           <v-btn
               icon="mdi-dots-vertical"
