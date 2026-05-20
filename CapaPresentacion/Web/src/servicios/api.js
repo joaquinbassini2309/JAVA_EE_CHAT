@@ -31,7 +31,11 @@ class ServicioAPI {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          // Token expirado o inválido
+          // Si el 401 viene del intento de login, solo rechazar la promesa para mostrar el error
+          if (error.config && error.config.url && error.config.url.includes('/usuarios/login')) {
+            return Promise.reject(error)
+          }
+          // Token expirado o inválido para otras peticiones
           localStorage.removeItem('token')
           localStorage.removeItem('usuario')
           window.location.href = `${contextPath}/login`

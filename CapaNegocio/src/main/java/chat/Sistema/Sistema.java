@@ -63,6 +63,11 @@ public class Sistema implements ISistema {
             throw new IllegalArgumentException("El correo electrónico ya se encuentra registrado");
         }
 
+        // Validar que el nombre de usuario no esté en uso
+        if (usuarioHandler().buscarUsuarioPorUsername(username).isPresent()) {
+            throw new IllegalArgumentException("El nombre de usuario ya está en uso");
+        }
+
         // Hashear password con BCrypt
         String passwordHash = org.mindrot.jbcrypt.BCrypt.hashpw(password, org.mindrot.jbcrypt.BCrypt.gensalt());
         
