@@ -110,8 +110,8 @@ class ServicioAPI {
     return data
   }
 
-  async actualizarConversacion(idConversacion, nombre) {
-    const { data } = await this.cliente.put(`/conversaciones/${idConversacion}`, { nombre })
+  async actualizarConversacion(idConversacion, nombre, fotoUrl, imagenBanner) {
+    const { data } = await this.cliente.put(`/conversaciones/${idConversacion}`, { nombre, fotoUrl, imagenBanner })
     return data
   }
 

@@ -24,6 +24,12 @@ public class Conversacion {
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
+    @Column(name = "foto_url")
+    private String fotoUrl;
+
+    @Column(name = "imagen_banner")
+    private String imagenBanner;
+
     @OneToMany(mappedBy = "conversacion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<Participante> participantes = new HashSet<>();
 
@@ -47,6 +53,12 @@ public class Conversacion {
 
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+
+    public String getFotoUrl() { return fotoUrl; }
+    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+
+    public String getImagenBanner() { return imagenBanner; }
+    public void setImagenBanner(String imagenBanner) { this.imagenBanner = imagenBanner; }
 
     public Set<Participante> getParticipantes() { return participantes; }
     public void setParticipantes(Set<Participante> participantes) { this.participantes = participantes; }

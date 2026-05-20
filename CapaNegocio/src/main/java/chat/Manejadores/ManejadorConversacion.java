@@ -52,10 +52,12 @@ public class ManejadorConversacion {
         return q.getResultList().stream().findFirst();
     }
 
-    public void actualizarNombre(Long conversacionId, String nuevoNombre) {
+    public void actualizarInfo(Long conversacionId, String nuevoNombre, String fotoUrl, String imagenBanner) {
         Conversacion c = em.find(Conversacion.class, conversacionId);
         if (c != null) {
-            c.setNombre(nuevoNombre);
+            if (nuevoNombre != null) c.setNombre(nuevoNombre);
+            if (fotoUrl != null) c.setFotoUrl(fotoUrl);
+            if (imagenBanner != null) c.setImagenBanner(imagenBanner);
             em.merge(c);
         }
     }

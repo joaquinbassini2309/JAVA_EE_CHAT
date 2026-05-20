@@ -223,7 +223,7 @@ public class Sistema implements ISistema {
     // ========== IMPLEMENTACIÓN: GESTIÓN DE GRUPOS ==========
 
     @Override
-    public void actualizarInfoGrupo(Long grupoId, String nombre, Long actorId) {
+    public void actualizarInfoGrupo(Long grupoId, String nombre, String fotoUrl, String imagenBanner, Long actorId) {
         // Validar que quien actúa es ADMIN o MODERADOR
         Participante actor = participanteHandler().buscarParticipante(grupoId, actorId)
                 .orElseThrow(() -> new IllegalArgumentException("No eres miembro de este grupo"));
@@ -232,8 +232,8 @@ public class Sistema implements ISistema {
             throw new IllegalArgumentException("No tienes permisos para actualizar la información del grupo");
         }
 
-        // Actualizar nombre
-        conversacionHandler().actualizarNombre(grupoId, nombre);
+        // Actualizar información
+        conversacionHandler().actualizarInfo(grupoId, nombre, fotoUrl, imagenBanner);
         
         // TODO: Notificar a observadores sobre el cambio de info
     }
@@ -285,9 +285,16 @@ public class Sistema implements ISistema {
             }
         }
 
+        Usuario usuarioEliminado = buscarUsuarioPorId(usuarioId).orElse(null);
+
         List<Participante> removidos = participanteHandler().removerParticipante(grupoId, usuarioId);
         for (Participante p : removidos) {
             observable.notificar(new EventoChat(EventoTipo.PARTICIPANTE_ELIMINADO, p));
+        }
+
+        if (usuarioEliminado != null) {
+            String mensajeInfo = usuarioEliminado.getUsername() + " ha sido eliminado por " + actor.getUsuario().getUsername();
+            enviarMensajeTexto(grupoId, actorId, mensajeInfo);
         }
     }
 

@@ -98,28 +98,34 @@ export const useAlmacen = defineStore('principal', () => {
     })
   }
 
-  function actualizarNombreConversacion(conversacionId, nombre) {
+  function actualizarInfoConversacion(conversacionId, nombre, fotoUrl, imagenBanner) {
     const conv = conversaciones.value.find(c => c.id === conversacionId)
     if (conv) {
-      conv.nombre = nombre
+      if (nombre !== undefined) conv.nombre = nombre
+      if (fotoUrl !== undefined) conv.fotoUrl = fotoUrl
+      if (imagenBanner !== undefined) conv.imagenBanner = imagenBanner
     }
     if (conversacionActual.value?.id === conversacionId) {
-      conversacionActual.value.nombre = nombre
+      if (nombre !== undefined) conversacionActual.value.nombre = nombre
+      if (fotoUrl !== undefined) conversacionActual.value.fotoUrl = fotoUrl
+      if (imagenBanner !== undefined) conversacionActual.value.imagenBanner = imagenBanner
     }
   }
 
   function actualizarRolParticipante(conversacionId, participanteId, nuevoRol) {
     const conv = conversaciones.value.find(c => c.id === conversacionId)
     if (conv?.participantes) {
-      const participante = conv.participantes.find(p => p.id === participanteId)
-      if (participante) {
-        participante.rol = nuevoRol
+      const pIndex = conv.participantes.findIndex(p => p.id === participanteId)
+      if (pIndex !== -1) {
+        conv.participantes[pIndex].rol = nuevoRol
+        conv.participantes = [...conv.participantes]
       }
     }
     if (conversacionActual.value?.id === conversacionId) {
-      const participante = conversacionActual.value.participantes.find(p => p.id === participanteId)
-      if (participante) {
-        participante.rol = nuevoRol
+      const pIndex = conversacionActual.value.participantes.findIndex(p => p.id === participanteId)
+      if (pIndex !== -1) {
+        conversacionActual.value.participantes[pIndex].rol = nuevoRol
+        conversacionActual.value.participantes = [...conversacionActual.value.participantes]
       }
     }
   }
@@ -189,10 +195,9 @@ export const useAlmacen = defineStore('principal', () => {
     establecerConversaciones,
     establecerConversacionActual,
     establecerMensajes,
-    agregarMensaje,
     agregarConversacion,
-    actualizarEstadoUsuario,
-    actualizarNombreConversacion,
+    agregarMensaje,
+    actualizarInfoConversacion,
     actualizarRolParticipante,
     eliminarParticipante,
     establecerCargando,
