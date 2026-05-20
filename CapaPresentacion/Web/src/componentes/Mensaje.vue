@@ -1,5 +1,5 @@
 <template>
-  <div v-if="esMensajeCifrado" class="mensaje-sistema">
+  <div v-if="esMensajeSistema" class="mensaje-sistema">
     {{ mensaje.contenido }}
   </div>
   <div v-else class="burbuja-wrap" :class="{ propio }">
@@ -67,8 +67,8 @@ const usuarioActual = computed(() => almacen.usuarioActual)
 
 const propio = computed(() => props.mensaje.emisorId === usuarioActual.value?.id)
 
-const esMensajeCifrado = computed(() => {
-  return props.mensaje.contenido === 'Los mensajes están cifrados de extremo a extremo'
+const esMensajeSistema = computed(() => {
+  return props.mensaje.contenido === 'Los mensajes están cifrados de extremo a extremo' || props.mensaje.contenido.includes('ha sido eliminado por')
 })
 
 const mostrarNombre = computed(

@@ -104,7 +104,7 @@
                 <v-list-item @click="cambiarRol(miembro.usuario.id, 'SILENCIADO')" class="text-warning">
                   <v-list-item-title>Silenciar</v-list-item-title>
                 </v-list-item>
-                <v-list-item @click="eliminarMiembro(miembro.usuario.id)" class="text-error">
+                <v-list-item @click="abrirConfirmacionEliminar(miembro.usuario)" class="text-error">
                   <v-list-item-title>Eliminar del grupo</v-list-item-title>
                 </v-list-item>
               </v-list>
@@ -179,6 +179,23 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Modal Confirmar Eliminación -->
+    <v-dialog v-model="mostrarModalEliminar" max-width="400">
+      <v-card rounded="2xl">
+        <v-card-title style="font-size: 1rem; font-weight: 700; color: #d32f2f;">
+          Eliminar Usuario
+        </v-card-title>
+        <v-card-text>
+          ¿Estás seguro de que deseas eliminar a <strong>{{ usuarioAEliminar?.username }}</strong> del grupo?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="mostrarModalEliminar = false">Cancelar</v-btn>
+          <v-btn color="error" variant="flat" @click="confirmarEliminarMiembro" :loading="eliminandoMiembro">Aceptar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -206,6 +223,11 @@ const tipoEdicion = ref('')
 const valorEdicion = ref('')
 const tituloModal = ref('')
 const guardandoInfo = ref(false)
+
+// Confirmacion de eliminacion
+const mostrarModalEliminar = ref(false)
+const usuarioAEliminar = ref(null)
+const eliminandoMiembro = ref(false)
 
 const usuarioActual = computed(() => almacen.usuarioActual)
 
@@ -290,14 +312,23 @@ async function cambiarRol(participanteId, nuevoRol) {
   }
 }
 
-async function eliminarMiembro(participanteId) {
-  if (confirm('¿Estás seguro de que quieres eliminar a este miembro del grupo?')) {
-    try {
-      await servicioApi.eliminarParticipante(props.conversacion.id, participanteId)
-      almacen.eliminarParticipante(props.conversacion.id, participanteId)
-    } catch (error) {
-      console.error("Error al eliminar miembro:", error)
-    }
+const abrirConfirmacionEliminar = (usuario) => {
+  usuarioAEliminar.value = usuario
+  mostrarModalEliminar.value = true
+}
+
+const confirmarEliminarMiembro = async () => {
+  if (!usuarioAEliminar.value) return
+  eliminandoMiembro.value = true
+  try {
+    await servicioApi.eliminarParticipante(props.conversacion.id, usuarioAEliminar.value.id)
+    almacen.eliminarParticipante(props.conversacion.id, usuarioAEliminar.value.id)
+    mostrarModalEliminar.value = false
+  } catch (error) {
+    console.error("Error al eliminar miembro:", error)
+  } finally {
+    eliminandoMiembro.value = false
+    usuarioAEliminar.value = null
   }
 }
 

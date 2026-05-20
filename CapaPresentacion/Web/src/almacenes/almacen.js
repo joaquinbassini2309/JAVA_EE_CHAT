@@ -133,10 +133,10 @@ export const useAlmacen = defineStore('principal', () => {
   function eliminarParticipante(conversacionId, participanteId) {
     const conv = conversaciones.value.find(c => c.id === conversacionId)
     if (conv?.participantes) {
-      conv.participantes = conv.participantes.filter(p => p.id !== participanteId)
+      conv.participantes = conv.participantes.filter(p => p.usuario.id !== participanteId)
     }
     if (conversacionActual.value?.id === conversacionId) {
-      conversacionActual.value.participantes = conversacionActual.value.participantes.filter(p => p.id !== participanteId)
+      conversacionActual.value.participantes = conversacionActual.value.participantes.filter(p => p.usuario.id !== participanteId)
     }
   }
 
