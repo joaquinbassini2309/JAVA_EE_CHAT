@@ -209,6 +209,8 @@ const fileInput = ref(null)
 const subiendoArchivo = ref(false)
 const cargandoMas = ref(false)
 const offsetMensajes = ref(0)
+const todosCargados = ref(false)
+const cargandoAnteriores = computed(() => cargandoMas.value)
 
 const conversacionActual = computed(() => almacen.conversacionActual)
 const usuarioActual = computed(() => almacen.usuarioActual)
@@ -255,8 +257,12 @@ const cargarMensajes = async () => {
   if (!conversacionActual.value) return
   try {
     offsetMensajes.value = 0
+    todosCargados.value = false
     const mensajesObtenidos = await servicioApi.obtenerMensajes(conversacionActual.value.id, 6, 0)
     almacen.establecerMensajes(mensajesObtenidos)
+    if (mensajesObtenidos.length < 6) {
+      todosCargados.value = true
+    }
     scrollToBottom()
     await servicioApi.marcarConversacionLeida(conversacionActual.value.id)
   } catch (error) {
@@ -265,14 +271,18 @@ const cargarMensajes = async () => {
 }
 
 const cargarMasMensajes = async () => {
-  if (!conversacionActual.value || cargandoMas.value) return
+  if (!conversacionActual.value || cargandoMas.value || todosCargados.value) return
   try {
     cargandoMas.value = true
     offsetMensajes.value += 6
     const anteriores = await servicioApi.obtenerMensajes(conversacionActual.value.id, 6, offsetMensajes.value)
     if (anteriores.length > 0) {
-      // Agregar al principio del almacén (el almacén debe soportar esto o lo hacemos manual)
       almacen.establecerMensajes([...anteriores, ...mensajes.value])
+      if (anteriores.length < 6) {
+        todosCargados.value = true
+      }
+    } else {
+      todosCargados.value = true
     }
   } catch (error) {
     console.error('Error al cargar más mensajes:', error)

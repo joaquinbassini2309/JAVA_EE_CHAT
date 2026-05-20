@@ -43,11 +43,13 @@ if (-not (Test-Path $driverPath)) {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -Uri $driverUrl -OutFile $driverPath -UseBasicParsing
         Write-Success "[OK] Driver descargado en $driverPath"
-    } catch {
+    }
+    catch {
         Write-Error-Custom "[!] Error descargando el driver de PostgreSQL: $_"
         exit 1
     }
-} else {
+}
+else {
     Write-Info "Driver de PostgreSQL ya existe en $env:TEMP"
 }
 
@@ -59,7 +61,8 @@ Write-Info "======================================"
 try {
     $javaVersion = java -version 2>&1
     Write-Success "[OK] Java instalado"
-} catch {
+}
+catch {
     Write-Error-Custom "[!] Java no encontrado. Instala Java 21+ primero."
     exit 1
 }
@@ -67,7 +70,8 @@ try {
 try {
     $pgVersion = psql --version 2>&1
     Write-Success "[OK] PostgreSQL instalado: $pgVersion"
-} catch {
+}
+catch {
     Write-Error-Custom "[!] PostgreSQL no encontrado. Instala PostgreSQL primero."
     exit 1
 }
@@ -90,7 +94,8 @@ if (Test-Path $WildFlyDir) {
         Get-Process | Where-Object { $_.ProcessName -eq "java" -and $_.Path -like "$WildFlyDir*" } | Stop-Process -Force
         Start-Sleep -Seconds 2
         Remove-Item -Recurse -Force $WildFlyDir
-    } else {
+    }
+    else {
         Write-Info "Usando WildFly existente..."
     }
 }
@@ -104,7 +109,8 @@ if (-not (Test-Path $WildFlyDir)) {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath -UseBasicParsing
         Write-Success "[OK] Descarga completada"
-    } catch {
+    }
+    catch {
         Write-Error-Custom "[!] Error en descarga: $_"
         exit 1
     }
@@ -114,7 +120,8 @@ if (-not (Test-Path $WildFlyDir)) {
         Expand-Archive -Path $zipPath -DestinationPath "C:\" -Force
         Remove-Item $zipPath
         Write-Success "[OK] WildFly extraido en $WildFlyDir"
-    } catch {
+    }
+    catch {
         Write-Error-Custom "[!] Error en extraccion: $_"
         exit 1
     }
@@ -131,10 +138,12 @@ try {
         Write-Info "Creando base de datos chat..."
         psql -U postgres -c "CREATE DATABASE chat;" 2>$null
         Write-Success "[OK] Base de datos chat creada"
-    } else {
+    }
+    else {
         Write-Info "Base de datos chat ya existe"
     }
-} catch {
+}
+catch {
     Write-Warning-Custom "[!] Error al crear BD PostgreSQL: $_"
     Write-Info "Continuando... la BD podria crearse despues"
 }
@@ -168,7 +177,8 @@ while ($attempt -lt $maxAttempts -and -not $ready) {
         if ($response.StatusCode -eq 200) {
             $ready = $true
         }
-    } catch {
+    }
+    catch {
         $attempt++
         Write-Host "." -NoNewline
         Start-Sleep -Seconds 1
@@ -178,7 +188,8 @@ while ($attempt -lt $maxAttempts -and -not $ready) {
 if ($ready) {
     Write-Success ""
     Write-Success "[OK] WildFly esta listo en http://localhost:9990/console"
-} else {
+}
+else {
     Write-Error-Custom ""
     Write-Error-Custom "[!] WildFly no pudo iniciarse. Revisa los logs en $WildFlyDir\standalone\log"
     Stop-Process -Id $process.Id -Force
@@ -216,10 +227,12 @@ try {
     
     if ($cliOutput -match "WFLYJCA0040" -or $cliOutput -match '\"outcome\" => \"success\"') {
         Write-Success "[OK] Data Source ChatDS configurado exitosamente"
-    } else {
+    }
+    else {
         Write-Warning-Custom "[!] El Data Source podría no haberse creado. Revisa el output."
     }
-} catch {
+}
+catch {
     Write-Warning-Custom "[!] Error ejecutando CLI: $_"
 }
 
@@ -243,7 +256,8 @@ if ($LASTEXITCODE -eq 0) {
     if (Test-Path $warFile) {
         Write-Success "[OK] WAR generado: $warFile"
     }
-} else {
+}
+else {
     Write-Error-Custom "[!] Error en compilacion de Maven"
     Write-Host $mavenOutput
     exit 1
@@ -270,11 +284,12 @@ if (Test-Path $warFile) {
     
     while ($attempt -lt $maxAttempts -and -not $deployed) {
         try {
-            $response = Invoke-WebRequest -Uri "http://localhost:8080/chat-empresarial/InicioSesion.html" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
+            $response = Invoke-WebRequest -Uri "http://localhost:8080/chat-empresarial/" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
             if ($response.StatusCode -eq 200) {
                 $deployed = $true
             }
-        } catch {
+        }
+        catch {
             $attempt++
             Write-Host "." -NoNewline
             Start-Sleep -Seconds 1
@@ -284,11 +299,13 @@ if (Test-Path $warFile) {
     if ($deployed) {
         Write-Success ""
         Write-Success "[OK] Aplicacion desplegada exitosamente"
-    } else {
+    }
+    else {
         Write-Info ""
         Write-Error-Custom "[!] La aplicación no se desplegó correctamente (404 Not Found). Revisa los logs de WildFly."
     }
-} else {
+}
+else {
     Write-Error-Custom "[!] WAR no encontrado en $warFile"
 }
 
@@ -305,7 +322,7 @@ Write-Success "[OK] Aplicacion compilada y desplegada"
 Write-Info ""
 Write-Info "URLS IMPORTANTES:"
 Write-Info "   Admin Console: http://localhost:9990/console"
-Write-Info "   Aplicacion: http://localhost:8080/chat-empresarial/InicioSesion.html"
+Write-Info "   Aplicacion: http://localhost:8080/chat-empresarial/"
 Write-Info "   API Login: POST http://localhost:8080/chat-empresarial/api/v1/usuarios/login"
 
 Write-Info ""
@@ -316,7 +333,7 @@ Write-Warning-Custom "   3. Prueba el inicio de sesion en la URL de la aplicacio
 Write-Warning-Custom "   4. Para detener WildFly: Stop-Process -Id $($process.Id)"
 
 if ($deployed) {
-    Start-Process "http://localhost:8080/chat-empresarial/InicioSesion.html"
+    Start-Process "http://localhost:8080/chat-empresarial/"
 }
 
 Write-Info ""

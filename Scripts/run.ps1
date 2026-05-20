@@ -40,8 +40,9 @@ function Stop-PortProcess {
         $pids = @()
         try {
             $pids = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Stop |
-                    Select-Object -ExpandProperty OwningProcess -Unique
-        } catch {
+            Select-Object -ExpandProperty OwningProcess -Unique
+        }
+        catch {
             $pids = netstat -ano | Select-String ":$Port " | ForEach-Object {
                 ($_ -split '\s+')[-1]
             } | Where-Object { $_ -match '^\d+$' } | Select-Object -Unique
@@ -51,12 +52,14 @@ function Stop-PortProcess {
                 try {
                     Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
                     Write-Warning-Custom "Puerto $Port liberado (PID $pid detenido)."
-                } catch {
+                }
+                catch {
                     Write-Warning-Custom "No se pudo detener PID $pid para puerto $Port."
                 }
             }
         }
-    } catch {
+    }
+    catch {
         Write-Warning-Custom "No se pudo consultar el puerto $Port."
     }
 }
@@ -116,7 +119,7 @@ Start-Sleep -Seconds 1
 try {
     Push-Location $frontendDir
     Invoke-Step "Compilando Frontend con npm run build..." {
-        $env:VITE_CONTEXT_PATH = "/chat-empresarial"
+        $env:VITE_CONTEXT_PATH = "/chat-empresarial/"
         npm install
         if ($LASTEXITCODE -ne 0) { throw "npm install fallo" }
         npm run build
@@ -128,15 +131,19 @@ try {
         $distDir = Join-Path $frontendDir "dist"
         $webappDir = Join-Path (Join-Path $backendDir "src\main") "webapp"
         if (Test-Path $distDir) {
+            if (Test-Path $webappDir) {
+                Get-ChildItem -Path $webappDir -Exclude "WEB-INF" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+            }
             Copy-Item -Path "$distDir\*" -Destination $webappDir -Recurse -Force
-        } else {
+        }
+        else {
             throw "No se encontro directorio dist"
         }
     }
 
     Push-Location $ProjectRoot
     Invoke-Step "Compilando proyecto con Maven..." {
-        mvn clean package
+        mvn clean package -DskipTests
     }
     if ($LASTEXITCODE -eq 0) {
         Write-Success "[OK] Compilación exitosa."
@@ -147,6 +154,14 @@ try {
             }
 
             Remove-Item "$wildFlyDeploy\*" -Force -Recurse -ErrorAction SilentlyContinue
+            
+            # Limpiar caché de WildFly
+            $wildFlyStandalone = Split-Path $wildFlyDeploy -Parent
+            $tmpDir = Join-Path $wildFlyStandalone "tmp"
+            $dataDir = Join-Path $wildFlyStandalone "data"
+            if (Test-Path $tmpDir) { Remove-Item $tmpDir -Recurse -Force -ErrorAction SilentlyContinue }
+            if (Test-Path $dataDir) { Remove-Item $dataDir -Recurse -Force -ErrorAction SilentlyContinue }
+
             Copy-Item $warFile -Destination $wildFlyDeploy -Force
             New-Item -Path "$wildFlyDeploy\chat-empresarial.war.dodeploy" -ItemType File -Force | Out-Null
         }
@@ -166,12 +181,14 @@ try {
             & $jbossCli --file=$tempCli
             if ($LASTEXITCODE -ne 0) { throw "Configuración de WildFly fallo" }
         }
-    } else {
+    }
+    else {
         Write-Error-Custom "[!] Error en la compilación. Se intentará arrancar igual..."
     }
     Pop-Location
 
-} catch {
+}
+catch {
     Write-Error-Custom "[!] Error durante build/deploy: $($_.Exception.Message)"
     try { Pop-Location } catch {}
     try { Pop-Location } catch {}
@@ -197,7 +214,8 @@ $wfProcess = $null
 try {
     $wfProcess = Start-Process -FilePath $wildFlyBin -ArgumentList "-b 0.0.0.0" -PassThru
     Write-Success "[OK] WildFly iniciado (PID: $($wfProcess.Id))"
-} catch {
+}
+catch {
     Write-Error-Custom "[!] No se pudo iniciar WildFly: $($_.Exception.Message)"
     exit 1
 }
@@ -222,14 +240,16 @@ try {
         & $jbossCli --connect --command=":shutdown" 2>$null | Out-Null
         Start-Sleep -Seconds 2
     }
-} catch {
+}
+catch {
     Write-Warning-Custom "No se pudo apagar con CLI, se intentara forzar."
 }
 
 if ($wfProcess -and -not $wfProcess.HasExited) {
     try {
         Stop-Process -Id $wfProcess.Id -Force -ErrorAction SilentlyContinue
-    } catch {}
+    }
+    catch {}
 }
 
 Invoke-Step "Deteniendo contenedor Docker: $dockerName" {

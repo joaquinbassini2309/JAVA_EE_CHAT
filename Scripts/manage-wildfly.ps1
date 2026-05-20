@@ -45,9 +45,9 @@ function Check-WildFlyStatus {
         
         # Verificar si la aplicación está desplegada
         try {
-            $appResponse = Invoke-WebRequest -Uri "http://localhost:8080/chat-empresarial/InicioSesion.html" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
+            $appResponse = Invoke-WebRequest -Uri "http://localhost:8080/chat-empresarial/" -UseBasicParsing -TimeoutSec 2 -ErrorAction SilentlyContinue
             if ($appResponse.StatusCode -eq 200) {
-                Write-Success "[OK] Aplicacion DESPLEGADA en http://localhost:8080/chat-empresarial/InicioSesion.html"
+                Write-Success "[OK] Aplicacion DESPLEGADA en http://localhost:8080/chat-empresarial/"
             } else {
                 Write-Warning-Custom "[!] La aplicación respondió, pero no con éxito (Código: $($appResponse.StatusCode))"
             }
