@@ -41,6 +41,14 @@
           </button>
         </form>
 
+        <div class="separador">
+          <span>o</span>
+        </div>
+
+        <div class="contenedor-google">
+          <div id="googleBtn"></div>
+        </div>
+
         <div class="pie-login">
           <p>¿No tienes una cuenta? <router-link to="/registro">Regístrate</router-link></p>
         </div>
@@ -55,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
@@ -94,6 +102,48 @@ const iniciarSesion = async () => {
     cargando.value = false
   }
 }
+
+const manejarRespuestaGoogle = async (response) => {
+  cargando.value = true
+  error.value = null
+  try {
+    const respuesta = await servicioApi.iniciarSesionConGoogle(response.credential)
+    almacen.establecerToken(respuesta.token)
+    almacen.establecerUsuario(respuesta.usuario)
+    localStorage.setItem('usuario', JSON.stringify(respuesta.usuario))
+    router.push('/chat')
+  } catch (err) {
+    error.value = err.response?.data?.detalle || 'Error al iniciar sesión con Google'
+  } finally {
+    cargando.value = false
+  }
+}
+
+const inicializarGoogle = () => {
+  if (window.google) {
+    window.google.accounts.id.initialize({
+      client_id: '623580687397-vd3dbk2u500dsda1tiact908fc4lq9s7.apps.googleusercontent.com',
+      callback: manejarRespuestaGoogle
+    })
+    window.google.accounts.id.renderButton(
+      document.getElementById('googleBtn'),
+      { theme: 'outline', size: 'large', width: '100%' }
+    )
+  }
+}
+
+onMounted(() => {
+  if (!window.google) {
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    script.onload = inicializarGoogle
+    document.head.appendChild(script)
+  } else {
+    inicializarGoogle()
+  }
+})
 </script>
 
 <style scoped>
@@ -207,6 +257,35 @@ input {
   text-align: center;
   font-size: 13px;
   color: #2f4a4f;
+}
+
+.separador {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 16px 0;
+  color: #8fa4a6;
+}
+
+.separador::before,
+.separador::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e0e8e9;
+}
+
+.separador:not(:empty)::before {
+  margin-right: .5em;
+}
+
+.separador:not(:empty)::after {
+  margin-left: .5em;
+}
+
+.contenedor-google {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
 }
 
 a {

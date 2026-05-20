@@ -55,6 +55,13 @@ class ServicioAPI {
     return data
   }
 
+  async iniciarSesionConGoogle(credential) {
+    const { data } = await this.cliente.post('/usuarios/login-google', {
+      credential: credential
+    })
+    return data
+  }
+
   async registrarse(nombreUsuario, email, contraseña) {
     const { data } = await this.cliente.post('/usuarios/register', {
       username: nombreUsuario,

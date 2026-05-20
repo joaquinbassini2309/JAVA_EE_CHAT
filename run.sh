@@ -14,6 +14,21 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+# Cargar variables de entorno desde .env y reemplazar db con localhost:5433 para local
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+        if [[ ! "$line" =~ ^# ]] && [[ ! -z "$line" ]]; then
+            key=$(echo "$line" | cut -d'=' -f1)
+            val=$(echo "$line" | cut -d'=' -f2-)
+            if [ "$key" = "DB_URL" ]; then
+                val=$(echo "$val" | sed 's/:\/\/db/:\/\/localhost/g')
+            fi
+            export "$key=$val"
+        fi
+    done < "$PROJECT_ROOT/.env"
+    echo -e "${GREEN}[OK] Variables de entorno (.env) cargadas para WildFly.${NC}"
+fi
+
 echo -e "${CYAN}--- PREPARANDO ENTORNO ---${NC}"
 
 # 0. Limpiar puertos (por si quedaron procesos colgados)
