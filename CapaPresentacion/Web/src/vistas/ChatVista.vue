@@ -9,11 +9,7 @@
             <ListaConversaciones />
           </div>
 
-          <div v-if="esModoMovil && conversacionActual" style="flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-rows: auto 1fr;">
-            <div class="header-retroceso">
-              <v-btn icon="mdi-arrow-left" variant="flat" color="accent" size="small" @click="volverALista" />
-              <span class="titulo-conversacion">{{ obtenerNombreConversacion }}</span>
-            </div>
+          <div v-if="esModoMovil && conversacionActual" style="flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-rows: 1fr;">
             <Chat />
           </div>
 

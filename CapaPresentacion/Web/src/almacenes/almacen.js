@@ -57,9 +57,6 @@ export const useAlmacen = defineStore('principal', () => {
 
   function establecerConversacionActual(conversacion) {
     conversacionActual.value = conversacion
-    if (conversacion) {
-      localStorage.setItem('conversacionActual', JSON.stringify(conversacion))
-    }
   }
 
   function establecerMensajes(nuevosMensajes) {
@@ -157,22 +154,17 @@ export const useAlmacen = defineStore('principal', () => {
     mensajes.value = []
     localStorage.removeItem('token')
     localStorage.removeItem('usuario')
-    localStorage.removeItem('conversacionActual')
   }
 
   function cargarDelAlmacenamientoLocal() {
     const tokenGuardado = localStorage.getItem('token')
     const usuarioGuardado = localStorage.getItem('usuario')
-    const conversacionGuardada = localStorage.getItem('conversacionActual')
 
     if (tokenGuardado) {
       token.value = tokenGuardado
     }
     if (usuarioGuardado) {
       usuarioActual.value = JSON.parse(usuarioGuardado)
-    }
-    if (conversacionGuardada) {
-      conversacionActual.value = JSON.parse(conversacionGuardada)
     }
   }
 
