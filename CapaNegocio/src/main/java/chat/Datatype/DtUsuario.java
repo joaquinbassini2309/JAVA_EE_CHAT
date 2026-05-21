@@ -186,6 +186,20 @@ public final class DtUsuario {
         public void setUsuario(UsuarioResponseDTO usuario) { this.usuario = usuario; }
     }
 
+    // DTO para login con Google
+    public static class GoogleLoginDTO {
+        private String credential;
+
+        public GoogleLoginDTO() {}
+
+        public GoogleLoginDTO(String credential) {
+            this.credential = credential;
+        }
+
+        public String getCredential() { return credential; }
+        public void setCredential(String credential) { this.credential = credential; }
+    }
+
     private static EstadoUsuario parseEstado(String estado) {
         if (estado == null || estado.isBlank()) return null;
         return EstadoUsuario.valueOf(estado.trim().toUpperCase());

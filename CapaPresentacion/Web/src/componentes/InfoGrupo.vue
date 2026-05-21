@@ -5,7 +5,7 @@
     <div class="info-header">
       <div
           class="profile-banner profile-banner--default"
-          :style="esGrupo ? {} : (otroUsuario?.imagenBanner ? { backgroundImage: `url('${otroUsuario.imagenBanner}')` } : {})"
+          :style="conversacion.imagenBanner ? { backgroundImage: `url('${conversacion.imagenBanner}')` } : {}"
       />
       <div class="profile-lower">
         <div class="profile-avatar-wrap">
@@ -15,6 +15,8 @@
             </template>
             <template v-else-if="esAviso">
               <v-icon size="28" color="#406D73">mdi-bullhorn</v-icon>
+            <template v-if="conversacion.fotoUrl">
+              <img :src="conversacion.fotoUrl" class="avatar-img" />
             </template>
             <template v-else>
               {{ conversacion.nombre?.charAt(0).toUpperCase() || 'G' }}
@@ -48,6 +50,22 @@
               @click="editandoNombre = true"
               class="ml-1"
           />
+          <v-menu v-if="puedeGestionar" content-class="menu-perfil-flotante" transition="scale-transition">
+            <template v-slot:activator="{ props }">
+              <v-btn icon="mdi-dots-vertical" variant="text" size="small" class="ml-1" v-bind="props" />
+            </template>
+            <v-list>
+              <v-list-item @click="editandoNombre = true" prepend-icon="mdi-pencil">
+                <v-list-item-title>Cambiar nombre</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="abrirEdicionGrupo('fotoUrl')" prepend-icon="mdi-camera">
+                <v-list-item-title>Cambiar foto de grupo</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="abrirEdicionGrupo('imagenBanner')" prepend-icon="mdi-wallpaper">
+                <v-list-item-title>Cambiar banner</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
         </div>
         <div class="profile-subtitle">
           {{ esAviso ? '📣 Canal de Avisos' : '' }}{{ conversacion.participantes?.length || 0 }} miembros
@@ -81,11 +99,14 @@
             </div>
 
             <!-- Menú de acciones para el Admin -->
-            <v-menu v-if="esAdmin && usuarioActual.id !== miembro.usuario.id">
+            <v-menu v-if="esAdmin && usuarioActual.id !== miembro.usuario.id" content-class="menu-perfil-flotante" transition="scale-transition">
               <template v-slot:activator="{ props }">
                 <v-btn icon="mdi-dots-vertical" variant="text" size="small" v-bind="props" />
               </template>
               <v-list>
+                <v-list-item @click="cambiarRol(miembro.usuario.id, 'ADMIN')" v-if="miembro.rol !== 'ADMIN'">
+                  <v-list-item-title>Nombrar Administrador</v-list-item-title>
+                </v-list-item>
                 <v-list-item @click="cambiarRol(miembro.usuario.id, 'MODERADOR')" v-if="miembro.rol !== 'MODERADOR'">
                   <v-list-item-title>Nombrar Moderador</v-list-item-title>
                 </v-list-item>
@@ -93,10 +114,10 @@
                   <v-list-item-title>Nombrar Miembro</v-list-item-title>
                 </v-list-item>
                 <v-divider />
-                <v-list-item @click="cambiarRol(miembro.usuario.id, 'SILENCIADO')" class="text-warning">
-                  <v-list-item-title>Silenciar</v-list-item-title>
+                <v-list-item @click="cambiarRol(miembro.usuario.id, miembro.rol === 'SILENCIADO' ? 'MIEMBRO' : 'SILENCIADO')" :class="miembro.rol === 'SILENCIADO' ? 'text-success' : 'text-warning'">
+                  <v-list-item-title>{{ miembro.rol === 'SILENCIADO' ? 'Desilenciar' : 'Silenciar' }}</v-list-item-title>
                 </v-list-item>
-                <v-list-item @click="eliminarMiembro(miembro.usuario.id)" class="text-error">
+                <v-list-item @click="abrirConfirmacionEliminar(miembro.usuario)" class="text-error">
                   <v-list-item-title>Eliminar del grupo</v-list-item-title>
                 </v-list-item>
               </v-list>
@@ -133,6 +154,61 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Editar Info de Grupo -->
+    <v-dialog v-model="mostrarModalEdicion" max-width="420">
+      <v-card rounded="2xl" class="modal-editar-perfil">
+        <v-card-title class="modal-titulo-perfil">
+          <v-icon size="18" color="white" class="mr-2">
+            {{ tipoEdicion === 'fotoUrl' ? 'mdi-camera' : 'mdi-wallpaper' }}
+          </v-icon>
+          {{ tituloModal }}
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="mostrarModalEdicion = false" />
+        </v-card-title>
+        <v-card-text class="modal-contenido-perfil">
+          <div class="campo-edicion">
+            <label class="label-input-mejorado">
+              <v-icon size="14" color="#406D73" class="mr-1">mdi-link</v-icon>
+              {{ tipoEdicion === 'fotoUrl' ? 'URL de la foto' : 'URL del banner' }}
+            </label>
+            <input v-model="valorEdicion" type="text" class="input-modal-mejorado" placeholder="https://ejemplo.com/imagen.jpg" />
+          </div>
+        </v-card-text>
+        <v-card-actions class="modal-acciones-perfil">
+          <v-spacer />
+          <v-btn
+              color="accent"
+              variant="flat"
+              rounded="lg"
+              prepend-icon="mdi-content-save"
+              size="small"
+              @click="guardarInfoGrupo"
+              :loading="guardandoInfo"
+              class="btn-guardar-perfil"
+          >
+            Guardar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Modal Confirmar Eliminación -->
+    <v-dialog v-model="mostrarModalEliminar" max-width="400">
+      <v-card rounded="2xl">
+        <v-card-title style="font-size: 1rem; font-weight: 700; color: #d32f2f;">
+          Eliminar Usuario
+        </v-card-title>
+        <v-card-text>
+          ¿Estás seguro de que deseas eliminar a <strong>{{ usuarioAEliminar?.username }}</strong> del grupo?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="mostrarModalEliminar = false">Cancelar</v-btn>
+          <v-btn color="error" variant="flat" @click="confirmarEliminarMiembro" :loading="eliminandoMiembro">Aceptar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -154,6 +230,18 @@ const almacen = useAlmacen()
 const editandoNombre = ref(false)
 const nuevoNombre = ref(props.conversacion.nombre)
 
+// Modal Edicion Grupo
+const mostrarModalEdicion = ref(false)
+const tipoEdicion = ref('')
+const valorEdicion = ref('')
+const tituloModal = ref('')
+const guardandoInfo = ref(false)
+
+// Confirmacion de eliminacion
+const mostrarModalEliminar = ref(false)
+const usuarioAEliminar = ref(null)
+const eliminandoMiembro = ref(false)
+
 const usuarioActual = computed(() => almacen.usuarioActual)
 
 const esGrupo = computed(() => props.conversacion.tipo === 'GRUPO')
@@ -170,8 +258,8 @@ const gruposEnComun = computed(() => {
   const convs = almacen.conversaciones || [];
   return convs.filter(c =>
       c.tipo === 'GRUPO' &&
-      c.participanteIds?.includes(usuarioActual.value?.id) &&
-      c.participanteIds?.includes(otroUsuario.value?.id)
+      c.participantes?.some(p => p.usuario.id === usuarioActual.value?.id) &&
+      c.participantes?.some(p => p.usuario.id === otroUsuario.value?.id)
   );
 })
 
@@ -189,13 +277,45 @@ async function guardarNuevoNombre() {
   if (nuevoNombre.value.trim() && nuevoNombre.value !== props.conversacion.nombre) {
     try {
       await servicioApi.actualizarConversacion(props.conversacion.id, nuevoNombre.value)
-      almacen.actualizarNombreConversacion(props.conversacion.id, nuevoNombre.value)
+      almacen.actualizarInfoConversacion(props.conversacion.id, nuevoNombre.value)
     } catch (error) {
       console.error("Error al actualizar nombre:", error)
       nuevoNombre.value = props.conversacion.nombre
     }
   } else {
     nuevoNombre.value = props.conversacion.nombre
+  }
+}
+
+const abrirEdicionGrupo = (tipo) => {
+  tipoEdicion.value = tipo
+  valorEdicion.value = props.conversacion[tipo] || ''
+  tituloModal.value = tipo === 'fotoUrl' ? 'Cambiar foto de grupo' : 'Cambiar banner del grupo'
+  mostrarModalEdicion.value = true
+}
+
+const guardarInfoGrupo = async () => {
+  if (!valorEdicion.value.trim() && !props.conversacion[tipoEdicion.value]) {
+    mostrarModalEdicion.value = false
+    return
+  }
+
+  guardandoInfo.value = true
+  try {
+    const payload = {
+      nombre: props.conversacion.nombre,
+      fotoUrl: props.conversacion.fotoUrl,
+      imagenBanner: props.conversacion.imagenBanner
+    }
+    payload[tipoEdicion.value] = valorEdicion.value
+
+    await servicioApi.actualizarConversacion(props.conversacion.id, payload.nombre, payload.fotoUrl, payload.imagenBanner)
+    almacen.actualizarInfoConversacion(props.conversacion.id, payload.nombre, payload.fotoUrl, payload.imagenBanner)
+    mostrarModalEdicion.value = false
+  } catch (error) {
+    console.error("Error al actualizar info:", error)
+  } finally {
+    guardandoInfo.value = false
   }
 }
 
@@ -208,14 +328,23 @@ async function cambiarRol(participanteId, nuevoRol) {
   }
 }
 
-async function eliminarMiembro(participanteId) {
-  if (confirm('¿Estás seguro de que quieres eliminar a este miembro del grupo?')) {
-    try {
-      await servicioApi.eliminarParticipante(props.conversacion.id, participanteId)
-      almacen.eliminarParticipante(props.conversacion.id, participanteId)
-    } catch (error) {
-      console.error("Error al eliminar miembro:", error)
-    }
+const abrirConfirmacionEliminar = (usuario) => {
+  usuarioAEliminar.value = usuario
+  mostrarModalEliminar.value = true
+}
+
+const confirmarEliminarMiembro = async () => {
+  if (!usuarioAEliminar.value) return
+  eliminandoMiembro.value = true
+  try {
+    await servicioApi.eliminarParticipante(props.conversacion.id, usuarioAEliminar.value.id)
+    almacen.eliminarParticipante(props.conversacion.id, usuarioAEliminar.value.id)
+    mostrarModalEliminar.value = false
+  } catch (error) {
+    console.error("Error al eliminar miembro:", error)
+  } finally {
+    eliminandoMiembro.value = false
+    usuarioAEliminar.value = null
   }
 }
 

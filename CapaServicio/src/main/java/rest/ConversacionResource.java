@@ -132,7 +132,7 @@ public class ConversacionResource {
         if (userId == null) return Response.status(Response.Status.UNAUTHORIZED).build();
 
         try {
-            sistema.actualizarInfoGrupo(id, dto.getNombre(), userId);
+            sistema.actualizarInfoGrupo(id, dto.getNombre(), dto.getFotoUrl(), dto.getImagenBanner(), userId);
             return Response.ok().build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.FORBIDDEN).entity(new ErrorResponse(403, e.getMessage())).build();
@@ -288,8 +288,15 @@ public class ConversacionResource {
 
     public static class UpdateConversacionDTO {
         private String nombre;
+        private String fotoUrl;
+        private String imagenBanner;
+
         public String getNombre() { return nombre; }
         public void setNombre(String nombre) { this.nombre = nombre; }
+        public String getFotoUrl() { return fotoUrl; }
+        public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+        public String getImagenBanner() { return imagenBanner; }
+        public void setImagenBanner(String imagenBanner) { this.imagenBanner = imagenBanner; }
     }
 
     public static class UpdateRoleDTO {

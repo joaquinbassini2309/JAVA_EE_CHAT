@@ -5,25 +5,35 @@
       <!-- Encabezado con banner + avatar cuadrado -->
       <div class="chat-encabezado" @click="mostrandoInfo = true">
         <div class="profile-banner profile-banner--default"
-          :style="esGrupo ? {} : (otroUsuario?.imagenBanner ? { backgroundImage: `url('${otroUsuario.imagenBanner}')` } : {})"
+          :style="conversacionActual?.imagenBanner ? { backgroundImage: `url('${conversacionActual.imagenBanner}')` } : {}"
           style="background-size: cover; background-position: center;"
         />
         <div class="profile-lower">
           <div class="profile-avatar-wrap">
             <div class="avatar-cuadrado">
-              <img v-if="!esGrupo && otroUsuario?.fotoUrl" :src="otroUsuario.fotoUrl" class="avatar-img" alt="avatar" />
+              <img v-if="conversacionActual?.fotoUrl" :src="conversacionActual.fotoUrl" class="avatar-img" alt="avatar" />
               <span v-else>{{ destinatario.iniciales }}</span>
             </div>
           </div>
           <div class="profile-title-row">
             <span class="profile-name text-truncate">{{ destinatario.nombre }}</span>
             <div class="encabezado-acciones" @click.stop>
+              <v-btn icon="mdi-account-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirModalAñadir" title="Añadir miembro" />
               <v-btn v-if="!esAviso || rolUsuario === 'ADMIN'" icon="mdi-account-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirModalAñadir" title="Añadir miembro" />
               <span class="badge-estado" :class="estadoUsuario">{{ estadoUsuario }}</span>
               <v-btn icon="mdi-close" variant="flat" color="error" size="small" density="comfortable" @click="cerrarConversacion" title="Cerrar conversación" />
             </div>
           </div>
-          <div class="profile-subtitle">En conversación</div>
+          <div class="profile-subtitle">
+            <template v-if="!esGrupo && otroUsuario">
+              <span :class="{'texto-online': otroUsuario.estado === 'ONLINE', 'texto-offline': otroUsuario.estado === 'OFFLINE'}">
+                {{ otroUsuario.estado === 'ONLINE' ? 'En línea' : 'Desconectado' }}
+              </span>
+            </template>
+            <template v-else>
+              Grupo
+            </template>
+          </div>
         </div>
       </div>
 
@@ -166,7 +176,7 @@
         />
         <button class="btn-adjunto" title="Archivos adjunto" @click="seleccionarArchivo">
           <v-icon size="18" color="#406D73" style="opacity:0.75">mdi-paperclip</v-icon>
-          <span>Archivos adjunto</span>
+          <span class="btn-texto">Archivos adjunto</span>
         </button>
         <input
             v-model="contenidoNuevo"
@@ -177,7 +187,7 @@
         />
         <button class="btn-enviar" @click="enviarMensaje" :disabled="!contenidoNuevo.trim()">
           <v-icon size="16">mdi-send</v-icon>
-          Enviar mensaje
+          <span class="btn-texto">Enviar mensaje</span>
         </button>
       </div>
 
@@ -632,23 +642,14 @@ onUnmounted(() => {
   background: rgba(64,109,115,0.1);
 }
 
-.badge-estado {
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.texto-online {
+  color: #6A9E7D;
+  font-weight: 600;
 }
 
-.badge-estado.ONLINE {
-  background: #6A9E7D;
-  color: white;
-}
-
-.badge-estado.OFFLINE {
-  background: #B2C5C8;
-  color: white;
+.texto-offline {
+  color: #7f9ea4;
+  font-weight: 600;
 }
 
 /* ---- Mensajes ---- */
@@ -757,6 +758,26 @@ onUnmounted(() => {
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+@media (max-width: 480px) {
+  .btn-texto {
+    display: none;
+  }
+  .entrada-mensaje {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .btn-adjunto, .btn-enviar {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    flex-shrink: 0;
+  }
+}
+
 
 /* ---- Modal ---- */
 .modal-titulo {

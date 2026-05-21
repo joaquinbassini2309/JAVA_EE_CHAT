@@ -89,7 +89,7 @@ public interface ISistema {
      * Actualiza la información de un grupo (nombre, etc.)
      * - Valida permisos (ADMIN o MODERADOR)
      */
-    void actualizarInfoGrupo(Long grupoId, String nombre, Long adminId);
+    void actualizarInfoGrupo(Long grupoId, String nombre, String fotoUrl, String imagenBanner, Long actorId);
 
     // ========== CASOS DE USO: PARTICIPANTES ==========
     

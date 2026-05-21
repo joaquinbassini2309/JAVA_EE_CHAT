@@ -562,7 +562,7 @@ const cargarConversaciones = async () => {
 
 onMounted(() => {
   cargarConversaciones()
-  intervaloRefresco = setInterval(cargarConversaciones, 5000)
+  intervaloRefresco = setInterval(cargarConversaciones, 2000)
 })
 
 onUnmounted(() => {
@@ -678,7 +678,10 @@ const guardarPerfil = async () => {
 
 const cerrarSesionLocal = () => {
   almacen.cerrarSesion()
-  router.push('/login')
+  const contextPath = window.location.pathname.includes('/chat-empresarial') 
+    ? '/chat-empresarial' 
+    : ''
+  window.location.href = `${contextPath}/login`
 }
 </script>
 

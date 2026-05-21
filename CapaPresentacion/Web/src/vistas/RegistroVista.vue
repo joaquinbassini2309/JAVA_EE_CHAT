@@ -247,8 +247,7 @@ a {
   }
 
   .panel-bienvenida {
-    padding: 30px 20px;
-    min-height: 200px;
+    display: none;
   }
 
   form {

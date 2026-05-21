@@ -14,7 +14,8 @@ public class DtConversacion {
     private String nombre;
     private TipoConversacion tipo;
     private LocalDateTime fechaCreacion;
-    private String fotoUrl; // Para el avatar en la lista de chats
+    private String fotoUrl; // Para el avatar en la lista de chats o de grupo
+    private String imagenBanner;
     private List<DtParticipante> participantes;
     private String ultimoMensaje;
     private LocalDateTime fechaUltimoMensaje;
@@ -22,7 +23,7 @@ public class DtConversacion {
 
     public DtConversacion() {}
 
-    public DtConversacion(Long id, String nombre, TipoConversacion tipo, LocalDateTime fechaCreacion, List<DtParticipante> participantes, String ultimoMensaje, LocalDateTime fechaUltimoMensaje, Integer noLeidos, String fotoUrl) {
+    public DtConversacion(Long id, String nombre, TipoConversacion tipo, LocalDateTime fechaCreacion, List<DtParticipante> participantes, String ultimoMensaje, LocalDateTime fechaUltimoMensaje, Integer noLeidos, String fotoUrl, String imagenBanner) {
         this.id = id;
         this.nombre = nombre;
         this.tipo = tipo;
@@ -32,6 +33,7 @@ public class DtConversacion {
         this.fechaUltimoMensaje = fechaUltimoMensaje;
         this.noLeidos = noLeidos;
         this.fotoUrl = fotoUrl;
+        this.imagenBanner = imagenBanner;
     }
 
     public static DtConversacion from(Conversacion conversacion) {
@@ -60,7 +62,8 @@ public class DtConversacion {
         }
 
         String nombreVisible = conversacion.getNombre();
-        String fotoVisible = null; 
+        String fotoVisible = conversacion.getFotoUrl();
+        String bannerVisible = conversacion.getImagenBanner();
 
         if (conversacion.getTipo() == TipoConversacion.PRIVADA && usuarioActualId != null) {
             Usuario otro = conversacion.getParticipantes().stream()
@@ -72,6 +75,7 @@ public class DtConversacion {
             if (otro != null) {
                 nombreVisible = otro.getUsername();
                 fotoVisible = otro.getFotoUrl();
+                bannerVisible = otro.getImagenBanner();
             }
         }
 
@@ -84,7 +88,8 @@ public class DtConversacion {
                 ultimoContenido,
                 ultimaFecha,
                 0, // Default no leidos
-                fotoVisible
+                fotoVisible,
+                bannerVisible
         );
     }
 

@@ -107,6 +107,7 @@ if (Test-Path $envFile) {
             $value = $value -replace '://db:', '://localhost:5433/'
         }
         [Environment]::SetEnvironmentVariable($name, $value, "Process")
+        Set-Item -Path "env:$name" -Value $value
     }
     Write-Success "[OK] Variables de entorno (.env) cargadas para WildFly."
 }
