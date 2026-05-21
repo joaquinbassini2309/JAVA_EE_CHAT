@@ -54,42 +54,120 @@
       </div>
     </div>
 
-    <!-- Tabs Ver canales / Lista de tareas -->
+    <!-- Tabs Mis Chats / Ver canales / Lista de tareas -->
     <div class="tabs-row">
-      <button class="tab-btn" :class="{ activo: tabActivo === 'canales' }" @click="tabActivo = 'canales'">
+      <button class="tab-btn" :class="{ activo: tabActivo === 'chats' }" @click="cambiarTab('chats')">
+        Mis Chats
+      </button>
+      <button class="tab-btn" :class="{ activo: tabActivo === 'canales' }" @click="cambiarTab('canales')">
         Ver canales de aviso
       </button>
-      <button class="tab-btn" :class="{ activo: tabActivo === 'tareas' }" @click="tabActivo = 'tareas'">
+      <button class="tab-btn" :class="{ activo: tabActivo === 'tareas' }" @click="cambiarTab('tareas')">
         Lista de tareas
       </button>
     </div>
 
     <!-- Subheader lista -->
-    <div class="seccion-titulo">
-      LISTA DE USUARIO Y MIEMBROS PARA HABLAR
+    <div class="seccion-titulo text-uppercase">
+      {{ tabActivo === 'chats' ? 'LISTA DE USUARIO Y MIEMBROS PARA HABLAR' : tabActivo === 'canales' ? 'CANALES DE AVISOS PÚBLICOS' : 'LISTA DE TAREAS' }}
     </div>
 
     <!-- Listado conversaciones -->
     <div class="listado">
-      <div
-          v-for="conversacion in conversacionesFiltradas"
-          :key="conversacion.id"
-          class="item-conversacion"
-          :class="{ activa: esActiva(conversacion) }"
-          @click="seleccionarConversacion(conversacion)"
-      >
-        <div class="avatar-mini-lista">
-          <img v-if="conversacion.fotoUrl" :src="conversacion.fotoUrl" class="avatar-img-lista" alt="avatar" />
-          <span v-else>{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id).charAt(0).toUpperCase() }}</span>
+      <!-- Tab Chats -->
+      <template v-if="tabActivo === 'chats'">
+        <div
+            v-for="conversacion in conversacionesFiltradas"
+            :key="conversacion.id"
+            class="item-conversacion"
+            :class="{ activa: esActiva(conversacion) }"
+            @click="seleccionarConversacion(conversacion)"
+        >
+          <div class="avatar-mini-lista">
+            <img v-if="conversacion.fotoUrl" :src="conversacion.fotoUrl" class="avatar-img-lista" alt="avatar" />
+            <span v-else>{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id).charAt(0).toUpperCase() }}</span>
+          </div>
+          <div class="info-conversacion" style="flex: 1; min-width: 0;">
+            <div class="d-flex align-center">
+              <span class="nombre text-truncate mr-1" style="max-width: 140px;">{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id) }}</span>
+              <v-chip v-if="conversacion.tipo === 'AVISO'" color="error" size="x-small" density="compact" variant="flat" class="px-1 text-uppercase ml-1" style="font-size: 8px; height: 14px; line-height: 14px;">Aviso</v-chip>
+            </div>
+            <span class="ultimo-msg text-truncate">{{ conversacion.ultimoMensaje || '...' }}</span>
+          </div>
         </div>
-        <div class="info-conversacion">
-          <span class="nombre">{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id) }}</span>
-          <span class="ultimo-msg">{{ conversacion.ultimoMensaje || '...' }}</span>
+        <div v-if="conversacionesFiltradas.length === 0" class="sin-resultados">
+          Sin conversaciones
         </div>
-      </div>
-      <div v-if="conversacionesFiltradas.length === 0" class="sin-resultados">
-        Sin conversaciones
-      </div>
+      </template>
+
+      <!-- Tab Canales -->
+      <template v-else-if="tabActivo === 'canales'">
+        <!-- Botón crear canal dentro del tab -->
+        <div class="canal-header-action">
+          <button class="btn-crear-canal" @click="abrirNuevoCanal">
+            <v-icon size="16" class="mr-1">mdi-plus-circle-outline</v-icon>
+            Crear nuevo canal de avisos
+          </button>
+        </div>
+
+        <div
+            v-for="canal in canalesAvisos"
+            :key="canal.id"
+            class="item-conversacion d-flex align-center justify-space-between"
+            :class="{ 'cursor-pointer': usuarioPerteneceAlCanal(canal) }"
+            @click="usuarioPerteneceAlCanal(canal) ? abrirCanalYaMiembro(canal) : null"
+        >
+          <div class="d-flex align-center" style="flex: 1; min-width: 0;">
+            <div class="avatar-mini-lista mr-3" style="background: rgba(64,109,115,0.12); color: #406D73;">
+              <v-icon size="18">mdi-bullhorn</v-icon>
+            </div>
+            <div class="info-conversacion" style="flex: 1; min-width: 0;">
+              <span class="nombre text-truncate">{{ canal.nombre }}</span>
+              <span class="ultimo-msg text-truncate">{{ canal.ultimoMensaje || 'Canal de avisos públicos' }}</span>
+            </div>
+          </div>
+
+          <div class="acciones-canal ml-2">
+            <v-chip
+                v-if="usuarioPerteneceAlCanal(canal)"
+                color="success"
+                size="small"
+                variant="tonal"
+                class="font-weight-bold"
+                style="height: 24px;"
+                @click.stop="abrirCanalYaMiembro(canal)"
+            >
+              Miembro
+            </v-chip>
+            <v-btn
+                v-else
+                color="accent"
+                size="x-small"
+                variant="flat"
+                class="font-weight-bold px-3"
+                rounded="lg"
+                height="24"
+                :loading="uniendoseCanalId === canal.id"
+                @click.stop="unirseACanal(canal)"
+            >
+              Unirse
+            </v-btn>
+          </div>
+        </div>
+        <div v-if="canalesAvisos.length === 0" class="sin-resultados d-flex flex-column align-center justify-center pa-6">
+          <v-icon size="36" color="#a0b8bc" class="mb-2">mdi-bullhorn-outline</v-icon>
+          <span>Aún no hay canales de avisos</span>
+          <span style="font-size: 11px; color: #a0b8bc; margin-top: 4px;">Sé el primero en crear uno</span>
+        </div>
+      </template>
+
+      <!-- Tab Tareas -->
+      <template v-else>
+        <div class="sin-resultados d-flex flex-column align-center justify-center pa-6">
+          <v-icon size="40" color="#a0b8bc" class="mb-2">mdi-checkbox-marked-circle-outline</v-icon>
+          <span>Sección de Tareas (Próximamente)</span>
+        </div>
+      </template>
     </div>
 
     <!-- Modal Nueva Conversación / Grupo -->
@@ -158,6 +236,83 @@
               class="btn-crear-grupo"
           >
             Crear Grupo
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Modal Nuevo Canal de Avisos -->
+    <v-dialog v-model="mostrarModalCanal" max-width="420">
+      <v-card rounded="2xl" class="modal-nueva-conv">
+        <v-card-title class="modal-titulo-conv">
+          <v-icon size="18" color="white" class="mr-2">mdi-bullhorn</v-icon>
+          Nuevo Canal de Avisos
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="cerrarModalCanal" />
+        </v-card-title>
+
+        <v-card-text class="modal-contenido-conv">
+          <!-- Nombre del canal -->
+          <div class="modal-seccion-mejorada">
+            <label class="label-input-conv">
+              <v-icon size="14" color="#406D73" class="mr-1">mdi-bullhorn-outline</v-icon>
+              Nombre del canal
+            </label>
+            <input
+                v-model="nombreCanal"
+                type="text"
+                placeholder="Ej: Comunicados Generales"
+                class="input-modal-conv"
+            />
+          </div>
+
+          <!-- Buscar miembros iniciales (opcional) -->
+          <div class="modal-busqueda-mejorada">
+            <v-icon size="16" color="#406D73" style="opacity:0.6">mdi-magnify</v-icon>
+            <input v-model="terminoCanalUsuario" type="text" placeholder="Agregar miembros (opcional)..." />
+          </div>
+          <div class="modal-listado-mejorado">
+            <div
+                v-for="usuario in usuariosFiltradosCanal"
+                :key="usuario.id"
+                class="item-usuario-mejorado"
+                @click="toggleSeleccionCanal(usuario.id)"
+            >
+              <div class="avatar-mini-modal">{{ usuario.username.charAt(0).toUpperCase() }}</div>
+              <div class="info-usuario-modal">
+                <span class="nombre">{{ usuario.username }}</span>
+                <span class="email">{{ usuario.email }}</span>
+              </div>
+              <v-checkbox
+                  :model-value="seleccionadosCanal.includes(usuario.id)"
+                  color="accent"
+                  hide-details
+                  density="compact"
+                  @click.stop
+              />
+            </div>
+          </div>
+          <div v-if="seleccionadosCanal.length > 0" class="d-flex flex-wrap gap-1 pt-1">
+            <v-chip v-for="id in seleccionadosCanal" :key="id" size="x-small" color="accent" variant="tonal" closable @click:close="toggleSeleccionCanal(id)">
+              {{ usuariosCanal.find(u => u.id === id)?.username }}
+            </v-chip>
+          </div>
+        </v-card-text>
+
+        <v-card-actions class="modal-acciones-conv">
+          <v-spacer />
+          <v-btn
+              color="accent"
+              variant="flat"
+              rounded="lg"
+              size="small"
+              :disabled="!nombreCanal.trim()"
+              :loading="creandoCanal"
+              prepend-icon="mdi-check-circle"
+              @click="crearCanal"
+              class="btn-crear-grupo"
+          >
+            Crear Canal
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -241,8 +396,117 @@ const esGrupo = ref(false)
 const nombreGrupo = ref('')
 const seleccionados = ref([])
 const usuarios = ref([])
-const tabActivo = ref('canales')
+const tabActivo = ref('chats')
 let intervaloRefresco = null
+
+// Canales de Avisos
+const canalesAvisos = ref([])
+const uniendoseCanalId = ref(null)
+const mostrarModalCanal = ref(false)
+const nombreCanal = ref('')
+const creandoCanal = ref(false)
+const terminoCanalUsuario = ref('')
+const seleccionadosCanal = ref([])
+const usuariosCanal = ref([])
+
+const cambiarTab = (tab) => {
+  tabActivo.value = tab
+  if (tab === 'canales') {
+    cargarCanalesAvisos()
+  }
+}
+
+const cargarCanalesAvisos = async () => {
+  try {
+    canalesAvisos.value = await servicioApi.obtenerCanalesAvisos()
+  } catch (error) {
+    console.error('Error al cargar canales de aviso:', error)
+  }
+}
+
+const usuarioPerteneceAlCanal = (canal) => {
+  return almacen.conversaciones.some(c => c.id === canal.id)
+}
+
+const abrirCanalYaMiembro = (canal) => {
+  const conv = almacen.conversaciones.find(c => c.id === canal.id)
+  if (conv) {
+    almacen.establecerConversacionActual(conv)
+    tabActivo.value = 'chats'
+  }
+}
+
+const unirseACanal = async (canal) => {
+  uniendoseCanalId.value = canal.id
+  try {
+    await servicioApi.unirseACanalAvisos(canal.id)
+    await cargarConversaciones()
+    
+    const conv = almacen.conversaciones.find(c => c.id === canal.id)
+    if (conv) {
+      almacen.establecerConversacionActual(conv)
+    }
+    tabActivo.value = 'chats'
+  } catch (error) {
+    console.error('Error al unirse al canal de avisos:', error)
+  } finally {
+    uniendoseCanalId.value = null
+  }
+}
+
+const abrirNuevoCanal = async () => {
+  nombreCanal.value = ''
+  terminoCanalUsuario.value = ''
+  seleccionadosCanal.value = []
+  mostrarModalCanal.value = true
+  // Cargar lista de usuarios para agregar como miembros iniciales
+  try {
+    usuariosCanal.value = await servicioApi.obtenerUsuarios()
+  } catch (e) {
+    console.error('Error al cargar usuarios para canal:', e)
+  }
+}
+
+const cerrarModalCanal = () => {
+  mostrarModalCanal.value = false
+  nombreCanal.value = ''
+  terminoCanalUsuario.value = ''
+  seleccionadosCanal.value = []
+}
+
+const toggleSeleccionCanal = (idUsuario) => {
+  const index = seleccionadosCanal.value.indexOf(idUsuario)
+  if (index === -1) seleccionadosCanal.value.push(idUsuario)
+  else seleccionadosCanal.value.splice(index, 1)
+}
+
+const crearCanal = async () => {
+  if (!nombreCanal.value.trim()) return
+  creandoCanal.value = true
+  try {
+    const nuevoCanal = await servicioApi.crearCanalAvisos(nombreCanal.value.trim())
+    
+    // Agregar miembros seleccionados al canal uno a uno
+    for (const idUsuario of seleccionadosCanal.value) {
+      try {
+        await servicioApi.añadirParticipante(nuevoCanal.id, idUsuario)
+      } catch (e) {
+        console.error('Error al agregar miembro al canal:', e)
+      }
+    }
+
+    await cargarConversaciones()
+    const canalActualizado = almacen.conversaciones.find(c => c.id === nuevoCanal.id) || nuevoCanal
+    almacen.establecerConversacionActual(canalActualizado)
+
+    cerrarModalCanal()
+    tabActivo.value = 'chats'
+  } catch (error) {
+    console.error('Error al crear canal de avisos:', error)
+  } finally {
+    creandoCanal.value = false
+  }
+}
 
 // Edición de perfil
 const mostrarModalPerfil = ref(false)
@@ -269,6 +533,16 @@ const usuariosFiltrados = computed(() => {
   let lista = usuarios.value.filter(u => u.id !== yo?.id)
   if (terminoUsuario.value) {
     const t = terminoUsuario.value.toLowerCase()
+    lista = lista.filter(u => u.username.toLowerCase().includes(t))
+  }
+  return lista
+})
+
+const usuariosFiltradosCanal = computed(() => {
+  const yo = almacen.usuarioActual
+  let lista = usuariosCanal.value.filter(u => u.id !== yo?.id)
+  if (terminoCanalUsuario.value) {
+    const t = terminoCanalUsuario.value.toLowerCase()
     lista = lista.filter(u => u.username.toLowerCase().includes(t))
   }
   return lista
@@ -598,6 +872,33 @@ const cerrarSesionLocal = () => {
   overflow-y: auto;
   min-height: 0; /* Crucial para scroll */
   background: #ffffff;
+}
+
+/* ---- Botón crear canal dentro del tab ---- */
+.canal-header-action {
+  padding: 10px 14px 6px;
+  border-bottom: 1px solid rgba(64,109,115,0.07);
+}
+
+.btn-crear-canal {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(64,109,115,0.06);
+  border: 1.5px dashed rgba(64,109,115,0.3);
+  border-radius: 10px;
+  color: #406D73;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-crear-canal:hover {
+  background: rgba(64,109,115,0.12);
+  border-color: #406D73;
 }
 
 .item-conversacion {

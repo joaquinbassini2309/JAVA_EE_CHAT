@@ -59,4 +59,12 @@ public class ManejadorConversacion {
             em.merge(c);
         }
     }
+
+    public List<Conversacion> listarCanalesAvisos() {
+        TypedQuery<Conversacion> q = em.createQuery(
+                "SELECT c FROM Conversacion c WHERE c.tipo = :tipo",
+                Conversacion.class);
+        q.setParameter("tipo", TipoConversacion.AVISO);
+        return q.getResultList();
+    }
 }

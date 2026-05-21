@@ -98,6 +98,29 @@ class ServicioAPI {
     return data
   }
 
+  async obtenerCanalesAvisos() {
+    const { data } = await this.cliente.get('/conversaciones/canales')
+    return data
+  }
+
+  async unirseACanalAvisos(canalId) {
+    const { data } = await this.cliente.post(`/conversaciones/canales/${canalId}/unirse`)
+    return data
+  }
+
+  async obtenerRolEnConversacion(idConversacion) {
+    const { data } = await this.cliente.get(`/conversaciones/${idConversacion}/rol`)
+    return data
+  }
+
+  async crearCanalAvisos(nombre) {
+    const { data } = await this.cliente.post('/conversaciones', {
+      tipo: 'AVISO',
+      nombre: nombre
+    })
+    return data
+  }
+
   async obtenerConversacion(idConversacion) {
     const { data } = await this.cliente.get(`/conversaciones/${idConversacion}`)
     return data

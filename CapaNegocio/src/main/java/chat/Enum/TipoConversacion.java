@@ -2,7 +2,8 @@ package chat.Enum;
 
 public enum TipoConversacion {
     PRIVADA("privada"),
-    GRUPO("grupo");
+    GRUPO("grupo"),
+    AVISO("aviso");
 
     private final String valor;
 

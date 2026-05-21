@@ -69,6 +69,13 @@ public class ConversacionResource {
                     .entity(new ErrorResponse(400, "Request body is required")).build();
         }
 
+        // Conversacion tipo AVISO (Canal de avisos)
+        if (dto.getTipo() == TipoConversacion.AVISO) {
+            chat.clases.Conversacion creada = sistema.crearCanalAvisos(dto.getNombre(), userId);
+            DtConversacion res = DtConversacion.from(creada, userId);
+            return Response.status(Response.Status.CREATED).entity(res).build();
+        }
+
         // Conversacion privada: Se espera exactamente 1 participante adicional
         if (dto.getTipo() == TipoConversacion.PRIVADA) {
             List<Long> participantes = dto.getParticipanteIds();
@@ -206,6 +213,63 @@ public class ConversacionResource {
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ErrorResponse(500, "Error updating role", e.getMessage())).build();
         }
+    }
+
+    @GET
+    @Path("/canales")
+    public Response listCanalesAvisos(@Context SecurityContext securityContext) {
+        Long userId = authService.getAuthenticatedUserId(securityContext);
+
+        if (userId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
+        }
+
+        List<chat.clases.Conversacion> canales = sistema.listarCanalesAvisos();
+        List<DtConversacion> dtos = canales.stream()
+                .map(canal -> DtConversacion.from(canal, userId))
+                .collect(Collectors.toList());
+
+        return Response.ok(dtos).build();
+    }
+
+    @POST
+    @Path("/canales/{id}/unirse")
+    public Response unirseACanalAvisos(@PathParam("id") Long canalId, @Context SecurityContext securityContext) {
+        Long userId = authService.getAuthenticatedUserId(securityContext);
+
+        if (userId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
+        }
+
+        try {
+            sistema.unirseACanalAvisos(canalId, userId);
+            return Response.ok("{\"message\": \"Unido exitosamente al canal de avisos\"}").build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(400, e.getMessage())).build();
+        }
+    }
+
+    @GET
+    @Path("/{id}/rol")
+    public Response getUserRoleInConversacion(@PathParam("id") Long id, @Context SecurityContext securityContext) {
+        Long userId = authService.getAuthenticatedUserId(securityContext);
+
+        if (userId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
+        }
+
+        Optional<chat.clases.Participante> partOpt = sistema.participanteHandler().buscarParticipante(id, userId);
+        if (partOpt.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponse(404, "No es participante de esta conversación")).build();
+        }
+
+        String rol = partOpt.get().getRol().toString();
+        return Response.ok("{\"rol\":\"" + rol + "\"}").build();
     }
 
     // --- DTOs ---

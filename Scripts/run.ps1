@@ -48,13 +48,13 @@ function Stop-PortProcess {
             } | Where-Object { $_ -match '^\d+$' } | Select-Object -Unique
         }
         if ($pids) {
-            foreach ($pid in $pids) {
+            foreach ($procId in $pids) {
                 try {
-                    Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
-                    Write-Warning-Custom "Puerto $Port liberado (PID $pid detenido)."
+                    Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+                    Write-Warning-Custom "Puerto $Port liberado (PID $procId detenido)."
                 }
                 catch {
-                    Write-Warning-Custom "No se pudo detener PID $pid para puerto $Port."
+                    Write-Warning-Custom "No se pudo detener PID $procId para puerto $Port."
                 }
             }
         }
@@ -201,10 +201,36 @@ Write-Info "--- INICIANDO SERVICIOS ---"
 Invoke-Step "Reiniciando contenedor Docker: $dockerName" {
     $containerId = docker ps -a --filter name=$dockerName -q 2>$null
     if (-not $containerId) {
-        throw "El contenedor $dockerName no existe. Asegúrate de crearlo primero con: docker run -d --name $dockerName -e POSTGRES_DB=chatdb -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5433:5432 postgres:15-alpine"
+        if ($AutoCreatePostgres) {
+            Write-Info "Contenedor $dockerName no existe. Creando contenedor PostgreSQL (mapeo 5433:5432)..."
+            docker run -d --name $dockerName -e POSTGRES_DB=chatdb -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5433:5432 postgres:15-alpine | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw "No se pudo crear el contenedor $dockerName" }
+            # actualizar containerId después de crear
+            $containerId = docker ps -a --filter name=$dockerName -q
+        } else {
+            throw "El contenedor $dockerName no existe. Asegúrate de crearlo primero con: docker run -d --name $dockerName -e POSTGRES_DB=chatdb -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5433:5432 postgres:15-alpine"
+        }
     }
+
+    # Si el contenedor existe, intentamos reiniciarlo
     docker stop $dockerName 2>$null >$null
     docker start $dockerName
+
+    # Esperar a que Postgres esté listo (pg_isready) con timeout
+    $maxAttempts = 30
+    $attempt = 0
+    Write-Info "Esperando a que PostgreSQL esté listo (comprobando desde dentro del contenedor)..."
+    while ($attempt -lt $maxAttempts) {
+        try {
+            $check = docker exec $dockerName pg_isready -U postgres -d chatdb 2>$null
+            if ($LASTEXITCODE -eq 0) { Write-Success "Postgres listo."; break }
+        } catch {
+            # ignorar
+        }
+        Start-Sleep -Seconds 2
+        $attempt++
+    }
+    if ($attempt -ge $maxAttempts) { Write-Warning-Custom "Advertencia: PostgreSQL no respondió dentro del timeout. Puede que siga arrancando o haya un problema." }
 }
 
 Write-Host ""

@@ -360,7 +360,7 @@ public class Sistema implements ISistema {
             throw new IllegalArgumentException("El usuario no pertenece a esta conversación");
         }
 
-        // NUEVA LÓGICA: Validar que el usuario no esté silenciado
+        // NUEVA LÓGICA: Validar que el usuario no esté silenciado o tenga permisos en canal de avisos
         Conversacion c = buscarConversacionPorId(conversacionId)
                 .orElseThrow(() -> new IllegalArgumentException("Conversación no encontrada"));
         
@@ -369,6 +369,12 @@ public class Sistema implements ISistema {
                     .orElseThrow(() -> new IllegalArgumentException("No se encontró tu participación en el grupo"));
             if (emisor.getRol() == RolParticipante.SILENCIADO) {
                 throw new IllegalArgumentException("Estás silenciado en este grupo y no puedes enviar mensajes");
+            }
+        } else if (c.getTipo() == TipoConversacion.AVISO) {
+            Participante emisor = participanteHandler().buscarParticipante(conversacionId, emisorId)
+                    .orElseThrow(() -> new IllegalArgumentException("El usuario no es participante de este canal"));
+            if (emisor.getRol() != RolParticipante.ADMIN) {
+                throw new IllegalArgumentException("Solo los administradores pueden enviar mensajes en este canal");
             }
         }
 
@@ -468,5 +474,56 @@ public class Sistema implements ISistema {
     @Override
     public String desencriptarMensaje(String contenidoEncriptado) {
         return new String(java.util.Base64.getDecoder().decode(contenidoEncriptado));
+    }
+
+    // ========== IMPLEMENTACIÓN: CANALES DE AVISOS ==========
+
+    @Override
+    public Conversacion crearCanalAvisos(String nombre, Long creadorId) {
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("El nombre del canal no puede estar vacío");
+        }
+
+        // Validar que el creador existe
+        Usuario creador = buscarUsuarioPorId(creadorId)
+                .orElseThrow(() -> new IllegalArgumentException("Creador no encontrado"));
+
+        // Crear canal
+        Conversacion canal = conversacionHandler().crearConversacion(nombre, TipoConversacion.AVISO);
+
+        // Agregar al creador como ADMIN
+        participanteHandler().agregarParticipante(canal.getId(), creadorId, RolParticipante.ADMIN);
+
+        observable.notificar(new EventoChat(EventoTipo.CONVERSACION_CREADA, canal));
+        return canal;
+    }
+
+    @Override
+    public List<Conversacion> listarCanalesAvisos() {
+        return conversacionHandler().listarCanalesAvisos();
+    }
+
+    @Override
+    public Participante unirseACanalAvisos(Long canalId, Long usuarioId) {
+        Conversacion canal = buscarConversacionPorId(canalId)
+                .orElseThrow(() -> new IllegalArgumentException("Canal no encontrado"));
+
+        if (canal.getTipo() != TipoConversacion.AVISO) {
+            throw new IllegalArgumentException("La conversación no es un canal de avisos");
+        }
+
+        // Validar que el usuario existe
+        buscarUsuarioPorId(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        // Validar que no esté ya en el canal
+        if (usuarioEstaEnConversacion(usuarioId, canalId)) {
+            throw new IllegalArgumentException("El usuario ya es miembro de este canal");
+        }
+
+        // Agregar como MIEMBRO
+        Participante p = participanteHandler().agregarParticipante(canalId, usuarioId, RolParticipante.MIEMBRO);
+        observable.notificar(new EventoChat(EventoTipo.PARTICIPANTE_AGREGADO, p));
+        return p;
     }
 }

@@ -10,8 +10,11 @@
       <div class="profile-lower">
         <div class="profile-avatar-wrap">
           <div class="avatar-cuadrado">
-            <template v-if="!esGrupo && otroUsuario?.fotoUrl">
+            <template v-if="!esGrupoOCanal && otroUsuario?.fotoUrl">
               <img :src="otroUsuario.fotoUrl" class="avatar-img" />
+            </template>
+            <template v-else-if="esAviso">
+              <v-icon size="28" color="#406D73">mdi-bullhorn</v-icon>
             </template>
             <template v-else>
               {{ conversacion.nombre?.charAt(0).toUpperCase() || 'G' }}
@@ -38,7 +41,7 @@
           <span v-else class="profile-name text-truncate">{{ conversacion.nombre }}</span>
 
           <v-btn
-              v-if="puedeGestionar && !editandoNombre"
+              v-if="puedeGestionar && !editandoNombre && !esAviso"
               icon="mdi-pencil"
               variant="text"
               size="x-small"
@@ -47,7 +50,7 @@
           />
         </div>
         <div class="profile-subtitle">
-          {{ conversacion.participantes?.length || 0 }} miembros
+          {{ esAviso ? '📣 Canal de Avisos' : '' }}{{ conversacion.participantes?.length || 0 }} miembros
         </div>
       </div>
     </div>
@@ -55,11 +58,11 @@
     <!-- Cuerpo scrolleable -->
     <div class="info-cuerpo">
 
-      <!-- Sección integrantes (solo grupos) -->
-      <div v-if="esGrupo" class="seccion">
+      <!-- Sección integrantes (grupos y canales de avisos) -->
+      <div v-if="esGrupoOCanal" class="seccion">
         <div class="seccion-titulo">
-          <v-icon size="16" color="#406D73" class="mr-1">mdi-account-group</v-icon>
-          Integrantes
+          <v-icon size="16" color="#406D73" class="mr-1">{{ esAviso ? 'mdi-bullhorn' : 'mdi-account-group' }}</v-icon>
+          {{ esAviso ? 'Miembros del Canal' : 'Integrantes' }}
         </div>
         <div class="lista-miembros">
           <div v-for="miembro in conversacion.participantes" :key="miembro.usuario.id" class="item-miembro">
@@ -103,7 +106,7 @@
       </div>
 
       <!-- Sección de perfil de usuario (solo chat privado) -->
-      <div v-else-if="otroUsuario" class="seccion-perfil">
+      <div v-else-if="!esGrupoOCanal && otroUsuario" class="seccion-perfil">
         <div class="seccion">
           <div class="seccion-titulo">
             <v-icon size="16" color="#406D73" class="mr-1">mdi-account-details</v-icon>
@@ -154,8 +157,11 @@ const nuevoNombre = ref(props.conversacion.nombre)
 const usuarioActual = computed(() => almacen.usuarioActual)
 
 const esGrupo = computed(() => props.conversacion.tipo === 'GRUPO')
+const esAviso = computed(() => props.conversacion.tipo === 'AVISO')
+const esGrupoOCanal = computed(() => esGrupo.value || esAviso.value)
 
 const otroUsuario = computed(() => {
+  if (esGrupoOCanal.value) return null
   const participante = props.conversacion.participantes?.find(p => p.usuario.id !== usuarioActual.value?.id)
   return participante?.usuario
 })

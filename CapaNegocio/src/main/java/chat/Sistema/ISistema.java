@@ -167,4 +167,8 @@ public interface ISistema {
     String encriptarMensaje(String contenido);
     String desencriptarMensaje(String contenidoEncriptado);
 
+    // ========== CASOS DE USO: CANALES DE AVISOS ==========
+    Conversacion crearCanalAvisos(String nombre, Long creadorId);
+    List<Conversacion> listarCanalesAvisos();
+    Participante unirseACanalAvisos(Long canalId, Long usuarioId);
 }

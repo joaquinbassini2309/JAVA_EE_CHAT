@@ -18,7 +18,7 @@
           <div class="profile-title-row">
             <span class="profile-name text-truncate">{{ destinatario.nombre }}</span>
             <div class="encabezado-acciones" @click.stop>
-              <v-btn icon="mdi-account-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirModalAñadir" title="Añadir miembro" />
+              <v-btn v-if="!esAviso || rolUsuario === 'ADMIN'" icon="mdi-account-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirModalAñadir" title="Añadir miembro" />
               <span class="badge-estado" :class="estadoUsuario">{{ estadoUsuario }}</span>
               <v-btn icon="mdi-close" variant="flat" color="error" size="small" density="comfortable" @click="cerrarConversacion" title="Cerrar conversación" />
             </div>
@@ -150,8 +150,12 @@
 
       <v-divider style="opacity:0.2; border-color:#406D73;" />
 
-      <!-- Barra de entrada -->
-      <div class="entrada-mensaje">
+      <!-- Barra de entrada o Banner de Solo Lectura -->
+      <div v-if="esAviso && rolUsuario !== 'ADMIN'" class="read-only-banner d-flex align-center justify-center pa-4 text-subtitle-2 font-weight-bold" style="background: rgba(64,109,115,0.08); border-top: 1px solid rgba(0,0,0,0.1); color: #406D73; gap: 8px;">
+        <v-icon size="18" color="#406D73">mdi-lock</v-icon>
+        Solo los administradores pueden enviar mensajes en este canal.
+      </div>
+      <div v-else class="entrada-mensaje">
         <!-- Nuevo: input de archivo oculto -->
         <input
             ref="fileInput"
@@ -216,6 +220,23 @@ const conversacionActual = computed(() => almacen.conversacionActual)
 const usuarioActual = computed(() => almacen.usuarioActual)
 const mensajes = computed(() => almacen.mensajes)
 const esGrupo = computed(() => conversacionActual.value?.tipo === 'GRUPO')
+const esAviso = computed(() => conversacionActual.value?.tipo === 'AVISO')
+const rolUsuario = ref('ADMIN')
+
+const determinarRolUsuario = async () => {
+  if (!conversacionActual.value) return
+  if (esAviso.value) {
+    try {
+      const res = await servicioApi.obtenerRolEnConversacion(conversacionActual.value.id)
+      rolUsuario.value = res.rol || 'MIEMBRO'
+    } catch (error) {
+      console.error('Error al obtener rol en canal de avisos:', error)
+      rolUsuario.value = 'MIEMBRO'
+    }
+  } else {
+    rolUsuario.value = 'ADMIN'
+  }
+}
 
 const destinatario = computed(() => {
   if (!conversacionActual.value) return { nombre: 'Chat', iniciales: '?' }
@@ -481,6 +502,7 @@ const cerrarConversacion = () => {
 
 watch(conversacionActual, (nueva, vieja) => {
   if (nueva && nueva.id !== vieja?.id) {
+    determinarRolUsuario()
     cargarMensajes()
     conectarWS()
   }
@@ -488,6 +510,7 @@ watch(conversacionActual, (nueva, vieja) => {
 
 onMounted(() => {
   if (conversacionActual.value) {
+    determinarRolUsuario()
     cargarMensajes()
     conectarWS()
   }
