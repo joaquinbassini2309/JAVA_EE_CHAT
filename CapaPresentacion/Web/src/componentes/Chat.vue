@@ -18,9 +18,7 @@
           <div class="profile-title-row">
             <span class="profile-name text-truncate">{{ destinatario.nombre }}</span>
             <div class="encabezado-acciones" @click.stop>
-              <v-btn icon="mdi-account-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirModalAñadir" title="Añadir miembro" />
-              <v-btn v-if="!esAviso || rolUsuario === 'ADMIN'" icon="mdi-account-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirModalAñadir" title="Añadir miembro" />
-              <span class="badge-estado" :class="estadoUsuario">{{ estadoUsuario }}</span>
+              <v-btn v-if="(esGrupo || esAviso) && (!esAviso || rolUsuario === 'ADMIN')" icon="mdi-account-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirModalAñadir" title="Añadir miembro" />
               <v-btn icon="mdi-close" variant="flat" color="error" size="small" density="comfortable" @click="cerrarConversacion" title="Cerrar conversación" />
             </div>
           </div>
@@ -396,11 +394,11 @@ const handleFileSelected = async (event) => {
   const f = event.target.files && event.target.files[0]
   if (!f) return
 
-  // Tamaño máximo consistente con backend (10 MB)
-  const MAX_BYTES = 10 * 1024 * 1024
+  // Tamaño máximo consistente con backend (15 MB)
+  const MAX_BYTES = 15 * 1024 * 1024
   if (f.size > MAX_BYTES) {
     console.error('Archivo demasiado grande')
-    alert('El archivo supera el tamaño máximo permitido (10 MB).')
+    alert('El archivo supera el tamaño máximo permitido (15 MB).')
     return
   }
 

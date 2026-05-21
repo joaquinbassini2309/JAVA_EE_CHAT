@@ -47,42 +47,58 @@
         <!-- profile subtitle removed -->
 
         <!-- Buscador y Filtro -->
-        <div class="d-flex align-center gap-2 mt-2">
+        <div class="campo-busqueda" style="margin-top: 10px; padding-left: 4px;">
           <v-menu :close-on-content-click="false" location="bottom start">
             <template v-slot:activator="{ props }">
-              <v-btn 
-                variant="flat" 
-                color="#ffffff" 
-                class="rounded-lg"
-                width="38"
-                height="38"
-                min-width="38"
-                style="color: #406D73; border: 1px solid rgba(64,109,115,0.22); padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" 
+              <button 
                 v-bind="props" 
                 title="Filtrar conversaciones"
+                style="display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; color: #406D73; padding: 4px; border-radius: 6px; transition: background 0.2s;"
+                onmouseover="this.style.background='rgba(64,109,115,0.1)'"
+                onmouseout="this.style.background='none'"
               >
-                <v-icon>mdi-filter-variant</v-icon>
-              </v-btn>
+                <v-icon size="20">mdi-filter-variant</v-icon>
+              </button>
             </template>
-            <v-card min-width="220" rounded="lg">
-              <v-list density="compact">
-                <v-list-subheader class="font-weight-bold text-uppercase" style="font-size: 11px; color: #406D73;">Mostrar en lista</v-list-subheader>
-                <v-list-item>
-                  <v-checkbox-btn v-model="filtrosSeleccionados" label="Contactos" value="PRIVADA" color="#406D73" hide-details></v-checkbox-btn>
-                </v-list-item>
-                <v-list-item>
-                  <v-checkbox-btn v-model="filtrosSeleccionados" label="Grupos" value="GRUPO" color="#406D73" hide-details></v-checkbox-btn>
-                </v-list-item>
-                <v-list-item>
-                  <v-checkbox-btn v-model="filtrosSeleccionados" label="Canales de aviso" value="AVISO" color="#406D73" hide-details></v-checkbox-btn>
-                </v-list-item>
+            <v-card min-width="220" rounded="2xl" class="border-sm border-opacity-25" style="border-color: #406D73 !important; overflow: hidden; box-shadow: 0 8px 24px rgba(64,109,115,0.15) !important;">
+              <v-card-title class="modal-titulo-mejorado px-4 py-3" style="background-color: #406D73; color: white; font-size: 14px;">
+                <v-icon size="16" class="mr-2">mdi-filter-variant</v-icon>
+                Mostrar en lista
+              </v-card-title>
+              <v-list density="compact" class="py-2" bg-color="#ffffff" style="overflow-x: hidden;">
+                <template v-if="tabActivo === 'chats'">
+                  <v-list-item>
+                    <v-checkbox-btn v-model="filtrosSeleccionados" label="Contactos" value="PRIVADA" color="#406D73" hide-details></v-checkbox-btn>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-checkbox-btn v-model="filtrosSeleccionados" label="Grupos" value="GRUPO" color="#406D73" hide-details></v-checkbox-btn>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-checkbox-btn v-model="filtrosSeleccionados" label="Canales de aviso" value="AVISO" color="#406D73" hide-details></v-checkbox-btn>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-checkbox-btn v-model="filtrosSeleccionados" label="Lista de tareas" value="TAREAS" color="#406D73" hide-details></v-checkbox-btn>
+                  </v-list-item>
+                </template>
+                <template v-else-if="tabActivo === 'tareas'">
+                  <v-list-item>
+                    <v-checkbox-btn v-model="filtrosTareas" label="Tareas pendientes" value="PENDIENTES" color="#406D73" hide-details></v-checkbox-btn>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-checkbox-btn v-model="filtrosTareas" label="Tareas completadas" value="COMPLETADAS" color="#406D73" hide-details></v-checkbox-btn>
+                  </v-list-item>
+                </template>
+                <template v-else>
+                  <v-list-item>
+                    <v-list-item-title class="text-caption text-center text-grey my-2">Solo filtro por texto</v-list-item-title>
+                  </v-list-item>
+                </template>
               </v-list>
             </v-card>
           </v-menu>
-          <div class="campo-busqueda" style="flex: 1; margin: 0;">
-            <v-icon size="16" color="#406D73" style="opacity:0.6">mdi-magnify</v-icon>
-            <input v-model="termino" type="text" placeholder="Buscar contactos" />
-          </div>
+          <div style="width: 1px; height: 16px; background: rgba(64,109,115,0.2); margin: 0 2px;"></div>
+          <v-icon size="16" color="#406D73" style="opacity:0.6">mdi-magnify</v-icon>
+          <input v-model="termino" type="text" placeholder="Buscar contactos" style="flex: 1;" />
         </div>
       </div>
     </div>
@@ -144,7 +160,7 @@
         </div>
 
         <div
-            v-for="canal in canalesAvisos"
+            v-for="canal in canalesFiltrados"
             :key="canal.id"
             class="item-conversacion d-flex align-center justify-space-between"
             :class="{ 'cursor-pointer': usuarioPerteneceAlCanal(canal) }"
@@ -187,7 +203,7 @@
             </v-btn>
           </div>
         </div>
-        <div v-if="canalesAvisos.length === 0" class="sin-resultados d-flex flex-column align-center justify-center pa-6">
+        <div v-if="canalesFiltrados.length === 0" class="sin-resultados d-flex flex-column align-center justify-center pa-6">
           <v-icon size="36" color="#a0b8bc" class="mb-2">mdi-bullhorn-outline</v-icon>
           <span>Aún no hay canales de avisos</span>
           <span style="font-size: 11px; color: #a0b8bc; margin-top: 4px;">Sé el primero en crear uno</span>
@@ -204,7 +220,7 @@
         </div>
 
         <div
-            v-for="tarea in tareasDelUsuario"
+            v-for="tarea in tareasFiltradas"
             :key="tarea.id"
             class="item-conversacion d-flex align-center justify-space-between"
             style="cursor: pointer;"
@@ -220,7 +236,7 @@
             </div>
           </div>
         </div>
-        <div v-if="tareasDelUsuario.length === 0" class="sin-resultados d-flex flex-column align-center justify-center pa-6">
+        <div v-if="tareasFiltradas.length === 0" class="sin-resultados d-flex flex-column align-center justify-center pa-6">
           <v-icon size="36" color="#a0b8bc" class="mb-2">mdi-clipboard-check-outline</v-icon>
           <span>Aún no hay tareas creadas</span>
         </div>
@@ -490,6 +506,7 @@ const seleccionados = ref([])
 const usuarios = ref([])
 const tabActivo = ref('chats')
 const filtrosSeleccionados = ref(['PRIVADA', 'GRUPO', 'AVISO'])
+const filtrosTareas = ref(['PENDIENTES', 'COMPLETADAS'])
 let intervaloRefresco = null
 
 // Canales de Avisos
@@ -614,10 +631,40 @@ const conversacionesActuales = computed(() => almacen.conversacionesOrdenadas)
 const conversacionActual = computed(() => almacen.conversacionActual)
 
 const conversacionesFiltradas = computed(() => {
-  let lista = conversacionesActuales.value.filter(c => filtrosSeleccionados.value.includes(c.tipo))
+  let lista = conversacionesActuales.value.filter(c => {
+    if (String(c.id).startsWith('tareas_')) {
+      return filtrosSeleccionados.value.includes('TAREAS')
+    }
+    return filtrosSeleccionados.value.includes(c.tipo)
+  })
   if (termino.value) {
     const t = termino.value.toLowerCase()
     lista = lista.filter(c => obtenerNombreVisibleConversacion(c, usuarioActual.value?.id).toLowerCase().includes(t))
+  }
+  return lista
+})
+
+const canalesFiltrados = computed(() => {
+  let lista = canalesAvisos.value
+  if (termino.value) {
+    const t = termino.value.toLowerCase()
+    lista = lista.filter(c => c.nombre.toLowerCase().includes(t))
+  }
+  return lista
+})
+
+const tareasFiltradas = computed(() => {
+  let lista = tareasDelUsuario.value
+  
+  lista = lista.filter(t => {
+    if (t.completada && filtrosTareas.value.includes('COMPLETADAS')) return true;
+    if (!t.completada && filtrosTareas.value.includes('PENDIENTES')) return true;
+    return false;
+  })
+
+  if (termino.value) {
+    const t = termino.value.toLowerCase()
+    lista = lista.filter(tItem => tItem.contenido.toLowerCase().includes(t))
   }
   return lista
 })
