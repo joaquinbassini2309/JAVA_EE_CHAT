@@ -54,7 +54,7 @@ public class DtConversacion {
                 .collect(Collectors.toList());
 
         String ultimoContenido = "..."; 
-        LocalDateTime ultimaFecha = LocalDateTime.now();
+        LocalDateTime ultimaFecha = conversacion.getFechaCreacion();
         
         if (ultimoM != null) {
             ultimoContenido = ultimoM.getContenido();
