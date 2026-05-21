@@ -237,7 +237,7 @@ class ServicioAPI {
       }
   }
 
-  async crearTarea(userId, contenido, fechaVencimiento) {
+  async crearTarea(userId, titulo, contenido, fechaVencimiento) {
       if (!userId) throw new Error('userId required')
       const key = this._keyTareas(userId)
       const raw = localStorage.getItem(key)
@@ -246,6 +246,7 @@ class ServicioAPI {
           id: Date.now(),
           conversacionId: `tareas_${userId}`,
           emisorId: userId,
+          titulo: titulo || '',
           contenido: contenido || '',
           fechaEnvio: new Date().toISOString(),
           fechaVencimiento: fechaVencimiento || null,

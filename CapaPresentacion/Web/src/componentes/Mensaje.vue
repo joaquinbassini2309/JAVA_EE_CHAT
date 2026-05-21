@@ -10,7 +10,7 @@
           <label class="tarea-checkbox">
             <input type="checkbox" :checked="mensaje.completada" @change.prevent="toggleCompletada" :disabled="cargando" />
           </label>
-          <div class="tarea-titulo">{{ mensaje.contenido }}</div>
+          <div class="tarea-titulo">{{ mensaje.titulo || 'Sin título' }}</div>
           <div class="tarea-acciones">
             <v-menu>
               <template v-slot:activator="{ props }">
@@ -26,6 +26,9 @@
               </v-list>
             </v-menu>
           </div>
+        </div>
+        <div v-if="mensaje.contenido" class="tarea-cuerpo">
+          {{ mensaje.contenido }}
         </div>
         <div v-if="mensaje.fechaVencimiento" class="tarea-footer">
           <v-icon size="14" class="mr-1">mdi-calendar-clock</v-icon>
@@ -141,6 +144,7 @@ const toggleCompletada = async () => {
         const payload = {
             id: props.mensaje.id,
             completada: !props.mensaje.completada,
+            titulo: props.mensaje.titulo,
             contenido: props.mensaje.contenido,
             fechaVencimiento: props.mensaje.fechaVencimiento
         }
@@ -150,6 +154,7 @@ const toggleCompletada = async () => {
             id: actualizado.id,
             conversacionId: props.mensaje.conversacionId || `tareas_${usuarioActual.value.id}`,
             emisorId: actualizado.emisorId || usuarioActual.value.id,
+            titulo: actualizado.titulo,
             contenido: actualizado.contenido,
             fechaEnvio: actualizado.fechaEnvio || props.mensaje.fechaEnvio,
             tipo: 'TAREA',
@@ -347,6 +352,17 @@ const toggleCompletada = async () => {
 .tarea-card.completada .tarea-titulo {
   text-decoration: line-through;
   color: #5a8a94;
+}
+.tarea-cuerpo {
+  font-size: 14px;
+  color: #4a6c72;
+  margin-top: 8px;
+  padding-left: 38px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+.tarea-card.completada .tarea-cuerpo {
+  opacity: 0.7;
 }
 .tarea-footer {
   margin-top: 12px;

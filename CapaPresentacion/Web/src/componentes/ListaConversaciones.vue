@@ -141,7 +141,14 @@
               <span class="nombre text-truncate mr-1" style="max-width: 140px;">{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id) }}</span>
               <v-chip v-if="conversacion.tipo === 'AVISO'" color="error" size="x-small" density="compact" variant="flat" class="px-1 text-uppercase ml-1" style="font-size: 8px; height: 14px; line-height: 14px;">Aviso</v-chip>
             </div>
-            <span class="ultimo-msg text-truncate">{{ conversacion.ultimoMensaje || '...' }}</span>
+            <span class="ultimo-msg text-truncate">
+              <template v-if="String(conversacion.id).startsWith('tareas_')">
+                {{ tareasPendientesCount === 1 ? '1 tarea pendiente' : (tareasPendientesCount + ' tareas pendientes') }}
+              </template>
+              <template v-else>
+                {{ conversacion.ultimoMensaje || '...' }}
+              </template>
+            </span>
           </div>
         </div>
         <div v-if="conversacionesFiltradas.length === 0" class="sin-resultados">
@@ -213,7 +220,7 @@
       <!-- Tab Tareas -->
       <template v-else>
         <div class="canal-header-action">
-          <button class="btn-crear-canal" @click="mostrarModalTarea = true">
+          <button class="btn-crear-canal" @click="abrirModalTarea">
             <v-icon size="16" class="mr-1">mdi-plus-circle-outline</v-icon>
             Crear nueva tarea
           </button>
@@ -222,17 +229,15 @@
         <div
             v-for="tarea in tareasFiltradas"
             :key="tarea.id"
-            class="item-conversacion d-flex align-center justify-space-between"
-            style="cursor: pointer;"
-            @click="toggleCompletadaLista(tarea)"
+            class="item-conversacion tarea-item"
         >
-          <div class="d-flex align-center" style="flex: 1; min-width: 0;">
-            <div class="avatar-mini-lista mr-3" :style="tarea.completada ? 'background: #6A9E7D; color: white;' : 'background: rgba(64,109,115,0.12); color: #406D73;'">
+          <div class="item-left" style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+            <div class="avatar-mini-lista tarea-avatar" :style="tarea.completada ? 'background: #6A9E7D; color: white;' : 'background: rgba(64,109,115,0.12); color: #406D73;'" @click.stop="toggleCompletadaLista(tarea)">
               <v-icon size="18">{{ tarea.completada ? 'mdi-check' : 'mdi-format-list-bulleted' }}</v-icon>
             </div>
-            <div class="info-conversacion" style="flex: 1; min-width: 0;">
-              <span class="nombre text-truncate" :style="tarea.completada ? 'text-decoration: line-through; opacity: 0.6;' : ''">{{ tarea.contenido }}</span>
-              <span class="ultimo-msg text-truncate">{{ tarea.fechaVencimiento ? 'Vence: ' + formatearFecha(tarea.fechaVencimiento) : 'Sin fecha de vencimiento' }}</span>
+            <div class="info-conversacion tarea-info" style="flex: 1; min-width: 0;">
+              <div class="nombre text-truncate" :style="tarea.completada ? 'text-decoration: line-through; opacity: 0.6;' : ''">{{ tarea.titulo || tarea.contenido || 'Sin título' }}</div>
+              <div class="ultimo-msg text-truncate">{{ tarea.fechaVencimiento ? 'Vence: ' + formatearFecha(tarea.fechaVencimiento) : 'Sin fecha de vencimiento' }}</div>
             </div>
           </div>
         </div>
@@ -403,10 +408,17 @@
         <v-card-text class="modal-contenido-conv">
           <div class="modal-seccion-mejorada">
             <label class="label-input-conv">
-              <v-icon size="14" color="#406D73" class="mr-1">mdi-pencil</v-icon>
-              Contenido de la tarea
+              <v-icon size="14" color="#406D73" class="mr-1">mdi-format-title</v-icon>
+              Nombre
             </label>
-            <input v-model="nuevaTareaContenido" type="text" placeholder="Ej: Revisar el informe" class="input-modal-conv" />
+            <input ref="inputNuevaTareaTitulo" v-model.trim="nuevaTareaTitulo" type="text" placeholder="Ej: Revisar el informe" class="input-modal-conv" />
+          </div>
+          <div class="modal-seccion-mejorada mt-4">
+            <label class="label-input-conv">
+              <v-icon size="14" color="#406D73" class="mr-1">mdi-text</v-icon>
+              Contenido
+            </label>
+            <textarea v-model="nuevaTareaContenido" placeholder="Detalles de la tarea..." class="input-modal-conv" rows="2" style="resize:none; padding:10px; font-family: inherit; width: 100%; border: 1px solid #B2C5C8; border-radius: 8px;"></textarea>
           </div>
           <div class="modal-seccion-mejorada mt-4">
             <label class="label-input-conv">
@@ -416,9 +428,9 @@
             <input type="date" v-model="nuevaTareaFecha" class="input-modal-conv" />
           </div>
         </v-card-text>
-        <v-card-actions class="modal-acciones-conv">
+        <v-card-actions class="modal-acciones-conv" style="justify-content: flex-end;">
           <v-spacer />
-          <v-btn color="accent" variant="flat" rounded="lg" size="small" :disabled="!nuevaTareaContenido.trim()" :loading="creandoTareaLocal" prepend-icon="mdi-check-circle" @click="crearTareaLocal">
+          <v-btn color="accent" variant="tonal" rounded="lg" size="small" :disabled="!nuevaTareaTitulo.trim()" :loading="creandoTareaLocal" prepend-icon="mdi-check-circle" @click="crearTareaLocal">
             Crear Tarea
           </v-btn>
         </v-card-actions>
@@ -488,7 +500,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
@@ -706,6 +718,7 @@ const seleccionarConversacion = async (conversacion) => {
                 id: t.id,
                 conversacionId: conversacion.id,
                 emisorId: t.emisorId,
+                titulo: t.titulo,
                 contenido: t.contenido,
                 fechaEnvio: t.fechaEnvio,
                 tipo: 'TAREA',
@@ -789,6 +802,7 @@ const abrirListaTareas = async () => {
             id: t.id,
             conversacionId: convId,
             emisorId: t.emisorId,
+            titulo: t.titulo,
             contenido: t.contenido,
             fechaEnvio: t.fechaEnvio,
             tipo: 'TAREA',
@@ -935,47 +949,109 @@ const tareasDelUsuario = computed(() => {
   return almacen.mensajes.filter(m => m.tipo === 'TAREA')
 })
 
+// Contador de tareas pendientes (para mostrar en la lista de conversaciones)
+const tareasPendientesCount = ref(0)
+
+const refrescarContadorTareas = async () => {
+  try {
+    if (!usuarioActual.value) { tareasPendientesCount.value = 0; return }
+    const todas = await servicioApi.obtenerTareas(usuarioActual.value.id)
+    tareasPendientesCount.value = todas.filter(t => !t.completada).length
+  } catch (e) {
+    console.error('Error al obtener tareas para contador:', e)
+    tareasPendientesCount.value = 0
+  }
+}
+
+onMounted(() => {
+  // refrescar contador al montar
+  refrescarContadorTareas()
+})
+
+// Actualizar contador cuando cambian las tareas en el almacen o cambia el usuario
+watch(() => almacen.mensajes, () => {
+  // Si hay mensajes de tipo TAREA en el almacen, recalcular
+  if (almacen.mensajes.some(m => m.tipo === 'TAREA')) refrescarContadorTareas()
+}, { deep: true })
+
+watch(usuarioActual, () => {
+  refrescarContadorTareas()
+})
+
+// Estado para Modal Tarea Local
 const mostrarModalTarea = ref(false)
+const nuevaTareaTitulo = ref('')
 const nuevaTareaContenido = ref('')
 const nuevaTareaFecha = ref('')
 const creandoTareaLocal = ref(false)
 
+const abrirModalTarea = () => {
+  mostrarModalTarea.value = true
+  nuevaTareaTitulo.value = ''
+  nuevaTareaContenido.value = ''
+  nuevaTareaFecha.value = ''
+}
+
 const cerrarModalTarea = () => {
   mostrarModalTarea.value = false
+  nuevaTareaTitulo.value = ''
   nuevaTareaContenido.value = ''
   nuevaTareaFecha.value = ''
 }
 
 const crearTareaLocal = async () => {
-  if (!nuevaTareaContenido.value.trim() || !usuarioActual.value) return
+  if (!nuevaTareaTitulo.value.trim() || !usuarioActual.value) return
   creandoTareaLocal.value = true
   try {
-    await servicioApi.crearTarea(
+    const nueva = await servicioApi.crearTarea(
       usuarioActual.value.id,
+      nuevaTareaTitulo.value.trim(),
       nuevaTareaContenido.value.trim(),
       nuevaTareaFecha.value || null
     )
+    
+    const convId = `tareas_${usuarioActual.value.id}`
+    const nuevaComoMensaje = {
+      id: nueva.id,
+      conversacionId: convId,
+      emisorId: nueva.emisorId || usuarioActual.value.id,
+      titulo: nueva.titulo,
+      contenido: nueva.contenido,
+      fechaEnvio: nueva.fechaEnvio,
+      tipo: 'TAREA',
+      fechaVencimiento: nueva.fechaVencimiento || null,
+      completada: !!nueva.completada
+    }
+
+    almacen.establecerMensajes([...(almacen.mensajes || []), nuevaComoMensaje])
+    
+    const convIdx = almacen.conversaciones.findIndex(c => String(c.id) === convId)
+    if (convIdx !== -1) {
+      const conv = almacen.conversaciones[convIdx]
+      conv.ultimoMensaje = nueva.contenido
+      conv.fechaUltimoMensaje = nueva.fechaEnvio
+      almacen.establecerConversaciones([...almacen.conversaciones])
+    }
+
+    refrescarContadorTareas()
     cerrarModalTarea()
-    await abrirListaTareas() // refresca la lista
-  } catch (e) {
-    console.error('Error creando tarea', e)
+  } catch (error) {
+    console.error('Error al crear tarea:', error)
   } finally {
     creandoTareaLocal.value = false
   }
 }
 
 const toggleCompletadaLista = async (tarea) => {
+  if (!usuarioActual.value) return
   try {
-    const payload = {
-      id: tarea.id,
-      completada: !tarea.completada,
-      contenido: tarea.contenido,
-      fechaVencimiento: tarea.fechaVencimiento
-    }
-    const actualizado = await servicioApi.actualizarTarea(usuarioActual.value.id, payload)
-    almacen.actualizarMensaje({ ...tarea, completada: actualizado.completada })
-  } catch (e) {
-    console.error(e)
+    const nuevoEstado = !tarea.completada
+    tarea.completada = nuevoEstado
+    await servicioApi.actualizarEstadoTarea(usuarioActual.value.id, tarea.id, nuevoEstado)
+    refrescarContadorTareas()
+  } catch (error) {
+    console.error('Error al actualizar estado de la tarea:', error)
+    tarea.completada = !tarea.completada
   }
 }
 </script>
@@ -1170,6 +1246,31 @@ const toggleCompletadaLista = async (tarea) => {
   overflow-y: auto;
   min-height: 0; /* Crucial para scroll */
   background: #ffffff;
+}
+
+/* Ajustes específicos para items de la lista de tareas: alinear título/contenido a la derecha del avatar */
+.tarea-item {
+  cursor: pointer;
+}
+.tarea-item .tarea-avatar {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tarea-item .tarea-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.tarea-item .tarea-info .nombre {
+  font-weight: 600;
+}
+.tarea-item .tarea-info .ultimo-msg {
+  font-size: 12px;
+  color: #7f9ea4;
 }
 
 /* ---- Botón crear canal dentro del tab ---- */
@@ -1774,7 +1875,6 @@ const toggleCompletadaLista = async (tarea) => {
   overflow: hidden !important;
   box-shadow: 0 8px 24px rgba(64, 109, 115, 0.15) !important;
   border: 1px solid rgba(64, 109, 115, 0.08) !important;
-  background: white !important;
 }
 .menu-perfil-flotante .v-list, .menu-mensaje-flotante .v-list {
   padding: 4px 0 !important;

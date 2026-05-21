@@ -131,8 +131,14 @@
           <v-card-title class="modal-titulo">Nueva tarea</v-card-title>
           <v-card-text>
             <div style="display:flex;flex-direction:column;gap:10px;padding:8px 4px;">
-              <div style="font-weight:700;color:#2f4a4f">Contenido</div>
-              <div style="background:#f7fcfd;padding:10px;border-radius:8px;border:1px solid rgba(64,109,115,0.06);">{{ textoPendiente }}</div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <label style="font-weight:700;color:#2f4a4f">Nombre</label>
+                <input type="text" v-model="textoPendienteTitulo" style="padding:8px;border-radius:8px;border:1px solid #B2C5C8;background:#fff;" />
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <label style="font-weight:700;color:#2f4a4f">Contenido</label>
+                <textarea v-model="textoPendienteContenido" style="padding:8px;border-radius:8px;border:1px solid #B2C5C8;background:#fff;" rows="3"></textarea>
+              </div>
               <div style="display:flex;flex-direction:column;gap:6px;">
                 <label style="font-weight:700;color:#2f4a4f">Fecha de vencimiento (opcional)</label>
                 <input type="date" v-model="fechaVencInput" style="padding:8px;border-radius:8px;border:1px solid #B2C5C8;background:#fff;" />
@@ -142,7 +148,7 @@
           <v-card-actions>
             <v-spacer />
             <v-btn text @click="cancelarCrearTarea">Cancelar</v-btn>
-            <v-btn color="accent" variant="flat" @click="confirmarCrearTarea" :loading="creandoTarea">Crear</v-btn>
+            <v-btn color="accent" variant="flat" @click="confirmarCrearTarea" :loading="creandoTarea" :disabled="!textoPendienteTitulo.trim()">Crear</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -198,13 +204,14 @@
           <v-icon size="18" color="#406D73" style="opacity:0.75">mdi-paperclip</v-icon>
           <span class="btn-texto">Archivos adjunto</span>
         </button>
-        <input
+        <textarea
             v-model="contenidoNuevo"
             class="input-mensaje"
-            type="text"
             :placeholder="String(conversacionActual?.id).startsWith('tareas_') ? 'Escribe una nueva tarea aquí...' : 'Barra de escribir mensajes'"
-            @keyup.enter="enviarMensaje"
-        />
+            @keydown="handleKeydown"
+            rows="1"
+            style="resize: none; overflow-y: hidden;"
+        ></textarea>
         <button class="btn-enviar" @click="enviarMensaje" :disabled="!contenidoNuevo.trim()">
           <v-icon size="16">mdi-send</v-icon>
           <span class="btn-texto">Enviar mensaje</span>
@@ -241,7 +248,8 @@ const mensajeParaInfo = ref(null)
 // Modal fecha y estado de creación de tarea
 const mostrarModalFecha = ref(false)
 const fechaVencInput = ref(null)
-const textoPendiente = ref('')
+const textoPendienteTitulo = ref('')
+const textoPendienteContenido = ref('')
 const creandoTarea = ref(false)
 
 // Nuevo: input de archivo y estado de subida
@@ -496,6 +504,13 @@ const conectarWS = () => {
   }
 }
 
+const handleKeydown = (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    enviarMensaje()
+  }
+}
+
 const enviarMensaje = async () => {
   if (!contenidoNuevo.value.trim() || !conversacionActual.value) return
   const texto = contenidoNuevo.value.trim()
@@ -507,7 +522,9 @@ const enviarMensaje = async () => {
     // Si estamos en la conversación de tareas local, crear tarea local
     if (String(conversacionActual.value.id).startsWith('tareas_')) {
       // Abrir modal para seleccionar fecha y confirmar la tarea
-      textoPendiente.value = texto
+      const lineas = texto.split('\n')
+      textoPendienteTitulo.value = lineas[0] || ''
+      textoPendienteContenido.value = lineas.slice(1).join('\n') || ''
       fechaVencInput.value = null
       mostrarModalFecha.value = true
       return
@@ -607,18 +624,20 @@ onUnmounted(() => {
 
 const cancelarCrearTarea = () => {
   mostrarModalFecha.value = false
-  textoPendiente.value = ''
+  textoPendienteTitulo.value = ''
+  textoPendienteContenido.value = ''
   fechaVencInput.value = null
 }
 
 const confirmarCrearTarea = async () => {
-  if (!textoPendiente.value || !usuarioActual.value) return
+  if (!textoPendienteTitulo.value || !usuarioActual.value) return
   creandoTarea.value = true
   try {
     // Crear tarea en el "servicio local"
     const nueva = await servicioApi.crearTarea(
         usuarioActual.value.id,
-        textoPendiente.value,
+        textoPendienteTitulo.value,
+        textoPendienteContenido.value,
         fechaVencInput.value || null
     )
 
@@ -627,6 +646,7 @@ const confirmarCrearTarea = async () => {
       id: nueva.id,
       conversacionId: nueva.conversacionId || `tareas_${usuarioActual.value.id}`,
       emisorId: nueva.emisorId || usuarioActual.value.id,
+      titulo: nueva.titulo,
       contenido: nueva.contenido,
       fechaEnvio: nueva.fechaEnvio,
       tipo: 'TAREA',
@@ -656,7 +676,9 @@ const confirmarCrearTarea = async () => {
     }
 
     mostrarModalFecha.value = false
-    textoPendiente.value = ''
+    // Limpiar los campos correctos (nombre y contenido de la tarea)
+    textoPendienteTitulo.value = ''
+    textoPendienteContenido.value = ''
     fechaVencInput.value = null
 
     await scrollToBottom()
@@ -1175,7 +1197,7 @@ const confirmarCrearTarea = async () => {
     gap: 8px;
   }
 
-  .btn-adjunto, .input-mensaje, .btn-enviar {
+  .btn-adjunto, .btn-enviar {
     width: 100%;
   }
 }
