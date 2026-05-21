@@ -15,7 +15,8 @@
             </template>
             <template v-else-if="esAviso">
               <v-icon size="28" color="#406D73">mdi-bullhorn</v-icon>
-            <template v-if="conversacion.fotoUrl">
+            </template>
+            <template v-else-if="conversacion.fotoUrl">
               <img :src="conversacion.fotoUrl" class="avatar-img" />
             </template>
             <template v-else>
