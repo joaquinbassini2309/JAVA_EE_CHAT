@@ -101,8 +101,8 @@
                   <v-list-item-title>Nombrar Miembro</v-list-item-title>
                 </v-list-item>
                 <v-divider />
-                <v-list-item @click="cambiarRol(miembro.usuario.id, 'SILENCIADO')" class="text-warning">
-                  <v-list-item-title>Silenciar</v-list-item-title>
+                <v-list-item @click="cambiarRol(miembro.usuario.id, miembro.rol === 'SILENCIADO' ? 'MIEMBRO' : 'SILENCIADO')" :class="miembro.rol === 'SILENCIADO' ? 'text-success' : 'text-warning'">
+                  <v-list-item-title>{{ miembro.rol === 'SILENCIADO' ? 'Desilenciar' : 'Silenciar' }}</v-list-item-title>
                 </v-list-item>
                 <v-list-item @click="abrirConfirmacionEliminar(miembro.usuario)" class="text-error">
                   <v-list-item-title>Eliminar del grupo</v-list-item-title>
@@ -242,8 +242,8 @@ const gruposEnComun = computed(() => {
   const convs = almacen.conversaciones || [];
   return convs.filter(c =>
       c.tipo === 'GRUPO' &&
-      c.participanteIds?.includes(usuarioActual.value?.id) &&
-      c.participanteIds?.includes(otroUsuario.value?.id)
+      c.participantes?.some(p => p.usuario.id === usuarioActual.value?.id) &&
+      c.participantes?.some(p => p.usuario.id === otroUsuario.value?.id)
   );
 })
 

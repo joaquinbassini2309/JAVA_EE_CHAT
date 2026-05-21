@@ -115,14 +115,14 @@ export const useAlmacen = defineStore('principal', () => {
   function actualizarRolParticipante(conversacionId, participanteId, nuevoRol) {
     const conv = conversaciones.value.find(c => c.id === conversacionId)
     if (conv?.participantes) {
-      const pIndex = conv.participantes.findIndex(p => p.id === participanteId)
+      const pIndex = conv.participantes.findIndex(p => p.usuario.id === participanteId)
       if (pIndex !== -1) {
         conv.participantes[pIndex].rol = nuevoRol
         conv.participantes = [...conv.participantes]
       }
     }
     if (conversacionActual.value?.id === conversacionId) {
-      const pIndex = conversacionActual.value.participantes.findIndex(p => p.id === participanteId)
+      const pIndex = conversacionActual.value.participantes.findIndex(p => p.usuario.id === participanteId)
       if (pIndex !== -1) {
         conversacionActual.value.participantes[pIndex].rol = nuevoRol
         conversacionActual.value.participantes = [...conversacionActual.value.participantes]
