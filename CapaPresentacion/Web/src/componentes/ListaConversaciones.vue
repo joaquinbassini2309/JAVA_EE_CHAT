@@ -46,10 +46,43 @@
         </div>
         <!-- profile subtitle removed -->
 
-        <!-- Buscador -->
-        <div class="campo-busqueda">
-          <v-icon size="16" color="#406D73" style="opacity:0.6">buscar</v-icon>
-          <input v-model="termino" type="text" placeholder="Buscar contactos" />
+        <!-- Buscador y Filtro -->
+        <div class="d-flex align-center gap-2 mt-2">
+          <v-menu :close-on-content-click="false" location="bottom start">
+            <template v-slot:activator="{ props }">
+              <v-btn 
+                variant="flat" 
+                color="#ffffff" 
+                class="rounded-lg"
+                width="38"
+                height="38"
+                min-width="38"
+                style="color: #406D73; border: 1px solid rgba(64,109,115,0.22); padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" 
+                v-bind="props" 
+                title="Filtrar conversaciones"
+              >
+                <v-icon>mdi-filter-variant</v-icon>
+              </v-btn>
+            </template>
+            <v-card min-width="220" rounded="lg">
+              <v-list density="compact">
+                <v-list-subheader class="font-weight-bold text-uppercase" style="font-size: 11px; color: #406D73;">Mostrar en lista</v-list-subheader>
+                <v-list-item>
+                  <v-checkbox-btn v-model="filtrosSeleccionados" label="Contactos" value="PRIVADA" color="#406D73" hide-details></v-checkbox-btn>
+                </v-list-item>
+                <v-list-item>
+                  <v-checkbox-btn v-model="filtrosSeleccionados" label="Grupos" value="GRUPO" color="#406D73" hide-details></v-checkbox-btn>
+                </v-list-item>
+                <v-list-item>
+                  <v-checkbox-btn v-model="filtrosSeleccionados" label="Canales de aviso" value="AVISO" color="#406D73" hide-details></v-checkbox-btn>
+                </v-list-item>
+              </v-list>
+            </v-card>
+          </v-menu>
+          <div class="campo-busqueda" style="flex: 1; margin: 0;">
+            <v-icon size="16" color="#406D73" style="opacity:0.6">mdi-magnify</v-icon>
+            <input v-model="termino" type="text" placeholder="Buscar contactos" />
+          </div>
         </div>
       </div>
     </div>
@@ -456,6 +489,7 @@ const nombreGrupo = ref('')
 const seleccionados = ref([])
 const usuarios = ref([])
 const tabActivo = ref('chats')
+const filtrosSeleccionados = ref(['PRIVADA', 'GRUPO', 'AVISO'])
 let intervaloRefresco = null
 
 // Canales de Avisos
@@ -580,10 +614,10 @@ const conversacionesActuales = computed(() => almacen.conversacionesOrdenadas)
 const conversacionActual = computed(() => almacen.conversacionActual)
 
 const conversacionesFiltradas = computed(() => {
-  let lista = conversacionesActuales.value
+  let lista = conversacionesActuales.value.filter(c => filtrosSeleccionados.value.includes(c.tipo))
   if (termino.value) {
     const t = termino.value.toLowerCase()
-    lista = lista.filter(c => (c.nombre || 'Chat').toLowerCase().includes(t))
+    lista = lista.filter(c => obtenerNombreVisibleConversacion(c, usuarioActual.value?.id).toLowerCase().includes(t))
   }
   return lista
 })
