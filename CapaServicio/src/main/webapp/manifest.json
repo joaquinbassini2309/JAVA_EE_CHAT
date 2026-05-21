@@ -1,0 +1,23 @@
+{
+  "short_name": "ChatEE",
+  "name": "Chat Empresarial",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./",
+  "background_color": "#e4f6f9",
+  "theme_color": "#406D73",
+  "display": "standalone",
+  "orientation": "portrait"
+}
