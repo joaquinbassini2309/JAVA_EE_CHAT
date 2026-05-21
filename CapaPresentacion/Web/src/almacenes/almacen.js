@@ -87,6 +87,27 @@ export const useAlmacen = defineStore('principal', () => {
     conversaciones.value.unshift(conversacion)
   }
 
+  // Nueva: actualizar un mensaje existente
+  function actualizarMensaje(mensajeActualizado) {
+    const idx = mensajes.value.findIndex(m => m.id === mensajeActualizado.id)
+    if (idx === -1) return null
+    const actualizado = { ...mensajes.value[idx], ...mensajeActualizado }
+    const copia = [...mensajes.value]
+    copia[idx] = actualizado
+    mensajes.value = copia
+
+    // Si corresponde, actualizar metadatos de la conversación
+    const convIdx = conversaciones.value.findIndex(c => c.id === actualizado.conversacionId)
+    if (convIdx !== -1) {
+      const conv = conversaciones.value[convIdx]
+      conv.ultimoMensaje = actualizado.contenido
+      conv.fechaUltimoMensaje = actualizado.fechaEnvio || conv.fechaUltimoMensaje
+      conversaciones.value = [...conversaciones.value]
+    }
+
+    return actualizado
+  }
+
   function actualizarEstadoUsuario(idUsuario, nuevoEstado) {
     conversaciones.value.forEach(conv => {
       if (conv.participantes) {
@@ -203,6 +224,7 @@ export const useAlmacen = defineStore('principal', () => {
     establecerMensajes,
     agregarConversacion,
     agregarMensaje,
+    actualizarMensaje,
     actualizarInfoConversacion,
     actualizarRolParticipante,
     eliminarParticipante,

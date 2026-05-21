@@ -127,6 +127,28 @@
         </v-card>
       </v-dialog>
 
+      <!-- Modal Crear Tarea(fecha más amigable) -->
+      <v-dialog v-model="mostrarModalFecha" max-width="480">
+        <v-card rounded="lg">
+          <v-card-title class="modal-titulo">Nueva tarea</v-card-title>
+          <v-card-text>
+            <div style="display:flex;flex-direction:column;gap:10px;padding:8px 4px;">
+              <div style="font-weight:700;color:#2f4a4f">Contenido</div>
+              <div style="background:#f7fcfd;padding:10px;border-radius:8px;border:1px solid rgba(64,109,115,0.06);">{{ textoPendiente }}</div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <label style="font-weight:700;color:#2f4a4f">Fecha de vencimiento (opcional)</label>
+                <input type="date" v-model="fechaVencInput" style="padding:8px;border-radius:8px;border:1px solid #B2C5C8;background:#fff;" />
+              </div>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn text @click="cancelarCrearTarea">Cancelar</v-btn>
+            <v-btn color="accent" variant="flat" @click="confirmarCrearTarea" :loading="creandoTarea">Crear</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <!-- Área de mensajes -->
       <div ref="contenedorMensajes" class="contenedor-mensajes">
         <!-- Botón Cargar Más -->
@@ -182,7 +204,7 @@
             v-model="contenidoNuevo"
             class="input-mensaje"
             type="text"
-            placeholder="Barra de escribir mensajes"
+            :placeholder="String(conversacionActual?.id).startsWith('tareas_') ? 'Escribe una nueva tarea aquí...' : 'Barra de escribir mensajes'"
             @keyup.enter="enviarMensaje"
         />
         <button class="btn-enviar" @click="enviarMensaje" :disabled="!contenidoNuevo.trim()">
@@ -217,6 +239,12 @@ const terminoUsuario = ref('')
 const usuariosDisponibles = ref([])
 const mostrarModalInfo = ref(false)
 const mensajeParaInfo = ref(null)
+
+// Modal fecha y estado de creación de tarea
+const mostrarModalFecha = ref(false)
+const fechaVencInput = ref(null)
+const textoPendiente = ref('')
+const creandoTarea = ref(false)
 
 // Nuevo: input de archivo y estado de subida
 const fileInput = ref(null)
@@ -286,6 +314,34 @@ const scrollToBottom = async () => {
 
 const cargarMensajes = async () => {
   if (!conversacionActual.value) return
+
+  // Si es la conversación de tareas local, no llamar al backend
+  if (String(conversacionActual.value.id).startsWith('tareas_')) {
+    try {
+      if (!usuarioActual.value) return
+      const userId = usuarioActual.value.id
+      const tareas = await servicioApi.obtenerTareas(userId)
+
+      const mensajesTareas = tareas.map(t => ({
+        id: t.id,
+        conversacionId: conversacionActual.value.id,
+        emisorId: t.emisorId,
+        contenido: t.contenido,
+        fechaEnvio: t.fechaEnvio,
+        tipo: 'TAREA',
+        fechaVencimiento: t.fechaVencimiento,
+        completada: !!t.completada
+      }))
+
+      almacen.establecerMensajes(mensajesTareas)
+      await nextTick()
+      scrollToBottom()
+    } catch (e) {
+      console.error('Error cargando tareas en Chat:', e)
+    }
+    return
+  }
+
   try {
     offsetMensajes.value = 0
     todosCargados.value = false
@@ -423,6 +479,9 @@ const añadirMiembro = async (idUsuario) => {
 const conectarWS = () => {
   if (ws.value) ws.value.close()
   if (conversacionActual.value && usuarioActual.value) {
+    // No conectar WebSocket para la conversación de tareas local
+    if (String(conversacionActual.value.id).startsWith('tareas_')) return
+
     const token = almacen.token
     ws.value = servicioApi.conectarWebSocket(
         conversacionActual.value.id,
@@ -447,6 +506,15 @@ const enviarMensaje = async () => {
   const esPrimerMensaje = mensajes.value.length === 0 && !esGrupo.value;
   
   try {
+    // Si estamos en la conversación de tareas local, crear tarea local
+    if (String(conversacionActual.value.id).startsWith('tareas_')) {
+      // Abrir modal para seleccionar fecha y confirmar la tarea
+      textoPendiente.value = texto
+      fechaVencInput.value = null
+      mostrarModalFecha.value = true
+      return
+    }
+
     if (esPrimerMensaje) {
       // Enviar mensaje de cifrado ANTES del mensaje del usuario
       const cifradoMsg = await servicioApi.enviarMensaje({
@@ -484,6 +552,26 @@ const mostrarInfoMensaje = (mensaje) => {
 
 const eliminarMensaje = async (mensaje) => {
   try {
+    // Si es tarea local, eliminar usando servicio local
+    if (String(conversacionActual.value.id).startsWith('tareas_')) {
+      await servicioApi.eliminarTarea(usuarioActual.value.id, mensaje.id)
+      // Remover del almacen
+      const nuevos = almacen.mensajes.filter(m => m.id !== mensaje.id)
+      almacen.establecerMensajes(nuevos)
+      // Actualizar metadatos de la conversación sintética (último mensaje)
+      const convId = conversacionActual.value.id
+      const convIdx = almacen.conversaciones.findIndex(c => c.id === convId)
+      if (convIdx !== -1) {
+        const conv = almacen.conversaciones[convIdx]
+        const ultimo = nuevos.length ? (nuevos[nuevos.length - 1].contenido || '') : null
+        conv.ultimoMensaje = ultimo
+        conv.fechaUltimoMensaje = nuevos.length ? nuevos[nuevos.length - 1].fechaEnvio : null
+        // Forzar actualización de la lista
+        almacen.establecerConversaciones([...almacen.conversaciones])
+      }
+      return
+    }
+
     await servicioApi.eliminarMensaje(mensaje.id)
     // Marcar el mensaje como eliminado
     mensaje.eliminado = true
@@ -499,6 +587,8 @@ const cerrarConversacion = () => {
 
 watch(conversacionActual, (nueva, vieja) => {
   if (nueva && nueva.id !== vieja?.id) {
+    // Limpiar mensajes inmediatamente para evitar mostrar mensajes de la conversación previa
+    almacen.establecerMensajes([])
     determinarRolUsuario()
     cargarMensajes()
     conectarWS()
@@ -516,6 +606,69 @@ onMounted(() => {
 onUnmounted(() => {
   if (ws.value) ws.value.close()
 })
+
+const cancelarCrearTarea = () => {
+  mostrarModalFecha.value = false
+  textoPendiente.value = ''
+  fechaVencInput.value = null
+}
+
+const confirmarCrearTarea = async () => {
+  if (!textoPendiente.value || !usuarioActual.value) return
+  creandoTarea.value = true
+  try {
+    // Crear tarea en el "servicio local"
+    const nueva = await servicioApi.crearTarea(
+        usuarioActual.value.id,
+        textoPendiente.value,
+        fechaVencInput.value || null
+    )
+
+    // Añadir a mensajes del almacen
+    const nuevaComoMensaje = {
+      id: nueva.id,
+      conversacionId: nueva.conversacionId || `tareas_${usuarioActual.value.id}`,
+      emisorId: nueva.emisorId || usuarioActual.value.id,
+      contenido: nueva.contenido,
+      fechaEnvio: nueva.fechaEnvio,
+      tipo: 'TAREA',
+      fechaVencimiento: nueva.fechaVencimiento || null,
+      completada: !!nueva.completada
+    }
+
+    const listaMensajes = [...(almacen.mensajes || []), nuevaComoMensaje]
+    almacen.establecerMensajes(listaMensajes)
+
+    // Actualizar / crear conversación sintética de tareas
+    const convId = `tareas_${usuarioActual.value.id}`
+    const idx = almacen.conversaciones.findIndex(c => String(c.id) === convId)
+    if (idx === -1) {
+      almacen.agregarConversacion({
+        id: convId,
+        nombre: 'Tareas',
+        tipo: 'TAREAS',
+        ultimoMensaje: nueva.contenido,
+        fechaUltimoMensaje: nueva.fechaEnvio
+      })
+    } else {
+      const conv = almacen.conversaciones[idx]
+      conv.ultimoMensaje = nueva.contenido
+      conv.fechaUltimoMensaje = nueva.fechaEnvio
+      almacen.establecerConversaciones([...almacen.conversaciones])
+    }
+
+    mostrarModalFecha.value = false
+    textoPendiente.value = ''
+    fechaVencInput.value = null
+
+    await scrollToBottom()
+  } catch (e) {
+    console.error('Error creando tarea:', e)
+    alert('No se pudo crear la tarea. Intenta nuevamente.')
+  } finally {
+    creandoTarea.value = false
+  }
+}
 </script>
 
 <style scoped>

@@ -2,8 +2,40 @@
   <div v-if="esMensajeSistema" class="mensaje-sistema">
     {{ mensaje.contenido }}
   </div>
-  <div v-else class="burbuja-wrap" :class="{ propio }">
-    <div class="burbuja" :class="propio ? 'burbuja-me' : 'burbuja-them'">
+  <div v-else>
+    <!-- Renderizado especial para tareas locales como tarjeta ancha -->
+    <div v-if="esTarea && esConversacionTareas" class="tarea-container">
+      <div class="tarea-card" :class="{ 'completada': mensaje.completada }">
+        <div class="tarea-header">
+          <label class="tarea-checkbox">
+            <input type="checkbox" :checked="mensaje.completada" @change.prevent="toggleCompletada" :disabled="cargando" />
+          </label>
+          <div class="tarea-titulo">{{ mensaje.contenido }}</div>
+          <div class="tarea-acciones">
+            <v-menu>
+              <template v-slot:activator="{ props }">
+                <v-btn icon="mdi-dots-vertical" size="x-small" variant="text" color="#406D73" v-bind="props" />
+              </template>
+              <v-list>
+                <v-list-item @click="$emit('ver-info', mensaje)" prepend-icon="mdi-information">
+                  <v-list-item-title>Info</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="$emit('eliminar', mensaje)" class="text-error" prepend-icon="mdi-delete">
+                  <v-list-item-title>Eliminar</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </div>
+        </div>
+        <div v-if="mensaje.fechaVencimiento" class="tarea-footer">
+          <v-icon size="14" class="mr-1">mdi-calendar-clock</v-icon>
+          Vence: {{ formatearFecha(mensaje.fechaVencimiento) }}
+        </div>
+      </div>
+    </div>
+    <!-- Fin tarjeta tarea -->
+    <div v-else class="burbuja-wrap" :class="{ propio }">
+      <div class="burbuja" :class="propio ? 'burbuja-me' : 'burbuja-them'">
       <span v-if="mostrarNombre" class="nombre-emisor">{{ mensaje.emisorNombre }}</span>
       <p class="contenido" :class="{ eliminado: mensaje.eliminado }">
         {{ mensaje.eliminado ? 'Mensaje eliminado' : (mensaje.contenido && !esSoloAdjunto ? mensaje.contenido : '') }}
@@ -46,11 +78,13 @@
       </v-menu>
     </div>
   </div>
+  </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
+import { servicioApi } from '@/servicios/api'
 import { formatearFecha } from '@/utilidades/formateoFechas'
 
 const props = defineProps({
@@ -93,6 +127,42 @@ const esDocumentoAdjunto = computed(() => {
 const esSoloAdjunto = computed(() => {
   return (!props.mensaje.contenido || props.mensaje.contenido.trim() === '') && !!props.mensaje.urlAdjunto
 })
+
+// Tipo tarea
+const esTarea = computed(() => String(tipoCampo.value)?.toUpperCase() === 'TAREA' || String(props.mensaje.tipo)?.toUpperCase() === 'TAREA')
+const esConversacionTareas = computed(() => String(almacen.conversacionActual?.id || '').startsWith('tareas_'))
+const cargando = ref(false)
+
+const toggleCompletada = async () => {
+    if (!esTarea.value) return
+    if (!usuarioActual.value) return
+    cargando.value = true
+    try {
+        const payload = {
+            id: props.mensaje.id,
+            completada: !props.mensaje.completada,
+            contenido: props.mensaje.contenido,
+            fechaVencimiento: props.mensaje.fechaVencimiento
+        }
+        const actualizado = await servicioApi.actualizarTarea(usuarioActual.value.id, payload)
+        // Mapear el resultado (tarea) al formato de mensaje que usa la app
+        const mensajeActualizado = {
+            id: actualizado.id,
+            conversacionId: props.mensaje.conversacionId || `tareas_${usuarioActual.value.id}`,
+            emisorId: actualizado.emisorId || usuarioActual.value.id,
+            contenido: actualizado.contenido,
+            fechaEnvio: actualizado.fechaEnvio || props.mensaje.fechaEnvio,
+            tipo: 'TAREA',
+            fechaVencimiento: actualizado.fechaVencimiento || null,
+            completada: !!actualizado.completada
+        }
+        almacen.actualizarMensaje(mensajeActualizado)
+    } catch (e) {
+        console.error('Error actualizando tarea:', e)
+    } finally {
+        cargando.value = false
+    }
+}
 </script>
 
 <style scoped>
@@ -223,4 +293,69 @@ const esSoloAdjunto = computed(() => {
   color: #2f4a4f;
   margin-top: 6px;
 }
+
+/* Estilos de Tarea */
+.tarea-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 8px 16px;
+  margin: 6px 0;
+}
+.tarea-card {
+  width: 100%;
+  max-width: 600px;
+  background: linear-gradient(145deg, #ffffff, #f7fcfd);
+  border-radius: 12px;
+  padding: 16px 20px;
+  border: 1px solid rgba(64,109,115,0.15);
+  box-shadow: 0 4px 12px rgba(64,109,115,0.08);
+  transition: all 0.2s ease;
+}
+.tarea-card.completada {
+  opacity: 0.7;
+  background: #f0f7f8;
+  border-color: rgba(106, 158, 125, 0.3);
+}
+.tarea-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(64,109,115,0.12);
+}
+.tarea-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.tarea-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tarea-checkbox input {
+  width: 22px;
+  height: 22px;
+  accent-color: #6A9E7D;
+  cursor: pointer;
+}
+.tarea-titulo {
+  flex: 1;
+  font-size: 16px;
+  color: #2a4d52;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.tarea-card.completada .tarea-titulo {
+  text-decoration: line-through;
+  color: #5a8a94;
+}
+.tarea-footer {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #6A9E7D;
+  font-weight: 500;
+  padding-left: 38px;
+  display: flex;
+  align-items: center;
+}
+
 </style>

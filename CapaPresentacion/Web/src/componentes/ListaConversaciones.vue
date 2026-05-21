@@ -163,9 +163,33 @@
 
       <!-- Tab Tareas -->
       <template v-else>
-        <div class="sin-resultados d-flex flex-column align-center justify-center pa-6">
-          <v-icon size="40" color="#a0b8bc" class="mb-2">mdi-checkbox-marked-circle-outline</v-icon>
-          <span>Sección de Tareas (Próximamente)</span>
+        <div class="canal-header-action">
+          <button class="btn-crear-canal" @click="mostrarModalTarea = true">
+            <v-icon size="16" class="mr-1">mdi-plus-circle-outline</v-icon>
+            Crear nueva tarea
+          </button>
+        </div>
+
+        <div
+            v-for="tarea in tareasDelUsuario"
+            :key="tarea.id"
+            class="item-conversacion d-flex align-center justify-space-between"
+            style="cursor: pointer;"
+            @click="toggleCompletadaLista(tarea)"
+        >
+          <div class="d-flex align-center" style="flex: 1; min-width: 0;">
+            <div class="avatar-mini-lista mr-3" :style="tarea.completada ? 'background: #6A9E7D; color: white;' : 'background: rgba(64,109,115,0.12); color: #406D73;'">
+              <v-icon size="18">{{ tarea.completada ? 'mdi-check' : 'mdi-format-list-bulleted' }}</v-icon>
+            </div>
+            <div class="info-conversacion" style="flex: 1; min-width: 0;">
+              <span class="nombre text-truncate" :style="tarea.completada ? 'text-decoration: line-through; opacity: 0.6;' : ''">{{ tarea.contenido }}</span>
+              <span class="ultimo-msg text-truncate">{{ tarea.fechaVencimiento ? 'Vence: ' + formatearFecha(tarea.fechaVencimiento) : 'Sin fecha de vencimiento' }}</span>
+            </div>
+          </div>
+        </div>
+        <div v-if="tareasDelUsuario.length === 0" class="sin-resultados d-flex flex-column align-center justify-center pa-6">
+          <v-icon size="36" color="#a0b8bc" class="mb-2">mdi-clipboard-check-outline</v-icon>
+          <span>Aún no hay tareas creadas</span>
         </div>
       </template>
     </div>
@@ -318,6 +342,40 @@
       </v-card>
     </v-dialog>
 
+    <!-- Modal Nueva Tarea -->
+    <v-dialog v-model="mostrarModalTarea" max-width="420">
+      <v-card rounded="2xl" class="modal-nueva-conv">
+        <v-card-title class="modal-titulo-conv">
+          <v-icon size="18" color="white" class="mr-2">mdi-checkbox-marked-circle-outline</v-icon>
+          Nueva Tarea
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="cerrarModalTarea" />
+        </v-card-title>
+        <v-card-text class="modal-contenido-conv">
+          <div class="modal-seccion-mejorada">
+            <label class="label-input-conv">
+              <v-icon size="14" color="#406D73" class="mr-1">mdi-pencil</v-icon>
+              Contenido de la tarea
+            </label>
+            <input v-model="nuevaTareaContenido" type="text" placeholder="Ej: Revisar el informe" class="input-modal-conv" />
+          </div>
+          <div class="modal-seccion-mejorada mt-4">
+            <label class="label-input-conv">
+              <v-icon size="14" color="#406D73" class="mr-1">mdi-calendar</v-icon>
+              Fecha de vencimiento (Opcional)
+            </label>
+            <input type="date" v-model="nuevaTareaFecha" class="input-modal-conv" />
+          </div>
+        </v-card-text>
+        <v-card-actions class="modal-acciones-conv">
+          <v-spacer />
+          <v-btn color="accent" variant="flat" rounded="lg" size="small" :disabled="!nuevaTareaContenido.trim()" :loading="creandoTareaLocal" prepend-icon="mdi-check-circle" @click="crearTareaLocal">
+            Crear Tarea
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Modal Editar Perfil -->
     <v-dialog v-model="mostrarModalPerfil" max-width="420">
       <v-card rounded="2xl" class="modal-editar-perfil">
@@ -381,10 +439,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
+import { formatearFecha } from '@/utilidades/formateoFechas'
 import { useRouter } from 'vue-router'
 
 const almacen = useAlmacen()
@@ -408,6 +467,7 @@ const creandoCanal = ref(false)
 const terminoCanalUsuario = ref('')
 const seleccionadosCanal = ref([])
 const usuariosCanal = ref([])
+const tareasCargando = ref(false)
 
 const cambiarTab = (tab) => {
   tabActivo.value = tab
@@ -549,20 +609,125 @@ const usuariosFiltradosCanal = computed(() => {
 })
 
 const esActiva = (conversacion) => conversacionActual.value?.id === conversacion.id
-const seleccionarConversacion = (conversacion) => almacen.establecerConversacionActual(conversacion)
+const seleccionarConversacion = async (conversacion) => {
+    // Limpiar mensajes inmediatamente para no mostrar mensajes de la conversación anterior
+    almacen.establecerMensajes([])
+    almacen.establecerConversacionActual(conversacion)
+
+    // Si se selecciona la conversación sintética de tareas, asegurarse de cargar las tareas locales
+    if (String(conversacion.id).startsWith('tareas_')) {
+        try {
+            if (!usuarioActual.value) return
+            const userId = usuarioActual.value.id
+            const tareas = await servicioApi.obtenerTareas(userId)
+
+            const mensajesTareas = tareas.map(t => ({
+                id: t.id,
+                conversacionId: conversacion.id,
+                emisorId: t.emisorId,
+                contenido: t.contenido,
+                fechaEnvio: t.fechaEnvio,
+                tipo: 'TAREA',
+                fechaVencimiento: t.fechaVencimiento,
+                completada: !!t.completada
+            }))
+
+            almacen.establecerMensajes(mensajesTareas)
+            // Marcar la pestaña como 'tareas' para mantener coherencia visual
+            tabActivo.value = 'tareas'
+        } catch (error) {
+            console.error('Error cargando tareas al seleccionar conversación:', error)
+        }
+    } else {
+        // Cualquier otra conversación debe deseleccionar la pestaña de tareas
+        tabActivo.value = 'chats'
+    }
+}
 
 const cargarConversaciones = async () => {
-  try {
-    const convs = await servicioApi.obtenerConversaciones()
-    almacen.establecerConversaciones(convs)
-  } catch (error) {
-    console.error('Error al refrescar conversaciones:', error)
-  }
+    try {
+        const convs = await servicioApi.obtenerConversaciones()
+        // Preservar cualquier conversación sintética de tareas que exista localmente
+        const sinteticas = almacen.conversaciones.filter(c => String(c.id).startsWith('tareas_'))
+        // Filtrar duplicados entre lo obtenido del servidor y las sintéticas
+        const convsFiltradas = [...convs]
+        sinteticas.forEach(s => {
+            if (!convsFiltradas.find(c => c.id === s.id)) {
+                convsFiltradas.unshift(s)
+            }
+        })
+
+        almacen.establecerConversaciones(convsFiltradas)
+    } catch (error) {
+        console.error('Error al refrescar conversaciones:', error)
+    }
 }
 
 onMounted(() => {
-  cargarConversaciones()
-  intervaloRefresco = setInterval(cargarConversaciones, 2000)
+    cargarConversaciones()
+    intervaloRefresco = setInterval(cargarConversaciones, 5000)
+    // Si la app inicia en pestaña tareas
+    if (tabActivo.value === 'tareas') abrirListaTareas()
+})
+
+// Nuevo: abrir lista de tareas como conversación conmigo mismo
+const abrirListaTareas = async () => {
+    if (!usuarioActual.value) return
+    tareasCargando.value = true
+    try {
+        const userId = usuarioActual.value.id
+        const tareas = await servicioApi.obtenerTareas(userId)
+
+        // Crear conversacion sintética para tareas
+        const convId = `tareas_${userId}`
+        const conv = {
+            id: convId,
+            tipo: 'PRIVADA',
+            nombre: 'Lista de tareas',
+            participanteIds: [userId],
+            ultimoMensaje: tareas.length ? (tareas[tareas.length - 1].contenido || '') : null,
+            fechaUltimoMensaje: tareas.length ? tareas[tareas.length - 1].fechaEnvio : null,
+            fechaCreacion: new Date().toISOString()
+        }
+
+        // Añadir la conversación sintética al almacen si no existe para que aparezca en la lista
+        const existe = almacen.conversaciones.find(c => c.id === convId)
+        if (!existe) {
+            almacen.agregarConversacion(conv)
+        } else {
+            // Si existe, actualizar sus metadatos relevantes
+            existe.ultimoMensaje = conv.ultimoMensaje
+            existe.fechaUltimoMensaje = conv.fechaUltimoMensaje
+        }
+
+        // Establecer en el almacen
+        almacen.establecerConversacionActual(conv)
+
+        // Mapear tareas a mensajes que el componente Chat entiende
+        const mensajesTareas = tareas.map(t => ({
+            id: t.id,
+            conversacionId: convId,
+            emisorId: t.emisorId,
+            contenido: t.contenido,
+            fechaEnvio: t.fechaEnvio,
+            tipo: 'TAREA',
+            fechaVencimiento: t.fechaVencimiento,
+            completada: !!t.completada
+        }))
+
+        almacen.establecerMensajes(mensajesTareas)
+    } catch (error) {
+        console.error('No se pudo cargar lista de tareas:', error)
+    } finally {
+        tareasCargando.value = false
+    }
+}
+
+// Cuando el usuario cambia de pestaña
+watch(tabActivo, (nuevo) => {
+    if (nuevo === 'tareas') {
+        abrirListaTareas()
+    }
 })
 
 onUnmounted(() => {
@@ -682,6 +847,55 @@ const cerrarSesionLocal = () => {
     ? '/chat-empresarial' 
     : ''
   window.location.href = `${contextPath}/login`
+}
+
+const tareasDelUsuario = computed(() => {
+  if (tabActivo.value !== 'tareas') return []
+  return almacen.mensajes.filter(m => m.tipo === 'TAREA')
+})
+
+const mostrarModalTarea = ref(false)
+const nuevaTareaContenido = ref('')
+const nuevaTareaFecha = ref('')
+const creandoTareaLocal = ref(false)
+
+const cerrarModalTarea = () => {
+  mostrarModalTarea.value = false
+  nuevaTareaContenido.value = ''
+  nuevaTareaFecha.value = ''
+}
+
+const crearTareaLocal = async () => {
+  if (!nuevaTareaContenido.value.trim() || !usuarioActual.value) return
+  creandoTareaLocal.value = true
+  try {
+    await servicioApi.crearTarea(
+      usuarioActual.value.id,
+      nuevaTareaContenido.value.trim(),
+      nuevaTareaFecha.value || null
+    )
+    cerrarModalTarea()
+    await abrirListaTareas() // refresca la lista
+  } catch (e) {
+    console.error('Error creando tarea', e)
+  } finally {
+    creandoTareaLocal.value = false
+  }
+}
+
+const toggleCompletadaLista = async (tarea) => {
+  try {
+    const payload = {
+      id: tarea.id,
+      completada: !tarea.completada,
+      contenido: tarea.contenido,
+      fechaVencimiento: tarea.fechaVencimiento
+    }
+    const actualizado = await servicioApi.actualizarTarea(usuarioActual.value.id, payload)
+    almacen.actualizarMensaje({ ...tarea, completada: actualizado.completada })
+  } catch (e) {
+    console.error(e)
+  }
 }
 </script>
 
