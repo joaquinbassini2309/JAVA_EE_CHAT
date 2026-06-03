@@ -556,6 +556,14 @@ public class Sistema implements ISistema {
         if (grupoId != null) {
             grupo = buscarConversacionPorId(grupoId)
                     .orElseThrow(() -> new IllegalArgumentException("Grupo no encontrado"));
+            
+            // Validar que el creador es ADMIN o MODERADOR del grupo
+            Participante p = participanteHandler().buscarParticipante(grupoId, creadorId)
+                    .orElseThrow(() -> new IllegalArgumentException("No eres miembro de este grupo"));
+            
+            if (p.getRol() != RolParticipante.ADMIN && p.getRol() != RolParticipante.MODERADOR) {
+                throw new IllegalArgumentException("Solo los administradores o moderadores pueden crear tareas en este grupo");
+            }
         }
 
         chat.clases.Tarea tarea = new chat.clases.Tarea();

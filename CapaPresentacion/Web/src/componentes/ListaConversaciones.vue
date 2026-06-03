@@ -36,15 +36,27 @@
         </div>
 
         <div class="user-actions-row">
-          <v-hover v-slot="{ isHovering, props }">
-            <v-btn v-bind="props" icon="mdi-account-multiple-plus" :variant="isHovering ? 'flat' : 'outlined'" color="#406D73" size="small" @click="abrirNuevoGrupo" title="Nuevo grupo" class="header-action-btn teal-hover-white" rounded />
-          </v-hover>
-          <v-hover v-slot="{ isHovering, props }">
-            <v-btn v-bind="props" icon="mdi-message-plus" :variant="isHovering ? 'flat' : 'outlined'" color="#406D73" size="small" @click="abrirNuevaConversacion" title="Nueva conversación" class="header-action-btn teal-hover-white" rounded />
-          </v-hover>
-          <v-hover v-slot="{ isHovering, props }">
-            <v-btn v-bind="props" icon="mdi-logout" :variant="isHovering ? 'flat' : 'outlined'" color="error" size="small" @click="cerrarSesionLocal" title="Cerrar sesión" class="header-action-btn" rounded />
-          </v-hover>
+          <button
+            @click="abrirNuevoGrupo"
+            title="Nuevo grupo"
+            class="btn-cabecera-accion"
+          >
+            <v-icon size="17">mdi-account-group</v-icon>
+          </button>
+          <button
+            @click="abrirNuevaConversacion"
+            title="Nueva conversación"
+            class="btn-cabecera-accion"
+          >
+            <v-icon size="17">mdi-chat-plus</v-icon>
+          </button>
+          <button
+            @click="cerrarSesionLocal"
+            title="Cerrar sesión"
+            class="btn-cabecera-accion btn-logout"
+          >
+            <v-icon size="17">mdi-logout</v-icon>
+          </button>
         </div>
       </div>
 
@@ -1194,19 +1206,41 @@ const esConversacionFavorita = (conversacion) => {
   flex-shrink: 0;
 }
 
-.header-action-btn {
-  transition: transform .15s ease !important;
-}
-.header-action-btn:hover {
-  transform: scale(1.12) !important;
+.btn-cabecera-accion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #406D73;
+  background-color: #ffffff;
+  color: #406D73;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
+  box-sizing: border-box;
 }
 
-.teal-hover-white.v-btn--variant-flat {
-  color: #ffffff !important;
+.btn-cabecera-accion:hover {
+  background-color: #406D73;
+  color: #ffffff;
+  transform: scale(1.12);
 }
-.teal-hover-white.v-btn--variant-flat .v-icon,
-.teal-hover-white.v-btn--variant-flat i {
-  color: #ffffff !important;
+
+.btn-cabecera-accion .v-icon,
+.btn-cabecera-accion i {
+  color: inherit !important;
+}
+
+.btn-cabecera-accion.btn-logout {
+  border-color: #d32f2f;
+  color: #d32f2f;
+}
+
+.btn-cabecera-accion.btn-logout:hover {
+  background-color: #d32f2f;
+  color: #ffffff;
 }
 
 /* Buscador */

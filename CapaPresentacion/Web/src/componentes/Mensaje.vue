@@ -58,8 +58,8 @@
 
       <div class="burbuja-footer">
         <span class="timestamp">{{ formatearHora(mensaje.fechaEnvio) }}</span>
-        <v-icon v-if="propio" size="14" class="ml-1 icono-tick" :color="mensaje.estado === 'LEIDO' ? '#4caf50' : '#8aa8ae'">
-          {{ mensaje.estado === 'LEIDO' ? 'mdi-check-all' : 'mdi-check' }}
+        <v-icon v-if="propio" size="14" class="ml-1 icono-tick" :color="mensaje.leido ? '#4caf50' : '#8aa8ae'">
+          {{ mensaje.leido ? 'mdi-check-all' : 'mdi-check' }}
         </v-icon>
       </div>
     </div>

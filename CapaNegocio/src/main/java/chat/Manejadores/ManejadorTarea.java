@@ -22,11 +22,25 @@ public class ManejadorTarea {
     }
 
     public List<Tarea> obtenerTareasDeUsuario(Long usuarioId) {
-        // Tareas donde el usuario es el creador O está asignado a él O pertenece al grupo asociado
-        return em.createQuery("SELECT DISTINCT t FROM Tarea t LEFT JOIN t.grupo g LEFT JOIN g.participantes p " +
-                "WHERE t.creador.id = :usuarioId OR t.asignadoA.id = :usuarioId OR p.usuario.id = :usuarioId", Tarea.class)
-                .setParameter("usuarioId", usuarioId)
+        // Query 1: tareas asignadas explícitamente a este usuario
+        List<Tarea> asignadas = em.createQuery(
+                "SELECT t FROM Tarea t WHERE t.asignadoA.id = :uid", Tarea.class)
+                .setParameter("uid", usuarioId)
                 .getResultList();
+
+        // Query 2: tareas propias sin asignar (el creador las creó para sí mismo)
+        List<Tarea> propias = em.createQuery(
+                "SELECT t FROM Tarea t WHERE t.creador.id = :uid AND t.asignadoA IS NULL", Tarea.class)
+                .setParameter("uid", usuarioId)
+                .getResultList();
+
+        List<Tarea> resultado = new java.util.ArrayList<>(asignadas);
+        for (Tarea t : propias) {
+            if (resultado.stream().noneMatch(r -> r.getId().equals(t.getId()))) {
+                resultado.add(t);
+            }
+        }
+        return resultado;
     }
 
     public Optional<Tarea> buscarPorId(Long id) {
