@@ -78,6 +78,15 @@ public class ManejadorMensaje {
                 .executeUpdate();
     }
 
+    public Long contarMensajesSinLeer(Long conversacionId, Long usuarioId) {
+        TypedQuery<Long> q = em.createQuery(
+                "SELECT COUNT(m) FROM Mensaje m WHERE m.conversacion.id = :cid AND m.emisor.id != :uid AND m.leido = false",
+                Long.class);
+        q.setParameter("cid", conversacionId);
+        q.setParameter("uid", usuarioId);
+        return q.getSingleResult();
+    }
+
     public void eliminarMensaje(Long mensajeId, Long usuarioId) {
         Mensaje m = em.find(Mensaje.class, mensajeId);
         if (m != null && m.getEmisor().getId().equals(usuarioId)) {

@@ -48,7 +48,10 @@ public class ConversacionResource {
         List<DtConversacion> dtos = convs.stream()
                 .map(conv -> {
                     chat.clases.Mensaje ultimo = sistema.buscarUltimoMensaje(conv.getId()).orElse(null);
-                    return DtConversacion.from(conv, userId, ultimo);
+                    DtConversacion dto = DtConversacion.from(conv, userId, ultimo);
+                    int noLeidos = sistema.mensajeHandler().contarMensajesSinLeer(conv.getId(), userId).intValue();
+                    dto.setNoLeidos(noLeidos);
+                    return dto;
                 })
                 .collect(Collectors.toList());
 
@@ -122,6 +125,8 @@ public class ConversacionResource {
         }
 
         DtConversacion dto = DtConversacion.from(opt.get(), userId);
+        int noLeidos = sistema.mensajeHandler().contarMensajesSinLeer(id, userId).intValue();
+        dto.setNoLeidos(noLeidos);
         return Response.ok(dto).build();
     }
 
@@ -227,7 +232,12 @@ public class ConversacionResource {
 
         List<chat.clases.Conversacion> canales = sistema.listarCanalesAvisos();
         List<DtConversacion> dtos = canales.stream()
-                .map(canal -> DtConversacion.from(canal, userId))
+                .map(canal -> {
+                    DtConversacion dto = DtConversacion.from(canal, userId);
+                    int noLeidos = sistema.mensajeHandler().contarMensajesSinLeer(canal.getId(), userId).intValue();
+                    dto.setNoLeidos(noLeidos);
+                    return dto;
+                })
                 .collect(Collectors.toList());
 
         return Response.ok(dtos).build();

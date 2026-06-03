@@ -20,10 +20,11 @@ public class DtConversacion {
     private String ultimoMensaje;
     private LocalDateTime fechaUltimoMensaje;
     private Integer noLeidos;
+    private Long ultimoMensajeEmisorId;
 
     public DtConversacion() {}
 
-    public DtConversacion(Long id, String nombre, TipoConversacion tipo, LocalDateTime fechaCreacion, List<DtParticipante> participantes, String ultimoMensaje, LocalDateTime fechaUltimoMensaje, Integer noLeidos, String fotoUrl, String imagenBanner) {
+    public DtConversacion(Long id, String nombre, TipoConversacion tipo, LocalDateTime fechaCreacion, List<DtParticipante> participantes, String ultimoMensaje, LocalDateTime fechaUltimoMensaje, Integer noLeidos, String fotoUrl, String imagenBanner, Long ultimoMensajeEmisorId) {
         this.id = id;
         this.nombre = nombre;
         this.tipo = tipo;
@@ -34,6 +35,7 @@ public class DtConversacion {
         this.noLeidos = noLeidos;
         this.fotoUrl = fotoUrl;
         this.imagenBanner = imagenBanner;
+        this.ultimoMensajeEmisorId = ultimoMensajeEmisorId;
     }
 
     public static DtConversacion from(Conversacion conversacion) {
@@ -55,10 +57,14 @@ public class DtConversacion {
 
         String ultimoContenido = "..."; 
         LocalDateTime ultimaFecha = conversacion.getFechaCreacion();
+        Long ultimoEmisorId = null;
         
         if (ultimoM != null) {
             ultimoContenido = ultimoM.getContenido();
             ultimaFecha = ultimoM.getFechaEnvio();
+            if (ultimoM.getEmisor() != null) {
+                ultimoEmisorId = ultimoM.getEmisor().getId();
+            }
         }
 
         String nombreVisible = conversacion.getNombre();
@@ -89,7 +95,8 @@ public class DtConversacion {
                 ultimaFecha,
                 0, // Default no leidos
                 fotoVisible,
-                bannerVisible
+                bannerVisible,
+                ultimoEmisorId
         );
     }
 
@@ -112,4 +119,6 @@ public class DtConversacion {
     public void setNoLeidos(Integer noLeidos) { this.noLeidos = noLeidos; }
     public String getFotoUrl() { return fotoUrl; }
     public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+    public Long getUltimoMensajeEmisorId() { return ultimoMensajeEmisorId; }
+    public void setUltimoMensajeEmisorId(Long ultimoMensajeEmisorId) { this.ultimoMensajeEmisorId = ultimoMensajeEmisorId; }
 }
