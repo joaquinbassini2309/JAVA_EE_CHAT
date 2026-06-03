@@ -105,18 +105,18 @@ onUnmounted(() => {
 }
 
 .chat-app-root {
-  background: #eef5f7;
+  background: var(--bg);
   /* Fondo sutil degradado SaaS */
   background-image:
-    radial-gradient(ellipse at top left, rgba(179,235,242,0.3) 0%, transparent 60%),
-    radial-gradient(ellipse at bottom right, rgba(64,109,115,0.08) 0%, transparent 60%);
+    radial-gradient(ellipse at top left, rgba(179,235,242,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(64,109,115,0.04) 0%, transparent 60%);
 }
 
 .chat-shell-plain {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--surface);
   border-radius: 20px;
   overflow: hidden;
   min-height: 0;
@@ -124,7 +124,7 @@ onUnmounted(() => {
   box-shadow:
     0 4px 24px rgba(64,109,115,0.08),
     0 1px 3px rgba(0,0,0,0.04);
-  border: 1px solid rgba(255,255,255,0.6);
+  border: 1px solid var(--border-color);
 }
 
 .chat-desktop-grid {
@@ -141,12 +141,12 @@ onUnmounted(() => {
 }
 
 .sidebar-container {
-  border-right: 1px solid rgba(0,0,0,0.06);
+  border-right: 1px solid var(--border-color);
   height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--sidebar-bg);
   z-index: 5;
 }
 
@@ -156,12 +156,12 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   position: relative;
-  background: #f0f5f7;
+  background: var(--bg);
 }
 
 /* Pantalla Vacía */
 .sin-conversacion {
-  background: #f0f5f7;
+  background: var(--bg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -173,9 +173,9 @@ onUnmounted(() => {
 .sin-conv-text {
   font-size: 15px;
   font-weight: 500;
-  color: rgba(64,109,115,0.8);
+  color: var(--text-secondary);
   letter-spacing: -0.01em;
-  background: rgba(255,255,255,0.6);
+  background: var(--surface);
   padding: 6px 16px;
   border-radius: 50px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
@@ -205,8 +205,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: #ffffff;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
   box-shadow: 0 1px 0 rgba(0,0,0,0.02);
 }
@@ -214,7 +214,7 @@ onUnmounted(() => {
 .titulo-conversacion {
   font-weight: 600;
   font-size: 15px;
-  color: #1a2e31;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
