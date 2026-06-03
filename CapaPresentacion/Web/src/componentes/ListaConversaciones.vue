@@ -1,125 +1,106 @@
 <template>
   <div class="lista-conversaciones">
 
-    <!-- Panel usuario con banner + avatar cuadrado -->
-    <div class="panel-usuario">
-      <div
-          class="profile-banner profile-banner--default"
-          :style="usuarioActual?.imagenBanner ? { backgroundImage: `url('${usuarioActual.imagenBanner}')` } : {}"
-      />
-      <div class="profile-lower">
-        <div class="profile-avatar-wrap">
-          <v-menu offset-y content-class="menu-perfil-flotante" transition="slide-y-transition">
-            <template v-slot:activator="{ props }">
-              <div class="avatar-cuadrado cursor-pointer" v-bind="props" v-ripple>
-                <img v-if="usuarioActual?.fotoUrl" :src="usuarioActual.fotoUrl" class="avatar-img" />
-                <span v-else>{{ usuarioActual?.username?.charAt(0).toUpperCase() }}</span>
-              </div>
-            </template>
-            <v-list class="bg-surface menu-perfil" density="compact">
-              <v-list-item @click="abrirEdicionPerfil('username')" prepend-icon="mdi-account-edit">
-                <v-list-item-title>Cambiar nombre de usuario</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="abrirEdicionPerfil('fotoUrl')" prepend-icon="mdi-camera">
-                <v-list-item-title>Cambiar Foto de perfil</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="abrirEdicionPerfil('imagenBanner')" prepend-icon="mdi-wallpaper">
-                <v-list-item-title>Colocar imagen de banner</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="abrirEdicionPerfil('descripcion')" prepend-icon="mdi-card-text-outline">
-                <v-list-item-title>Cambiar descripción</v-list-item-title>
-              </v-list-item>
-              <v-divider class="my-1" />
-              <v-list-item @click="cerrarSesionLocal" class="text-error" prepend-icon="mdi-logout">
-                <v-list-item-title>Cerrar Sesión</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-        </div>
-        <div class="profile-title-row">
-          <span class="profile-name text-truncate">{{ usuarioActual?.username }}</span>
-          <div class="acciones-perfil">
-            <v-btn icon="mdi-account-multiple-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirNuevoGrupo" title="Nuevo grupo" />
-            <v-btn icon="mdi-plus-circle" variant="flat" color="accent" size="small" density="comfortable" @click="abrirNuevaConversacion" title="Nueva conversación" />
-            <v-btn icon="mdi-logout" variant="flat" color="error" size="small" density="comfortable" @click="cerrarSesionLocal" title="Cerrar sesión" />
-          </div>
-        </div>
-        <!-- profile subtitle removed -->
+    <!-- Header Compacto de Usuario -->
+    <div class="panel-usuario-compact">
+      <div class="user-header-row">
+        <v-menu offset-y content-class="menu-perfil-flotante" transition="slide-y-transition">
+          <template v-slot:activator="{ props }">
+            <div class="user-avatar-wrap" v-bind="props" v-ripple>
+              <img v-if="usuarioActual?.fotoUrl" :src="usuarioActual.fotoUrl" class="user-avatar-img" />
+              <span v-else>{{ usuarioActual?.username?.charAt(0).toUpperCase() }}</span>
+            </div>
+          </template>
+          <v-list class="bg-surface" density="compact">
+            <v-list-item @click="abrirEdicionPerfil('username')" prepend-icon="mdi-account-edit">
+              <v-list-item-title>Cambiar nombre de usuario</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="abrirEdicionPerfil('fotoUrl')" prepend-icon="mdi-camera">
+              <v-list-item-title>Cambiar Foto de perfil</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="abrirEdicionPerfil('descripcion')" prepend-icon="mdi-card-text-outline">
+              <v-list-item-title>Cambiar descripción</v-list-item-title>
+            </v-list-item>
+            <v-divider class="my-1" />
+            <v-list-item @click="cerrarSesionLocal" class="text-error" prepend-icon="mdi-logout">
+              <v-list-item-title>Cerrar Sesión</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
 
-        <!-- Buscador y Filtro -->
-        <div class="campo-busqueda" style="margin-top: 10px; padding-left: 4px;">
-          <v-menu :close-on-content-click="false" location="bottom start">
-            <template v-slot:activator="{ props }">
-              <button 
-                v-bind="props" 
-                title="Filtrar conversaciones"
-                style="display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; color: #406D73; padding: 4px; border-radius: 6px; transition: background 0.2s;"
-                onmouseover="this.style.background='rgba(64,109,115,0.1)'"
-                onmouseout="this.style.background='none'"
-              >
-                <v-icon size="20">mdi-filter-variant</v-icon>
-              </button>
-            </template>
-            <v-card min-width="220" rounded="2xl" class="border-sm border-opacity-25" style="border-color: #406D73 !important; overflow: hidden; box-shadow: 0 8px 24px rgba(64,109,115,0.15) !important;">
-              <v-card-title class="modal-titulo-mejorado px-4 py-3" style="background-color: #406D73; color: white; font-size: 14px;">
-                <v-icon size="16" class="mr-2">mdi-filter-variant</v-icon>
-                Mostrar en lista
-              </v-card-title>
-              <v-list density="compact" class="py-2" bg-color="#ffffff" style="overflow-x: hidden;">
-                <template v-if="tabActivo === 'chats'">
-                  <v-list-item>
-                    <v-checkbox-btn v-model="filtrosSeleccionados" label="Contactos" value="PRIVADA" color="#406D73" hide-details></v-checkbox-btn>
-                  </v-list-item>
-                  <v-list-item>
-                    <v-checkbox-btn v-model="filtrosSeleccionados" label="Grupos" value="GRUPO" color="#406D73" hide-details></v-checkbox-btn>
-                  </v-list-item>
-                  <v-list-item>
-                    <v-checkbox-btn v-model="filtrosSeleccionados" label="Canales de aviso" value="AVISO" color="#406D73" hide-details></v-checkbox-btn>
-                  </v-list-item>
-                  <v-list-item>
-                    <v-checkbox-btn v-model="filtrosSeleccionados" label="Lista de tareas" value="TAREAS" color="#406D73" hide-details></v-checkbox-btn>
-                  </v-list-item>
-                </template>
-                <template v-else-if="tabActivo === 'tareas'">
-                  <v-list-item>
-                    <v-checkbox-btn v-model="filtrosTareas" label="Tareas pendientes" value="PENDIENTES" color="#406D73" hide-details></v-checkbox-btn>
-                  </v-list-item>
-                  <v-list-item>
-                    <v-checkbox-btn v-model="filtrosTareas" label="Tareas completadas" value="COMPLETADAS" color="#406D73" hide-details></v-checkbox-btn>
-                  </v-list-item>
-                </template>
-                <template v-else>
-                  <v-list-item>
-                    <v-list-item-title class="text-caption text-center text-grey my-2">Solo filtro por texto</v-list-item-title>
-                  </v-list-item>
-                </template>
-              </v-list>
-            </v-card>
-          </v-menu>
-          <div style="width: 1px; height: 16px; background: rgba(64,109,115,0.2); margin: 0 2px;"></div>
-          <v-icon size="16" color="#406D73" style="opacity:0.6">mdi-magnify</v-icon>
-          <input v-model="termino" type="text" placeholder="Buscar contactos" style="flex: 1;" />
+        <div class="user-info-col">
+          <span class="user-name text-truncate">{{ usuarioActual?.username }}</span>
         </div>
+
+        <div class="user-actions-row">
+          <v-hover v-slot="{ isHovering, props }">
+            <v-btn v-bind="props" icon="mdi-account-multiple-plus" :variant="isHovering ? 'flat' : 'outlined'" color="#406D73" size="small" @click="abrirNuevoGrupo" title="Nuevo grupo" class="header-action-btn teal-hover-white" rounded />
+          </v-hover>
+          <v-hover v-slot="{ isHovering, props }">
+            <v-btn v-bind="props" icon="mdi-message-plus" :variant="isHovering ? 'flat' : 'outlined'" color="#406D73" size="small" @click="abrirNuevaConversacion" title="Nueva conversación" class="header-action-btn teal-hover-white" rounded />
+          </v-hover>
+          <v-hover v-slot="{ isHovering, props }">
+            <v-btn v-bind="props" icon="mdi-logout" :variant="isHovering ? 'flat' : 'outlined'" color="error" size="small" @click="cerrarSesionLocal" title="Cerrar sesión" class="header-action-btn" rounded />
+          </v-hover>
+        </div>
+      </div>
+
+      <!-- Buscador -->
+      <div class="campo-busqueda-modern">
+        <v-menu :close-on-content-click="false" location="bottom start">
+          <template v-slot:activator="{ props }">
+            <button v-bind="props" title="Filtrar conversaciones" class="btn-filtro">
+              <v-icon size="20">mdi-filter-variant</v-icon>
+            </button>
+          </template>
+          <v-card min-width="220" rounded="xl" style="overflow: hidden; box-shadow: 0 8px 24px rgba(64,109,115,0.15) !important;">
+            <v-card-title style="background: #406D73; color: white; font-size: 13px; padding: 10px 16px; display:flex; align-items:center; gap:6px;">
+              <v-icon size="16">mdi-filter-variant</v-icon>
+              Mostrar en lista
+            </v-card-title>
+            <v-list density="compact" class="py-1" bg-color="#ffffff">
+              <template v-if="tabActivo === 'chats'">
+                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Contactos" value="PRIVADA" color="#406D73" hide-details /></v-list-item>
+                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Grupos" value="GRUPO" color="#406D73" hide-details /></v-list-item>
+                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Canales de aviso" value="AVISO" color="#406D73" hide-details /></v-list-item>
+                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Lista de tareas" value="TAREAS" color="#406D73" hide-details /></v-list-item>
+              </template>
+              <template v-else-if="tabActivo === 'tareas'">
+                <v-list-item><v-checkbox-btn v-model="filtrosTareas" label="Tareas pendientes" value="PENDIENTES" color="#406D73" hide-details /></v-list-item>
+                <v-list-item><v-checkbox-btn v-model="filtrosTareas" label="Tareas completadas" value="COMPLETADAS" color="#406D73" hide-details /></v-list-item>
+              </template>
+              <template v-else>
+                <v-list-item><v-list-item-title class="text-caption text-grey py-2 px-2">Solo filtro por texto</v-list-item-title></v-list-item>
+              </template>
+            </v-list>
+          </v-card>
+        </v-menu>
+        <div class="divider-v"></div>
+        <v-icon size="17" color="#406D73" style="opacity:0.55;">mdi-magnify</v-icon>
+        <input v-model="termino" type="text" placeholder="Buscar..." class="input-busqueda" />
       </div>
     </div>
 
-    <!-- Tabs Mis Chats / Ver canales / Lista de tareas -->
-    <div class="tabs-row">
-      <button class="tab-btn" :class="{ activo: tabActivo === 'chats' }" @click="cambiarTab('chats')">
-        Mis Chats
+    <!-- Navegación Vertical -->
+    <div class="nav-vertical">
+      <button class="nav-item" :class="{ activo: tabActivo === 'chats' }" @click="cambiarTab('chats')">
+        <v-icon size="18">mdi-chat-outline</v-icon>
+        <span>Mis Chats</span>
       </button>
-      <button class="tab-btn" :class="{ activo: tabActivo === 'canales' }" @click="cambiarTab('canales')">
-        Ver canales de aviso
+      <button class="nav-item" :class="{ activo: tabActivo === 'canales' }" @click="cambiarTab('canales')">
+        <v-icon size="18">mdi-bullhorn-outline</v-icon>
+        <span>Canales de aviso</span>
       </button>
-      <button class="tab-btn" :class="{ activo: tabActivo === 'tareas' }" @click="cambiarTab('tareas')">
-        Lista de tareas
+      <button class="nav-item" :class="{ activo: tabActivo === 'tareas' }" @click="cambiarTab('tareas')">
+        <v-icon size="18">mdi-checkbox-marked-circle-outline</v-icon>
+        <span>Lista de tareas</span>
       </button>
     </div>
 
-    <!-- Subheader lista -->
-    <div class="seccion-titulo text-uppercase">
-      {{ tabActivo === 'chats' ? 'LISTA DE USUARIO Y MIEMBROS PARA HABLAR' : tabActivo === 'canales' ? 'CANALES DE AVISOS PÚBLICOS' : 'LISTA DE TAREAS' }}
-    </div>
+    <!-- Subheader según tab -->
+    <div v-if="tabActivo === 'chats'" class="seccion-chats-titulo">CHATS RECIENTES</div>
+    <div v-else-if="tabActivo === 'canales'" class="seccion-chats-titulo">CANALES DE AVISOS</div>
+    <div v-else class="seccion-chats-titulo">MIS TAREAS</div>
 
     <!-- Listado conversaciones -->
     <div class="listado">
@@ -137,18 +118,20 @@
             <span v-else>{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id).charAt(0).toUpperCase() }}</span>
           </div>
           <div class="info-conversacion" style="flex: 1; min-width: 0;">
-            <div class="d-flex align-center">
-              <span class="nombre text-truncate mr-1" style="max-width: 140px;">{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id) }}</span>
-              <v-chip v-if="conversacion.tipo === 'AVISO'" color="error" size="x-small" density="compact" variant="flat" class="px-1 text-uppercase ml-1" style="font-size: 8px; height: 14px; line-height: 14px;">Aviso</v-chip>
+            <div class="conv-header-row">
+              <span class="nombre text-truncate">{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id) }}</span>
+              <span class="conv-time" v-if="conversacion.fechaUltimoMensaje">{{ formatearHora(conversacion.fechaUltimoMensaje) }}</span>
             </div>
-            <span class="ultimo-msg text-truncate">
-              <template v-if="String(conversacion.id).startsWith('tareas_')">
-                {{ tareasPendientesCount === 1 ? '1 tarea pendiente' : (tareasPendientesCount + ' tareas pendientes') }}
-              </template>
-              <template v-else>
-                {{ conversacion.ultimoMensaje || '...' }}
-              </template>
-            </span>
+            <div class="conv-footer-row">
+              <span class="ultimo-msg text-truncate">
+                <template v-if="String(conversacion.id).startsWith('tareas_')">
+                  {{ tareasPendientesCount === 1 ? '1 tarea pendiente' : (tareasPendientesCount + ' tareas pendientes') }}
+                </template>
+                <template v-else>
+                  {{ conversacion.ultimoMensaje || '...' }}
+                </template>
+              </span>
+            </div>
           </div>
         </div>
         <div v-if="conversacionesFiltradas.length === 0" class="sin-resultados">
@@ -504,7 +487,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
-import { formatearFecha } from '@/utilidades/formateoFechas'
+import { formatearFecha, formatearHora } from '@/utilidades/formateoFechas'
 import { useRouter } from 'vue-router'
 
 const almacen = useAlmacen()
@@ -703,6 +686,8 @@ const usuariosFiltradosCanal = computed(() => {
 
 const esActiva = (conversacion) => conversacionActual.value?.id === conversacion.id
 const seleccionarConversacion = async (conversacion) => {
+    if (conversacionActual.value?.id === conversacion.id) return;
+
     // Limpiar mensajes inmediatamente para no mostrar mensajes de la conversación anterior
     almacen.establecerMensajes([])
     almacen.establecerConversacionActual(conversacion)
@@ -1057,247 +1042,205 @@ const toggleCompletadaLista = async (tarea) => {
 </script>
 
 <style scoped>
-/* ---- Contenedor raíz ---- */
+/* ==================================================
+   ListaConversaciones.vue — Premium SaaS Sidebar 2026
+   ================================================== */
+
 .lista-conversaciones {
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 0; /* Crucial para scroll */
+  min-height: 0;
   background: #ffffff;
   position: relative;
   overflow: hidden;
 }
 
-/* ---- Panel usuario (banner + lower) ---- */
-.panel-usuario {
+/* ===== HEADER COMPACTO ===== */
+.panel-usuario-compact {
   flex-shrink: 0;
-  position: relative;
+  padding: 14px 16px 12px;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(64,109,115,0.08);
 }
 
-.profile-banner {
-  height: 76px;
-  background-color: #B3EBF2;
-  background-image:
-      linear-gradient(135deg, rgba(64,109,115,0.22) 0%, transparent 55%),
-      linear-gradient(225deg, rgba(255,255,255,0.45) 0%, transparent 48%),
-      radial-gradient(ellipse 90% 140% at 15% 0%, rgba(64,109,115,0.15), transparent);
-  background-size: cover;
-  background-position: center;
+.user-header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.profile-banner--default {
-  /* ya cubierto arriba */
-}
-
-.profile-lower {
-  position: relative;
-  background: #f7fcfd;
-  padding: 10px 14px 14px;
-  padding-left: 100px;
-  min-height: 86px;
-}
-
-.profile-avatar-wrap {
-  position: absolute;
-  left: 14px;
-  top: -34px;
-  z-index: 2;
-}
-
-.avatar-cuadrado {
-  width: 64px;
-  height: 64px;
-  background: #406D73;
+.user-avatar-wrap {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #406D73 0%, #5a8a94 100%);
   color: #ffffff;
-  border-radius: 10px;
-  border: 3px solid #ffffff;
-  box-shadow: 0 4px 14px rgba(64,109,115,0.22);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 17px;
   font-weight: 700;
   overflow: hidden;
-  transition: transform 0.2s;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(64,109,115,0.2);
+  transition: transform .15s, box-shadow .15s;
 }
 
-.avatar-cuadrado:hover {
-  transform: scale(1.05);
+.user-avatar-wrap:hover {
+  transform: scale(1.06);
+  box-shadow: 0 4px 14px rgba(64,109,115,0.28);
 }
 
-.avatar-img {
+.user-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.profile-title-row {
+.user-info-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a2e31;
+  letter-spacing: -0.01em;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-actions-row {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.header-action-btn {
+  transition: transform .15s ease !important;
+}
+.header-action-btn:hover {
+  transform: scale(1.12) !important;
+}
+
+.teal-hover-white.v-btn--variant-flat {
+  color: #ffffff !important;
+}
+.teal-hover-white.v-btn--variant-flat .v-icon,
+.teal-hover-white.v-btn--variant-flat i {
+  color: #ffffff !important;
+}
+
+/* Buscador */
+.campo-busqueda-modern {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.profile-name {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #2f4a4f;
-  line-height: 1.25;
-  letter-spacing: 0.01em;
-}
-
-.profile-subtitle {
-  font-size: 12px;
-  color: #5a8a94;
-  margin-top: 2px;
-}
-
-.acciones-perfil {
-  display: flex;
   gap: 4px;
+  margin-top: 12px;
+  background: #f4f8f9;
+  border: 1px solid rgba(64,109,115,0.1);
+  border-radius: 12px;
+  padding: 6px 12px;
+  transition: border-color .2s, box-shadow .2s;
 }
 
-.btn-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
+.campo-busqueda-modern:focus-within {
+  border-color: #406D73;
+  box-shadow: 0 0 0 3px rgba(64,109,115,0.07);
+}
+
+.btn-filtro {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #406D73;
+  padding: 3px;
   border-radius: 6px;
-  transition: background 0.15s;
+  transition: background .15s;
+  flex-shrink: 0;
 }
 
-.btn-icon:hover {
-  background: rgba(64,109,115,0.1);
+.btn-filtro:hover { background: rgba(64,109,115,0.08); }
+
+.divider-v {
+  width: 1px;
+  height: 16px;
+  background: rgba(64,109,115,0.15);
+  margin: 0 4px;
+  flex-shrink: 0;
 }
 
-/* ---- Buscador ---- */
-.campo-busqueda {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 10px;
-  background: rgba(255,255,255,0.7);
-  border: 1px solid rgba(64,109,115,0.2);
-  border-radius: 8px;
-  padding: 5px 10px;
-}
-
-.campo-busqueda input {
+.input-busqueda {
   border: none;
   background: transparent;
   font-size: 13px;
-  color: #2f4a4f;
+  color: #1a2e31;
   flex: 1;
   outline: none;
+  min-width: 0;
 }
 
-.campo-busqueda input::placeholder {
-  color: rgba(64,109,115,0.45);
-}
+.input-busqueda::placeholder { color: rgba(64,109,115,0.4); }
 
-/* ---- Tabs ---- */
-.tabs-row {
+/* ===== NAVEGACIÓN VERTICAL ===== */
+.nav-vertical {
   display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  gap: 4px;
+  background: #ffffff;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(64,109,115,0.15);
 }
 
-.tab-btn {
-  flex: 1;
-  padding: 9px 4px;
-  font-size: 12px;
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  color: #7a9ea4;
+  color: #406D73;
   background: none;
   border: none;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
+  border-radius: 10px;
+  transition: background .18s, color .18s;
 }
 
-.tab-btn.activo {
-  color: #406D73;
-  border-bottom-color: #406D73;
+.nav-item.activo {
+  background: rgba(64,109,115,0.08);
 }
 
-.tab-btn:hover:not(.activo) {
-  color: #406D73;
+.nav-item:hover:not(.activo) {
+  background: rgba(64,109,115,0.04);
 }
 
-/* ---- Subheader ---- */
-.seccion-titulo {
-  padding: 8px 16px 6px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #406D73;
-  letter-spacing: 0.06em;
+/* Subheader */
+.seccion-chats-titulo {
+  padding: 12px 16px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #5a8a94;
+  letter-spacing: 0.08em;
   background: #ffffff;
   flex-shrink: 0;
+  text-transform: uppercase;
 }
 
-/* ---- Listado ---- */
+/* ===== LISTADO ===== */
 .listado {
   flex: 1;
   overflow-y: auto;
-  min-height: 0; /* Crucial para scroll */
+  min-height: 0;
   background: #ffffff;
-}
-
-/* Ajustes específicos para items de la lista de tareas: alinear título/contenido a la derecha del avatar */
-.tarea-item {
-  cursor: pointer;
-}
-.tarea-item .tarea-avatar {
-  flex: 0 0 38px;
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.tarea-item .tarea-info {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.tarea-item .tarea-info .nombre {
-  font-weight: 600;
-}
-.tarea-item .tarea-info .ultimo-msg {
-  font-size: 12px;
-  color: #7f9ea4;
-}
-
-/* ---- Botón crear canal dentro del tab ---- */
-.canal-header-action {
-  padding: 10px 14px 6px;
-  border-bottom: 1px solid rgba(64,109,115,0.07);
-}
-
-.btn-crear-canal {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 8px 12px;
-  background: rgba(64,109,115,0.06);
-  border: 1.5px dashed rgba(64,109,115,0.3);
-  border-radius: 10px;
-  color: #406D73;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  letter-spacing: 0.02em;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.btn-crear-canal:hover {
-  background: rgba(64,109,115,0.12);
-  border-color: #406D73;
 }
 
 .item-conversacion {
@@ -1306,53 +1249,80 @@ const toggleCompletadaLista = async (tarea) => {
   gap: 12px;
   padding: 10px 16px;
   cursor: pointer;
-  border-bottom: 1px solid rgba(64,109,115,0.07);
-  transition: background 0.12s;
+  border-bottom: 1px solid rgba(64,109,115,0.04);
+  transition: background .15s;
+  position: relative;
 }
 
-.item-conversacion:hover {
-  background: #f7fcfd;
-}
+.item-conversacion:hover { background: rgba(64,109,115,0.04); }
 
 .item-conversacion.activa {
-  background: rgba(179,235,242,0.4);
+  background: rgba(64,109,115,0.08);
+}
+
+.item-conversacion.activa::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #406D73;
 }
 
 .avatar-mini-lista {
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  background: #B2C5C8;
-  color: #2f4a4f;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  background: linear-gradient(135deg, #B2C5C8, #9fb3b6);
+  color: #ffffff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 16px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
-.avatar-img-lista {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
+.avatar-img-lista { width: 100%; height: 100%; object-fit: cover; }
 
 .info-conversacion {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  gap: 2px;
+}
+
+.conv-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.conv-footer-row {
+  display: flex;
+  align-items: center;
 }
 
 .info-conversacion .nombre {
   font-weight: 600;
   font-size: 14px;
-  color: #2f4a4f;
+  color: #1a2e31;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.info-conversacion .conv-time {
+  font-size: 11px;
+  color: #5a8a94;
+  font-weight: 600;
+  margin-left: 8px;
+  flex-shrink: 0;
 }
 
 .info-conversacion .ultimo-msg {
@@ -1361,139 +1331,64 @@ const toggleCompletadaLista = async (tarea) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+}
+
+/* Tareas */
+.tarea-item { cursor: pointer; }
+
+.tarea-item .tarea-avatar {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: transform .15s;
+}
+
+.tarea-item .tarea-avatar:hover { transform: scale(1.08); }
+.tarea-item .tarea-info { display: flex; flex-direction: column; justify-content: center; }
+.tarea-item .tarea-info .nombre { font-weight: 600; }
+.tarea-item .tarea-info .ultimo-msg { font-size: 12px; color: #7f9ea4; }
+
+/* Crear canal/tarea */
+.canal-header-action { padding: 10px 16px 8px; }
+
+.btn-crear-canal {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(64,109,115,0.04);
+  border: 1.5px dashed rgba(64,109,115,0.2);
+  border-radius: 12px;
+  color: #406D73;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: background .15s, border-color .15s;
+}
+
+.btn-crear-canal:hover {
+  background: rgba(64,109,115,0.08);
+  border-color: #406D73;
 }
 
 .sin-resultados {
-  padding: 24px 16px;
+  padding: 32px 16px;
   text-align: center;
   font-size: 13px;
   color: #a0b8bc;
 }
 
-/* ---- Modal ---- */
-.modal-titulo {
-  background: #406D73;
-  color: white;
-  font-size: 15px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  padding: 14px 16px;
-}
-
-.modal-seccion {
-  padding: 14px 16px 0;
-  background: #f7fcfd;
-  border-bottom: 1px solid rgba(64,109,115,0.15);
-}
-
-.input-modal {
-  width: 100%;
-  padding: 9px 12px;
-  border: 1px solid #B2C5C8;
-  border-radius: 6px;
-  font-size: 14px;
-  margin-bottom: 14px;
-  outline: none;
-  color: #2f4a4f;
-  resize: vertical;
-}
-
-.label-input {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: #406D73;
-  margin-bottom: 6px;
-}
-
-.input-modal:focus {
-  border-color: #406D73;
-  box-shadow: 0 0 0 3px rgba(64,109,115,0.1);
-}
-
-.modal-busqueda-input {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 12px 16px;
-  background: #f0f7f8;
-  border: 1px solid rgba(64,109,115,0.15);
-  border-radius: 6px;
-  padding: 6px 10px;
-}
-
-.modal-busqueda-input input {
-  border: none;
-  background: transparent;
-  font-size: 13px;
-  color: #2f4a4f;
-  flex: 1;
-  outline: none;
-}
-
-.modal-busqueda-input input::placeholder {
-  color: rgba(64,109,115,0.4);
-}
-
-.modal-listado {
-  max-height: 280px;
-  overflow-y: auto;
-}
-
-.item-usuario-modal {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  cursor: pointer;
-  transition: background 0.12s;
-}
-
-.item-usuario-modal:hover {
-  background: #f7fcfd;
-}
-
-.avatar-mini-modal {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  background: #B2C5C8;
-  color: #2f4a4f;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.info-usuario-modal {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-}
-
-.info-usuario-modal .nombre {
-  font-weight: 600;
-  font-size: 14px;
-  color: #2f4a4f;
-}
-
-.info-usuario-modal .email {
-  font-size: 12px;
-  color: #7f9ea4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ---- Estilos Mejorados Modal Nueva Conversación/Grupo ---- */
+/* ===== MODALES ===== */
 .modal-nueva-conv {
-  box-shadow: 0 10px 40px rgba(64, 109, 115, 0.15) !important;
+  box-shadow: 0 16px 48px rgba(64,109,115,0.18) !important;
   background: #ffffff !important;
-  border-radius: 24px !important;
+  border-radius: 20px !important;
   overflow: hidden !important;
 }
 
@@ -1504,229 +1399,141 @@ const toggleCompletadaLista = async (tarea) => {
   font-weight: 600 !important;
   display: flex !important;
   align-items: center !important;
-  padding: 12px 16px !important;
-  border-radius: 24px 24px 0 0 !important;
+  padding: 14px 16px !important;
 }
 
 .modal-contenido-conv {
   padding: 16px !important;
-  background: #f7fcfd !important;
+  background: #f8fbfc !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 12px !important;
-  border-radius: 0 0 24px 24px !important;
 }
 
 .modal-seccion-mejorada {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 8px !important;
-  padding: 12px !important;
-  background: #ffffff !important;
-  border-radius: 10px !important;
-  border: 1px solid rgba(64, 109, 115, 0.15) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(64,109,115,0.1);
 }
 
 .label-input-conv {
-  display: flex !important;
-  align-items: center !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  color: #406D73 !important;
-  letter-spacing: 0.02em !important;
-  text-transform: uppercase !important;
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #406D73;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .input-modal-conv {
-  width: 100% !important;
-  padding: 10px 12px !important;
-  border: 1px solid rgba(64, 109, 115, 0.2) !important;
-  border-radius: 8px !important;
-  font-size: 12px !important;
-  color: #2f4a4f !important;
-  background: #ffffff !important;
-  outline: none !important;
-  transition: all 0.2s !important;
-  font-family: inherit !important;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid rgba(64,109,115,0.15);
+  border-radius: 10px;
+  font-size: 13px;
+  color: #1a2e31;
+  background: #ffffff;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  font-family: inherit;
+  box-sizing: border-box;
 }
 
 .input-modal-conv:focus {
-  border-color: #406D73 !important;
-  box-shadow: 0 0 0 3px rgba(64, 109, 115, 0.1) !important;
+  border-color: #406D73;
+  box-shadow: 0 0 0 3px rgba(64,109,115,0.08);
 }
 
-.input-modal-conv::placeholder {
-  color: rgba(64, 109, 115, 0.4) !important;
-}
+.input-modal-conv::placeholder { color: rgba(64,109,115,0.4); }
 
 .modal-busqueda-mejorada {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  background: #ffffff !important;
-  border: 1px solid rgba(64, 109, 115, 0.15) !important;
-  border-radius: 10px !important;
-  padding: 8px 12px !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid rgba(64,109,115,0.1);
+  border-radius: 12px;
+  padding: 8px 14px;
 }
 
 .modal-busqueda-mejorada input {
-  border: none !important;
-  background: transparent !important;
-  font-size: 12px !important;
-  color: #2f4a4f !important;
-  flex: 1 !important;
-  outline: none !important;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #1a2e31;
+  flex: 1;
+  outline: none;
 }
 
-.modal-busqueda-mejorada input::placeholder {
-  color: rgba(64, 109, 115, 0.4) !important;
-}
+.modal-busqueda-mejorada input::placeholder { color: rgba(64,109,115,0.4); }
 
 .modal-listado-mejorado {
-  max-height: 300px !important;
-  overflow-y: auto !important;
-  border-radius: 10px !important;
-  background: #ffffff !important;
-  border: 1px solid rgba(64, 109, 115, 0.1) !important;
+  max-height: 300px;
+  overflow-y: auto;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(64,109,115,0.08);
 }
 
 .item-usuario-mejorado {
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  padding: 10px 12px !important;
-  cursor: pointer !important;
-  transition: background 0.12s !important;
-  border-bottom: 1px solid rgba(64, 109, 115, 0.05) !important;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background .12s;
+  border-bottom: 1px solid rgba(64,109,115,0.04);
 }
 
-.item-usuario-mejorado:hover {
-  background: rgba(179, 235, 242, 0.15) !important;
+.item-usuario-mejorado:hover { background: rgba(179,235,242,0.12); }
+.item-usuario-mejorado:last-child { border-bottom: none; }
+
+.avatar-mini-modal {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  background: linear-gradient(135deg, #B2C5C8, #9fb3b6);
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
 }
 
-.item-usuario-mejorado:last-child {
-  border-bottom: none !important;
-}
+.info-usuario-modal { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+.info-usuario-modal .nombre { font-weight: 600; font-size: 14px; color: #1a2e31; }
+.info-usuario-modal .email { font-size: 12px; color: #7f9ea4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .modal-acciones-conv {
   padding: 12px 16px !important;
   background: #ffffff !important;
-  border-top: 1px solid rgba(64, 109, 115, 0.08) !important;
-  border-radius: 0 0 16px 16px !important;
+  border-top: 1px solid rgba(64,109,115,0.06) !important;
 }
 
-.btn-crear-grupo {
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.02em !important;
-}
+.btn-crear-grupo { font-size: 12px !important; font-weight: 600 !important; letter-spacing: 0.01em !important; }
 
-/* ---- Media Queries para Responsividad ---- */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .profile-lower {
-    padding-left: 80px;
-    min-height: 80px;
-  }
-
-  .profile-avatar-wrap {
-    left: 10px;
-    top: -28px;
-  }
-
-  .avatar-cuadrado {
-    width: 56px;
-    height: 56px;
-  }
-
-  .profile-banner {
-    height: 70px;
-  }
-
-  .acciones-perfil {
-    gap: 2px;
-  }
-
-  .campo-busqueda {
-    margin-top: 8px;
-  }
-
-  .tabs-row {
-    gap: 0;
-  }
-
-  .tab-btn {
-    font-size: 11px;
-  }
-
-  .item-conversacion {
-    padding: 8px 12px;
-    gap: 10px;
-  }
-
-  .avatar-mini-lista {
-    width: 36px;
-    height: 36px;
-  }
-
-  .seccion-titulo {
-    font-size: 10px;
-  }
+  .panel-usuario-compact { padding: 10px 12px; }
+  .user-avatar-wrap { width: 38px; height: 38px; min-width: 38px; font-size: 15px; }
+  .tab-btn { font-size: 11px; }
+  .item-conversacion { padding: 8px 12px; }
+  .avatar-mini-lista { width: 40px; height: 40px; min-width: 40px; }
 }
 
 @media (max-width: 480px) {
-  .profile-lower {
-    padding-left: 70px;
-    min-height: 76px;
-  }
-
-  .profile-avatar-wrap {
-    left: 8px;
-    top: -24px;
-  }
-
-  .avatar-cuadrado {
-    width: 48px;
-    height: 48px;
-    border: 2px solid #ffffff;
-  }
-
-  .profile-banner {
-    height: 60px;
-  }
-
-  .acciones-perfil {
-    gap: 2px;
-  }
-
-  .campo-busqueda {
-    margin-top: 6px;
-    gap: 4px;
-  }
-
-  .item-conversacion {
-    padding: 6px 10px;
-    gap: 8px;
-  }
-
-  .avatar-mini-lista {
-    width: 34px;
-    height: 34px;
-  }
-
-  .seccion-titulo {
-    font-size: 9px;
-  }
-
-  .avatar-mini-modal {
-    width: 32px;
-    height: 32px;
-  }
-
-  .item-usuario-modal {
-    padding: 8px 12px;
-    gap: 10px;
-  }
+  .panel-usuario-compact { padding: 8px 10px; }
+  .user-avatar-wrap { width: 36px; height: 36px; min-width: 36px; }
+  .item-conversacion { padding: 6px 10px; gap: 10px; }
+  .avatar-mini-lista { width: 38px; height: 38px; min-width: 38px; }
+  .seccion-titulo { font-size: 9px; }
 }
 </style>
 

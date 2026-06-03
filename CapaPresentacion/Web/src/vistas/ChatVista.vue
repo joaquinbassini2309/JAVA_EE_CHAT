@@ -14,7 +14,7 @@
           </div>
 
           <!-- Vista desktop -->
-          <div v-if="!esModoMovil" style="display: grid; grid-template-columns: 350px 1fr; height: 100%; min-height: 0; overflow: hidden;">
+          <div v-if="!esModoMovil" style="display: grid; grid-template-columns: 390px 1fr; height: 100%; min-height: 0; overflow: hidden;">
             <div style="border-right: 1px solid rgba(0,0,0,0.1); height: 100%; overflow: hidden; display: flex; flex-direction: column; min-height: 0;">
               <ListaConversaciones />
             </div>
@@ -95,42 +95,47 @@ onUnmounted(() => {
   height: 100%;
   margin: 0;
   overflow: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-.chat-vista-root {
-  height: 100vh;
-  width: 100%;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-sizing: border-box;
+.chat-app-root {
+  background: #eef5f7;
+  /* Fondo sutil degradado SaaS */
+  background-image:
+    radial-gradient(ellipse at top left, rgba(179,235,242,0.3) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(64,109,115,0.08) 0%, transparent 60%);
 }
 
 .chat-shell-plain {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: white;
-  border-radius: 12px;
-  border: 2px solid rgba(64, 109, 115, 0.2);
+  background: #ffffff;
+  border-radius: 20px;
   overflow: hidden;
   min-height: 0;
+  /* Sombras progresivas premium */
+  box-shadow:
+    0 4px 24px rgba(64,109,115,0.08),
+    0 1px 3px rgba(0,0,0,0.04);
+  border: 1px solid rgba(255,255,255,0.6);
 }
 
 .chat-desktop-grid {
   display: grid;
-  grid-template-columns: 350px 1fr;
+  grid-template-columns: 320px 1fr;
   height: 100%;
   overflow: hidden;
 }
 
 .sidebar-container {
-  border-right: 1px solid rgba(64, 109, 115, 0.1);
+  border-right: 1px solid rgba(0,0,0,0.06);
   height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: #ffffff;
+  z-index: 5;
 }
 
 .chat-container {
@@ -139,17 +144,29 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   position: relative;
+  background: #f0f5f7;
 }
 
+/* Pantalla Vacía */
 .sin-conversacion {
-  background: rgba(179, 235, 242, 0.18);
+  background: #f0f5f7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 100%;
 }
 
 .sin-conv-text {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
-  color: #406D73;
-  letter-spacing: 0.01em;
+  color: rgba(64,109,115,0.8);
+  letter-spacing: -0.01em;
+  background: rgba(255,255,255,0.6);
+  padding: 6px 16px;
+  border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
 
 /* ---- MODO MÓVIL ---- */
@@ -175,16 +192,17 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
-  background: #f7fcfd;
-  border-bottom: 1px solid rgba(64, 109, 115, 0.15);
+  padding: 10px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
   flex-shrink: 0;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02);
 }
 
 .titulo-conversacion {
   font-weight: 600;
   font-size: 15px;
-  color: #2f4a4f;
+  color: #1a2e31;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -204,85 +222,47 @@ onUnmounted(() => {
   min-height: 0;
 }
 
-/* ---- Media Queries for Desktop Layout ---- */
+/* ---- Media Queries ---- */
 @media (max-width: 959px) {
   .chat-main-row {
     flex-direction: column;
     flex-wrap: nowrap;
   }
-  .sidebar-col {
-    flex: 0 1 auto;
-    max-height: min(48vh, 440px);
-    border-right: none;
-    border-bottom: 1px solid rgba(64, 109, 115, 0.18);
-  }
-  .chat-col {
-    flex: 1 1 auto;
-  }
 }
 
 @media (max-width: 768px) {
-  .chat-container-fill {
-    padding: 0.5rem 0.75rem !important;
-  }
-
   .chat-shell {
-    border-radius: 8px;
-    border: 1px solid rgba(64, 109, 115, 0.15);
-  }
-
-  .sidebar-col {
-    max-height: min(42vh, 380px);
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
   }
 }
 
 @media (max-width: 480px) {
-  .chat-container-fill {
-    padding: 0.25rem !important;
-  }
-
-  .chat-shell {
-    border-radius: 4px;
-    border: none;
-  }
-
-  .sidebar-col {
-    max-height: min(35vh, 280px);
-  }
-
-  .sin-conversacion {
-    background: rgba(179, 235, 242, 0.1);
-  }
-
   .sin-conv-text {
-    font-size: 13px;
-  }
-
-  .header-retroceso {
-    padding: 6px 10px;
-    gap: 10px;
-  }
-
-  .titulo-conversacion {
     font-size: 14px;
+  }
+  .header-retroceso {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .titulo-conversacion {
+    font-size: 15px;
   }
 }
 
-/* ---- Mobile First - Mostrar/ocultar según viewport ---- */
+/* ---- Mostrar/Ocultar según viewport ---- */
 @media (min-width: 960px) {
-  /* En desktop, siempre mostrar chat-desktop */
   .chat-movil-lista,
   .chat-movil-completo {
     display: none;
   }
-
   .chat-desktop {
     display: flex;
   }
 }
 
 @media (max-width: 959px) {
-  /* En móvil con pantalla < 960px, usar las vistas móviles */
   .chat-desktop {
     display: none;
   }

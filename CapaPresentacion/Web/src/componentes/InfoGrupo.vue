@@ -1,76 +1,72 @@
 <template>
   <div class="info-grupo">
 
-    <!-- Encabezado con banner + avatar cuadrado (mismo patrón que Chat.vue) -->
-    <div class="info-header">
-      <div
-          class="profile-banner profile-banner--default"
-          :style="conversacion.imagenBanner ? { backgroundImage: `url('${conversacion.imagenBanner}')` } : {}"
-      />
-      <div class="profile-lower">
-        <div class="profile-avatar-wrap">
-          <div class="avatar-cuadrado">
-            <template v-if="!esGrupoOCanal && otroUsuario?.fotoUrl">
-              <img :src="otroUsuario.fotoUrl" class="avatar-img" />
-            </template>
-            <template v-else-if="esAviso">
-              <v-icon size="28" color="#406D73">mdi-bullhorn</v-icon>
-            </template>
-            <template v-else-if="conversacion.fotoUrl">
-              <img :src="conversacion.fotoUrl" class="avatar-img" />
-            </template>
-            <template v-else>
-              {{ conversacion.nombre?.charAt(0).toUpperCase() || 'G' }}
-            </template>
-          </div>
-        </div>
-        <div class="profile-title-row">
-          <button class="btn-atras" @click="$emit('volver')" title="Volver">
-            <v-icon size="20" color="#406D73">mdi-arrow-left</v-icon>
-          </button>
+    <!-- Header Compacto Estilo Telegram/Slack -->
+    <div class="info-header-compact">
+      <button class="btn-atras" @click="$emit('volver')" title="Volver">
+        <v-icon size="20" color="#406D73">mdi-arrow-left</v-icon>
+      </button>
 
-          <!-- Título editable -->
-          <v-text-field
-              v-if="editandoNombre"
-              v-model="nuevoNombre"
-              variant="underlined"
-              density="compact"
-              autofocus
-              hide-details
-              @keyup.enter="guardarNuevoNombre"
-              @blur="guardarNuevoNombre"
-              class="input-nombre-grupo"
-          />
-          <span v-else class="profile-name text-truncate">{{ conversacion.nombre }}</span>
-
-          <v-btn
-              v-if="puedeGestionar && !editandoNombre && !esAviso"
-              icon="mdi-pencil"
-              variant="text"
-              size="x-small"
-              @click="editandoNombre = true"
-              class="ml-1"
-          />
-          <v-menu v-if="puedeGestionar" content-class="menu-perfil-flotante" transition="scale-transition">
-            <template v-slot:activator="{ props }">
-              <v-btn icon="mdi-dots-vertical" variant="text" size="small" class="ml-1" v-bind="props" />
-            </template>
-            <v-list>
-              <v-list-item @click="editandoNombre = true" prepend-icon="mdi-pencil">
-                <v-list-item-title>Cambiar nombre</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="abrirEdicionGrupo('fotoUrl')" prepend-icon="mdi-camera">
-                <v-list-item-title>Cambiar foto de grupo</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="abrirEdicionGrupo('imagenBanner')" prepend-icon="mdi-wallpaper">
-                <v-list-item-title>Cambiar banner</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
+      <div class="header-avatar-wrap">
+        <div class="header-avatar-info">
+          <template v-if="!esGrupoOCanal && otroUsuario?.fotoUrl">
+            <img :src="otroUsuario.fotoUrl" class="header-avatar-img" />
+          </template>
+          <template v-else-if="esAviso">
+            <v-icon size="24" color="white">mdi-bullhorn</v-icon>
+          </template>
+          <template v-else-if="conversacion.fotoUrl">
+            <img :src="conversacion.fotoUrl" class="header-avatar-img" />
+          </template>
+          <template v-else>
+            {{ conversacion.nombre?.charAt(0).toUpperCase() || 'G' }}
+          </template>
         </div>
-        <div class="profile-subtitle">
+      </div>
+
+      <div class="header-info-content">
+        <!-- Título editable -->
+        <v-text-field
+            v-if="editandoNombre"
+            v-model="nuevoNombre"
+            variant="underlined"
+            density="compact"
+            autofocus
+            hide-details
+            @keyup.enter="guardarNuevoNombre"
+            @blur="guardarNuevoNombre"
+            class="input-nombre-grupo"
+        />
+        <span v-else class="info-name text-truncate">{{ conversacion.nombre }}</span>
+        
+        <div class="info-subtitle">
           {{ esAviso ? '📣 Canal de Avisos' : '' }}{{ conversacion.participantes?.length || 0 }} miembros
         </div>
+      </div>
+
+      <div class="header-actions">
+        <v-btn
+            v-if="puedeGestionar && !editandoNombre && !esAviso"
+            icon="mdi-pencil"
+            variant="text"
+            color="#406D73"
+            size="small"
+            @click="editandoNombre = true"
+            class="header-btn"
+        />
+        <v-menu v-if="puedeGestionar" content-class="menu-perfil-flotante" transition="scale-transition">
+          <template v-slot:activator="{ props }">
+            <v-btn icon="mdi-dots-vertical" color="#406D73" variant="text" size="small" class="header-btn" v-bind="props" />
+          </template>
+          <v-list>
+            <v-list-item @click="editandoNombre = true" prepend-icon="mdi-pencil">
+              <v-list-item-title>Cambiar nombre</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="abrirEdicionGrupo('fotoUrl')" prepend-icon="mdi-camera">
+              <v-list-item-title>Cambiar foto de grupo</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </div>
     </div>
 
@@ -352,67 +348,31 @@ const confirmarEliminarMiembro = async () => {
 </script>
 
 <style scoped>
+/* ==================================================
+   InfoGrupo.vue — Premium SaaS Styles 2026
+   ================================================== */
+
 .info-grupo {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #f7fcfd;
+  background: #ffffff;
   overflow: hidden;
+  border-left: 1px solid rgba(64,109,115,0.08);
 }
 
-.info-header {
+/* ===================================================
+   HEADER COMPACTO
+   =================================================== */
+.info-header-compact {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(64,109,115,0.1);
   flex-shrink: 0;
-}
-
-.profile-banner {
-  height: 76px;
-  background-color: #B3EBF2;
-  background-image: linear-gradient(135deg, rgba(64,109,115,0.22) 0%, transparent 55%), linear-gradient(225deg, rgba(255,255,255,0.45) 0%, transparent 48%), radial-gradient(ellipse 90% 140% at 15% 0%, rgba(64,109,115,0.15), transparent);
-  background-size: cover;
-  background-position: center;
-}
-
-.profile-lower {
-  position: relative;
-  background: #f0f7f8;
-  padding: 8px 14px 14px;
-  padding-left: 100px;
-  min-height: 72px;
-}
-
-.profile-avatar-wrap {
-  position: absolute;
-  left: 14px;
-  top: -32px;
-  z-index: 2;
-}
-
-.avatar-cuadrado {
-  width: 64px;
-  height: 64px;
-  background: #B2C5C8;
-  color: #2f4a4f;
-  border-radius: 10px;
-  border: 3px solid #ffffff;
-  box-shadow: 0 4px 14px rgba(64,109,115,0.22);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  font-weight: 700;
-  overflow: hidden;
-}
-
-.avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profile-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 12px;
+  min-height: 62px;
 }
 
 .btn-atras {
@@ -422,70 +382,107 @@ const confirmarEliminarMiembro = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   flex-shrink: 0;
-  transition: background 0.15s;
+  transition: background .15s, transform .15s;
 }
 
 .btn-atras:hover {
-  background: rgba(64,109,115,0.1);
+  background: rgba(64,109,115,0.08);
+  transform: translateX(-2px);
 }
 
-.profile-name {
-  font-size: 1rem;
+.header-avatar-wrap {
+  flex-shrink: 0;
+}
+
+.header-avatar-info {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #406D73 0%, #5a8a94 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
   font-weight: 700;
-  color: #2f4a4f;
-  line-height: 1.25;
-  letter-spacing: 0.01em;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(64,109,115,0.2);
+}
+
+.header-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.header-info-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.info-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a2e31;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
 }
 
 .input-nombre-grupo {
-  font-size: 1rem;
+  font-size: 15px;
   font-weight: 700;
-  color: #2f4a4f;
+  color: #1a2e31;
 }
 
-.profile-subtitle {
+.info-subtitle {
   font-size: 12px;
   color: #5a8a94;
   margin-top: 2px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.header-btn {
+  transition: transform .15s ease, background .15s ease !important;
+}
+.header-btn:hover {
+  transform: scale(1.08) !important;
+}
+
+/* ===================================================
+   CUERPO SCROLLEABLE
+   =================================================== */
 .info-cuerpo {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  background: #f8fbfc;
 }
 
-/* Scrollbar mejorada */
-.info-cuerpo::-webkit-scrollbar {
-  width: 8px;
-}
-
-.info-cuerpo::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.info-cuerpo::-webkit-scrollbar-thumb {
-  background: rgba(64, 109, 115, 0.25);
-  border-radius: 10px;
-}
-
-.info-cuerpo::-webkit-scrollbar-thumb:hover {
-  background: rgba(64, 109, 115, 0.45);
-}
-
+/* ===================================================
+   SECCIONES Y TARJETAS
+   =================================================== */
 .seccion {
   background: #ffffff;
-  border-radius: 14px;
-  padding: 14px 16px;
-  box-shadow: 0 2px 8px rgba(64,109,115,0.1);
-  border: 1px solid rgba(64,109,115,0.12);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(64,109,115,0.06), 0 4px 12px rgba(64,109,115,0.03);
+  border: 1px solid rgba(64,109,115,0.08);
 }
 
 .seccion-titulo {
@@ -494,36 +491,46 @@ const confirmarEliminarMiembro = async () => {
   font-size: 11px;
   font-weight: 700;
   color: #406D73;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
+.descripcion-usuario {
+  font-size: 13px;
+  color: #2f4a4f;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ===================================================
+   LISTA DE MIEMBROS
+   =================================================== */
 .lista-miembros {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .item-miembro {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px;
-  border-radius: 10px;
-  transition: background 0.12s;
+  padding: 10px 12px;
+  border-radius: 12px;
+  transition: background .15s;
 }
 
 .item-miembro:hover {
-  background: rgba(179, 235, 242, 0.1);
+  background: rgba(179, 235, 242, 0.15);
 }
 
 .avatar-mini {
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  background: #B2C5C8;
-  color: #2f4a4f;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  background: linear-gradient(135deg, #B2C5C8, #9fb3b6);
+  color: #ffffff;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -549,41 +556,87 @@ const confirmarEliminarMiembro = async () => {
 
 .info-usuario .nombre {
   font-weight: 600;
-  font-size: 13px;
-  color: #2f4a4f;
+  font-size: 14px;
+  color: #1a2e31;
+  letter-spacing: -0.01em;
 }
 
 .roles-wrapper {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   margin-top: 4px;
 }
 
-.descripcion-usuario {
+/* ===================================================
+   MODALES (Heredan de estilos.css globales pero ajustes finos aquí)
+   =================================================== */
+.modal-editar-perfil {
+  box-shadow: 0 16px 48px rgba(64,109,115,0.18) !important;
+}
+
+.modal-titulo-perfil {
+  background: linear-gradient(135deg, #406D73 0%, #5a8a94 100%) !important;
+  color: white !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 14px 16px !important;
+}
+
+.modal-contenido-perfil {
+  padding: 20px 16px !important;
+  background: #f7fbfc !important;
+}
+
+.campo-edicion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label-input-mejorado {
+  display: flex;
+  align-items: center;
   font-size: 12px;
-  color: #5a8a94;
-  line-height: 1.5;
-  margin: 0;
+  font-weight: 600;
+  color: #2f4a4f;
 }
 
-/* Media Queries para Responsividad */
-@media (max-width: 768px) {
-  .profile-lower {
-    padding-left: 90px;
-  }
-  .avatar-cuadrado {
-    width: 56px;
-    height: 56px;
-  }
+.input-modal-mejorado {
+  padding: 10px 14px;
+  border: 1.5px solid rgba(64,109,115,0.2);
+  border-radius: 10px;
+  font-size: 13px;
+  color: #1a2e31;
+  background: #ffffff;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
 }
 
+.input-modal-mejorado:focus {
+  border-color: #406D73;
+  box-shadow: 0 0 0 3px rgba(64,109,115,0.1);
+}
+
+.modal-acciones-perfil {
+  background: #ffffff !important;
+  border-top: 1px solid rgba(64,109,115,0.08) !important;
+  padding: 12px 16px !important;
+}
+
+/* ===================================================
+   RESPONSIVE
+   =================================================== */
 @media (max-width: 480px) {
-  .profile-lower {
-    padding-left: 76px;
+  .info-header-compact {
+    padding: 10px 12px;
+    min-height: 56px;
   }
-  .avatar-cuadrado {
-    width: 48px;
-    height: 48px;
+  .header-avatar-info {
+    width: 38px;
+    height: 38px;
+    font-size: 15px;
   }
   .info-cuerpo {
     padding: 12px;
@@ -593,3 +646,4 @@ const confirmarEliminarMiembro = async () => {
   }
 }
 </style>
+

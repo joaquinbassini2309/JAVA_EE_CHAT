@@ -16,6 +16,8 @@ export function formatearFecha(fecha) {
   })
 }
 
+export const formatearSoloFecha = formatearFecha;
+
 /**
  * Formatea solo la hora
  * Ejemplo: "23:52"

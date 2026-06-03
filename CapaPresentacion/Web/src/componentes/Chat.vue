@@ -1,37 +1,55 @@
 <template>
-  <div class="componente-chat" style="display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; width: 100%; overflow: hidden;">
+  <div class="componente-chat" style="display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; width: 100%; overflow: hidden; background: #f8f9fa;">
     <template v-if="!mostrandoInfo">
 
-      <!-- Encabezado con banner + avatar cuadrado -->
-      <div class="chat-encabezado" @click="mostrandoInfo = true">
-        <div class="profile-banner profile-banner--default"
-          :style="conversacionActual?.imagenBanner ? { backgroundImage: `url('${conversacionActual.imagenBanner}')` } : {}"
-          style="background-size: cover; background-position: center;"
-        />
-        <div class="profile-lower">
-          <div class="profile-avatar-wrap">
-            <div class="avatar-cuadrado">
-              <img v-if="conversacionActual?.fotoUrl" :src="conversacionActual.fotoUrl" class="avatar-img" alt="avatar" />
-              <span v-else>{{ destinatario.iniciales }}</span>
-            </div>
+      <!-- Header Compacto Estilo Telegram/Slack -->
+      <div class="chat-header-compact" @click="mostrandoInfo = true">
+        <div class="header-left">
+          <div class="header-avatar">
+            <img v-if="conversacionActual?.fotoUrl" :src="conversacionActual.fotoUrl" class="header-avatar-img" alt="avatar" />
+            <span v-else>{{ destinatario.iniciales }}</span>
+            <span v-if="!esGrupo && otroUsuario?.estado === 'ONLINE'" class="header-dot"></span>
           </div>
-          <div class="profile-title-row">
-            <span class="profile-name text-truncate">{{ destinatario.nombre }}</span>
-            <div class="encabezado-acciones" @click.stop>
-              <v-btn v-if="(esGrupo || esAviso) && (!esAviso || rolUsuario === 'ADMIN')" icon="mdi-account-plus" variant="flat" color="accent" size="small" density="comfortable" @click="abrirModalAñadir" title="Añadir miembro" />
-              <v-btn icon="mdi-close" variant="flat" color="error" size="small" density="comfortable" @click="cerrarConversacion" title="Cerrar conversación" />
-            </div>
+          <div class="header-info">
+            <span class="header-name">{{ destinatario.nombre }}</span>
+            <span class="header-status">
+              <template v-if="!esGrupo && otroUsuario">
+                <span :class="otroUsuario.estado === 'ONLINE' ? 'status-online' : 'status-offline'">
+                  {{ otroUsuario.estado === 'ONLINE' ? '● En línea' : '● Desconectado' }}
+                </span>
+              </template>
+              <template v-else>
+                <span class="status-group">● Grupo de conversación</span>
+              </template>
+            </span>
           </div>
-          <div class="profile-subtitle">
-            <template v-if="!esGrupo && otroUsuario">
-              <span :class="{'texto-online': otroUsuario.estado === 'ONLINE', 'texto-offline': otroUsuario.estado === 'OFFLINE'}">
-                {{ otroUsuario.estado === 'ONLINE' ? 'En línea' : 'Desconectado' }}
-              </span>
-            </template>
-            <template v-else>
-              Grupo
-            </template>
-          </div>
+        </div>
+        <div class="header-actions" @click.stop>
+          <v-hover v-slot="{ isHovering, props }">
+            <v-btn
+              v-bind="props"
+              v-if="!esAviso || rolUsuario === 'ADMIN'"
+              icon="mdi-account-plus"
+              :variant="isHovering ? 'flat' : 'outlined'"
+              color="#406D73"
+              size="small"
+              @click="abrirModalAñadir"
+              title="Añadir miembro"
+              class="header-btn teal-hover-white"
+            />
+          </v-hover>
+          <v-hover v-slot="{ isHovering, props }">
+            <v-btn
+              v-bind="props"
+              icon="mdi-close"
+              :variant="isHovering ? 'flat' : 'outlined'"
+              color="error"
+              size="small"
+              @click="cerrarConversacion"
+              title="Cerrar conversación"
+              class="header-btn"
+            />
+          </v-hover>
         </div>
       </div>
 
@@ -155,8 +173,16 @@
 
       <!-- Área de mensajes -->
       <div ref="contenedorMensajes" class="contenedor-mensajes">
+        <!-- Cifrado estático al inicio -->
+        <div class="mensaje-sistema-container">
+          <div class="mensaje-sistema">
+            <v-icon size="12" color="#406D73" class="mr-1" style="opacity: 0.8;">mdi-lock</v-icon>
+            Los mensajes están cifrados de extremo a extremo
+          </div>
+        </div>
+
         <!-- Botón Cargar Más -->
-        <div v-if="!todosCargados" class="d-flex justify-center my-3">
+        <div v-if="!todosCargados && mensajesFiltrados.length > 0" class="d-flex justify-center my-3">
           <v-btn
             variant="flat"
             color="#455A64"
@@ -171,16 +197,25 @@
           </v-btn>
         </div>
         <div
-            v-for="mensaje in mensajesFiltrados"
+            v-for="(mensaje, index) in mensajesFiltrados"
             :key="mensaje.id"
-            class="mensaje-wrap"
-            :class="{ propio: esPropio(mensaje) }"
+            class="mensaje-agrupador"
         >
-          <Mensaje
-              :mensaje="mensaje"
-              @ver-info="mostrarInfoMensaje"
-              @eliminar="eliminarMensaje"
-          />
+          <!-- Date Header -->
+          <div v-if="mostrarFechaHeader(index)" class="fecha-header-container">
+            <div class="fecha-header">{{ formatearSoloFecha(mensaje.fechaEnvio) }}</div>
+          </div>
+          
+          <div
+              class="mensaje-wrap"
+              :class="{ propio: esPropio(mensaje) }"
+          >
+            <Mensaje
+                :mensaje="mensaje"
+                @ver-info="mostrarInfoMensaje"
+                @eliminar="eliminarMensaje"
+            />
+          </div>
         </div>
       </div>
 
@@ -192,7 +227,6 @@
         Solo los administradores pueden enviar mensajes en este canal.
       </div>
       <div v-else class="entrada-mensaje">
-        <!-- Nuevo: input de archivo oculto -->
         <input
             ref="fileInput"
             type="file"
@@ -200,22 +234,37 @@
             @change="handleFileSelected"
             style="display:none"
         />
-        <button class="btn-adjunto" title="Archivos adjunto" @click="seleccionarArchivo">
-          <v-icon size="18" color="#406D73" style="opacity:0.75">mdi-paperclip</v-icon>
-          <span class="btn-texto">Archivos adjunto</span>
-        </button>
+        <v-hover v-slot="{ isHovering, props }">
+          <v-btn
+            v-bind="props"
+            icon="mdi-paperclip"
+            :variant="isHovering ? 'flat' : 'text'"
+            color="#406D73"
+            class="btn-adjunto teal-hover-white"
+            @click="seleccionarArchivo"
+            title="Adjuntar archivo o imagen"
+            :loading="subiendoArchivo"
+          ></v-btn>
+        </v-hover>
         <textarea
             v-model="contenidoNuevo"
             class="input-mensaje"
-            :placeholder="String(conversacionActual?.id).startsWith('tareas_') ? 'Escribe una nueva tarea aquí...' : 'Barra de escribir mensajes'"
+            :placeholder="String(conversacionActual?.id).startsWith('tareas_') ? '✏️  Escribe una nueva tarea...' : '✉️  Escribe un mensaje...'"
             @keydown="handleKeydown"
             rows="1"
             style="resize: none; overflow-y: hidden;"
         ></textarea>
-        <button class="btn-enviar" @click="enviarMensaje" :disabled="!contenidoNuevo.trim()">
-          <v-icon size="16">mdi-send</v-icon>
-          <span class="btn-texto">Enviar mensaje</span>
-        </button>
+        <v-btn
+          variant="flat"
+          :color="contenidoNuevo.trim() ? '#5A8A94' : '#e0f2f1'"
+          height="38"
+          class="btn-enviar-pill"
+          :class="!contenidoNuevo.trim() ? 'btn-enviar-inactivo' : ''"
+          @click="enviarMensaje"
+        >
+          <v-icon size="18" :color="contenidoNuevo.trim() ? 'white' : '#8aa8ae'" class="mr-1">mdi-send</v-icon>
+          <span :style="{ color: contenidoNuevo.trim() ? 'white' : '#8aa8ae', fontWeight: 600, textTransform: 'none', fontSize: '14px', letterSpacing: '0.02em' }">Enviar</span>
+        </v-btn>
       </div>
 
     </template>
@@ -231,7 +280,7 @@ import { servicioApi } from '@/servicios/api'
 import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
 import Mensaje from './Mensaje.vue'
 import InfoGrupo from './InfoGrupo.vue'
-import { formatearFecha } from '@/utilidades/formateoFechas'
+import { formatearFecha, formatearSoloFecha } from '@/utilidades/formateoFechas'
 
 const almacen = useAlmacen()
 const contenidoNuevo = ref('')
@@ -307,7 +356,9 @@ const usuariosFiltrados = computed(() => {
   return lista
 })
 
-const mensajesFiltrados = computed(() => mensajes.value)
+const mensajesFiltrados = computed(() => {
+  return mensajes.value.filter(m => m.contenido !== 'Los mensajes están cifrados de extremo a extremo')
+})
 
 const esPropio = (mensaje) => mensaje.emisorId === usuarioActual.value?.id
 
@@ -511,12 +562,23 @@ const handleKeydown = (e) => {
   }
 }
 
+const mostrarFechaHeader = (index) => {
+  if (index === 0) return true;
+  const msgActual = mensajesFiltrados.value[index];
+  const msgAnterior = mensajesFiltrados.value[index - 1];
+  
+  if (!msgActual || !msgAnterior) return false;
+  
+  const fechaActual = formatearSoloFecha(msgActual.fechaEnvio);
+  const fechaAnterior = formatearSoloFecha(msgAnterior.fechaEnvio);
+  
+  return fechaActual !== fechaAnterior;
+}
+
 const enviarMensaje = async () => {
   if (!contenidoNuevo.value.trim() || !conversacionActual.value) return
   const texto = contenidoNuevo.value.trim()
   contenidoNuevo.value = ''
-  
-  const esPrimerMensaje = mensajes.value.length === 0 && !esGrupo.value;
   
   try {
     // Si estamos en la conversación de tareas local, crear tarea local
@@ -528,17 +590,6 @@ const enviarMensaje = async () => {
       fechaVencInput.value = null
       mostrarModalFecha.value = true
       return
-    }
-
-    if (esPrimerMensaje) {
-      // Enviar mensaje de cifrado ANTES del mensaje del usuario
-      const cifradoMsg = await servicioApi.enviarMensaje({
-        conversacionId: conversacionActual.value.id,
-        contenido: 'Los mensajes están cifrados de extremo a extremo',
-        tipoMensaje: 'TEXTO'
-      })
-      almacen.agregarMensaje(cifradoMsg)
-      scrollToBottom()
     }
 
     if (ws.value && ws.value.readyState === WebSocket.OPEN) {
@@ -692,344 +743,314 @@ const confirmarCrearTarea = async () => {
 </script>
 
 <style scoped>
+/* ==================================================
+   Chat.vue — Premium SaaS Styles 2026
+   ================================================== */
+
 /* ---- Raíz ---- */
 .componente-chat {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100%;
   width: 100%;
-  background: #f7fcfd;
+  background: #f0f5f7;
   overflow: hidden;
   box-sizing: border-box;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-/* ---- Encabezado tipo banner ---- */
-.chat-encabezado {
-  flex-shrink: 0;
-  cursor: pointer;
-  z-index: 10;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-.profile-banner {
-  height: 76px;
-  background-color: #B3EBF2;
-  background-image:
-      linear-gradient(135deg, rgba(64,109,115,0.22) 0%, transparent 55%),
-      linear-gradient(225deg, rgba(255,255,255,0.45) 0%, transparent 48%),
-      radial-gradient(ellipse 90% 140% at 15% 0%, rgba(64,109,115,0.15), transparent);
-  background-size: cover;
-}
-
-.profile-lower {
-  position: relative;
-  background: #f0f7f8;
-  padding: 8px 14px 12px;
-  padding-left: 100px;
-  min-height: 72px;
-}
-
-.profile-avatar-wrap {
-  position: absolute;
-  left: 14px;
-  top: -32px;
-  z-index: 2;
-}
-
-.avatar-cuadrado {
-  width: 64px;
-  height: 64px;
-  background: #B2C5C8;
-  color: #2f4a4f;
-  border-radius: 10px;
-  border: 3px solid #ffffff;
-  box-shadow: 0 4px 14px rgba(64,109,115,0.22);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  font-weight: 700;
-  overflow: hidden;
-}
-
-.avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profile-title-row {
+/* ===================================================
+   HEADER COMPACTO (estilo Telegram/Slack)
+   =================================================== */
+.chat-header-compact {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  padding: 10px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(64,109,115,0.1);
+  cursor: pointer;
+  flex-shrink: 0;
+  z-index: 10;
+  min-height: 62px;
+  transition: background .18s ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05);
 }
 
-.profile-name {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #2f4a4f;
-  line-height: 1.25;
-  letter-spacing: 0.01em;
+.chat-header-compact:hover {
+  background: rgba(179, 235, 242, 0.1);
 }
 
-.profile-subtitle {
-  font-size: 12px;
-  color: #5a8a94;
-  margin-top: 2px;
-}
-
-.encabezado-acciones {
+.header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
-.btn-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
+.header-avatar {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #406D73 0%, #5a8a94 100%);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  transition: background 0.15s;
+  font-size: 17px;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: visible;
+  box-shadow: 0 2px 8px rgba(64,109,115,0.28);
 }
 
-.btn-icon:hover {
-  background: rgba(64,109,115,0.1);
+.header-avatar-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
-.texto-online {
-  color: #6A9E7D;
+.header-dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #6A9E7D;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(106,158,125,0.3);
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.header-name {
+  font-size: 15px;
   font-weight: 600;
+  color: #1a2e31;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
 }
 
-.texto-offline {
-  color: #7f9ea4;
-  font-weight: 600;
+.header-status {
+  font-size: 12px;
+  line-height: 1.4;
 }
 
-/* ---- Mensajes ---- */
+.status-online  { color: #6A9E7D; font-weight: 500; }
+.status-offline { color: #8aa5ab; font-weight: 400; }
+.status-group   { color: #8aa5ab; font-weight: 400; }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.header-btn {
+  transition: transform .15s ease !important;
+}
+.header-btn:hover {
+  transform: scale(1.08) !important;
+}
+
+.teal-hover-white.v-btn--variant-flat {
+  color: #ffffff !important;
+}
+.teal-hover-white.v-btn--variant-flat .v-icon,
+.teal-hover-white.v-btn--variant-flat i {
+  color: #ffffff !important;
+}
+
+/* ===================================================
+   ÁREA DE MENSAJES
+   =================================================== */
 .contenedor-mensajes {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px;
+  padding: 20px 16px 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  background: rgba(179, 235, 242, 0.28);
+  gap: 4px;
+  /* Patrón muy sutil como WhatsApp */
+  background-color: #e8f1f3;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(64,109,115,0.06) 1px, transparent 0);
+  background-size: 24px 24px;
 }
 
-/* Scrollbar MUY visible para mensajes movido a global */
+.mensaje-agrupador {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 .mensaje-wrap {
   display: flex;
-  animation: fadeIn 0.25s ease-out;
+  flex-direction: column;
+  width: 100%;
+  align-items: flex-start;
 }
 
 .mensaje-wrap.propio {
-  justify-content: flex-end;
+  align-items: flex-end;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ===================================================
+   BANNERS Y SEPARADORES
+   =================================================== */
+.read-only-banner {
+  background: rgba(64,109,115,0.05) !important;
+  border-top: 1px solid rgba(64,109,115,0.08) !important;
+  color: #406D73 !important;
 }
 
-/* ---- Barra de entrada ---- */
+/* ===================================================
+   BARRA DE ENTRADA (estilo Telegram)
+   =================================================== */
 .entrada-mensaje {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: #ffffff;
   flex-shrink: 0;
   z-index: 10;
-  border-top: 1px solid rgba(64,109,115,0.1);
+  border-top: 1px solid rgba(64,109,115,0.08);
+  min-height: 60px;
 }
 
-.btn-adjunto {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 12px;
-  background: #e4f0f2;
-  border: 1px solid rgba(64,109,115,0.2);
-  border-radius: 8px;
-  color: #406D73;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s;
+.btn-adjunto-icon {
+  flex-shrink: 0;
+  opacity: 0.65;
+  transition: opacity .15s ease, transform .15s ease !important;
 }
-
-.btn-adjunto:hover {
-  background: #d2e8ec;
+.btn-adjunto-icon:hover {
+  opacity: 1;
+  transform: rotate(-15deg) scale(1.1) !important;
 }
 
 .input-mensaje {
   flex: 1;
-  padding: 9px 14px;
-  border: 1px solid rgba(64,109,115,0.22);
-  border-radius: 8px;
+  padding: 10px 16px;
+  border: 1.5px solid rgba(64,109,115,0.15);
+  border-radius: 24px;
   font-size: 14px;
-  color: #2f4a4f;
-  background: #ffffff;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #1a2e31;
+  background: #f7fbfc;
   outline: none;
   min-width: 0;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  max-height: 120px;
+  line-height: 1.45;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
 }
 
 .input-mensaje::placeholder {
-  color: rgba(64,109,115,0.4);
+  color: rgba(64,109,115,0.38);
+  font-weight: 400;
 }
 
 .input-mensaje:focus {
   border-color: #406D73;
-  box-shadow: 0 0 0 3px rgba(64,109,115,0.1);
+  box-shadow: 0 0 0 3px rgba(64,109,115,0.12);
+  background: #ffffff;
 }
 
-.btn-enviar {
+.btn-enviar-pill {
+  flex-shrink: 0;
+  border-radius: 20px !important;
+  padding: 0 16px !important;
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s !important;
+}
+.btn-enviar-pill:not(.btn-enviar-inactivo):hover {
+  transform: scale(1.04) !important;
+  box-shadow: 0 4px 12px rgba(64,109,115,0.35) !important;
+}
+.btn-enviar-pill:not(.btn-enviar-inactivo):active {
+  transform: scale(0.98) !important;
+}
+.btn-enviar-inactivo {
+  cursor: default !important;
+  box-shadow: none !important;
+}
+.btn-enviar-inactivo:hover > .v-btn__overlay {
+  opacity: 0 !important;
+}
+
+/* Mensaje Sistema (Pill de Cifrado) */
+.mensaje-sistema-container {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  margin: 12px 0 20px;
+}
+.mensaje-sistema {
+  font-size: 11px;
+  font-weight: 600;
+  color: #406D73;
+  background: #f7fcfd;
+  border: 1px solid rgba(64,109,115,0.15);
+  padding: 6px 14px;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 9px 18px;
-  background: #406D73;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
+  justify-content: center;
+  letter-spacing: 0.01em;
+}
+
+/* Date header */
+.fecha-header-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 16px 0 12px;
+}
+.fecha-header {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(4px);
+  color: #5a8a94;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s;
+  padding: 4px 14px;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  letter-spacing: 0.02em;
 }
 
-.btn-enviar:hover:not(:disabled) {
-  background: #34585d;
-}
+/* ===================================================
+   MODALES
+   =================================================== */
 
-.btn-enviar:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-@media (max-width: 480px) {
-  .btn-texto {
-    display: none;
-  }
-  .entrada-mensaje {
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    padding: 8px 10px 16px 10px;
-    padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 8px);
-    gap: 6px;
-  }
-  .btn-adjunto, .btn-enviar {
-    width: 36px !important;
-    height: 36px !important;
-    padding: 0 !important;
-    justify-content: center !important;
-    flex-shrink: 0;
-  }
-}
-
-
-/* ---- Modal ---- */
+/* Modal Crear Tarea */
 .modal-titulo {
-  background: #406D73;
+  background: linear-gradient(135deg, #406D73 0%, #5a8a94 100%);
   color: white;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   display: flex;
   align-items: center;
   padding: 14px 16px;
 }
 
-.modal-busqueda-input {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 12px 16px;
-  background: #f0f7f8;
-  border: 1px solid rgba(64,109,115,0.15);
-  border-radius: 6px;
-  padding: 6px 10px;
-}
-
-.modal-busqueda-input input {
-  border: none;
-  background: transparent;
-  font-size: 13px;
-  color: #2f4a4f;
-  flex: 1;
-  outline: none;
-}
-
-.modal-busqueda-input input::placeholder {
-  color: rgba(64,109,115,0.4);
-}
-
-.modal-listado {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.item-usuario-modal {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  cursor: pointer;
-  transition: background 0.12s;
-}
-
-.item-usuario-modal:hover {
-  background: #f7fcfd;
-}
-
-.avatar-mini-modal {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  background: #B2C5C8;
-  color: #2f4a4f;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.info-usuario-modal {
-  flex: 1;
-}
-
-.info-usuario-modal .nombre {
-  font-weight: 600;
-  font-size: 14px;
-  color: #2f4a4f;
-}
-
-/* Adjuntos */
-.adjunto-imagen {
-  max-width: 280px;
-  max-height: 280px;
-  border-radius: 8px;
-  display: block;
-  margin-top: 8px;
-}
-
-/* ---- Estilos Mejorados Modal Info Mensaje ---- */
+/* Modal Info Mensaje */
 .modal-info-mensaje {
-  box-shadow: 0 10px 40px rgba(64, 109, 115, 0.15) !important;
-  background: #ffffff !important;
+  box-shadow: 0 16px 48px rgba(64,109,115,0.18) !important;
 }
 
 .modal-titulo-mejorado {
@@ -1039,23 +1060,22 @@ const confirmarCrearTarea = async () => {
   font-weight: 600 !important;
   display: flex !important;
   align-items: center !important;
-  padding: 12px 16px !important;
-  border-radius: 24px 24px 0 0 !important;
+  padding: 14px 16px !important;
 }
 
 .modal-contenido-mejorado {
   padding: 16px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 12px !important;
+  gap: 10px !important;
 }
 
 .info-item {
   display: flex !important;
   flex-direction: column !important;
   gap: 4px !important;
-  padding: 10px 12px !important;
-  background: rgba(179, 235, 242, 0.15) !important;
+  padding: 10px 14px !important;
+  background: rgba(179,235,242,0.12) !important;
   border-radius: 12px !important;
   border-left: 3px solid #406D73 !important;
 }
@@ -1064,23 +1084,23 @@ const confirmarCrearTarea = async () => {
   display: flex !important;
   align-items: center !important;
   gap: 6px !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
   font-weight: 700 !important;
   color: #406D73 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.02em !important;
+  letter-spacing: 0.05em !important;
 }
 
 .info-valor {
   margin: 0 !important;
-  font-size: 12px !important;
-  color: #2f4a4f !important;
+  font-size: 13px !important;
+  color: #1a2e31 !important;
   font-weight: 500 !important;
 }
 
-/* ---- Estilos Mejorados Modal Añadir Miembro ---- */
+/* Modal Añadir Miembro */
 .modal-anadir-miembro {
-  box-shadow: 0 10px 40px rgba(64, 109, 115, 0.15) !important;
+  box-shadow: 0 16px 48px rgba(64,109,115,0.18) !important;
 }
 
 .modal-titulo-anadir {
@@ -1090,17 +1110,15 @@ const confirmarCrearTarea = async () => {
   font-weight: 600 !important;
   display: flex !important;
   align-items: center !important;
-  padding: 12px 16px !important;
-  border-radius: 24px 24px 0 0 !important;
+  padding: 14px 16px !important;
 }
 
 .modal-contenido-anadir {
-  padding: 12px !important;
-  background: #f7fcfd !important;
+  padding: 14px !important;
+  background: #f7fbfc !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 10px !important;
-  border-radius: 0 0 24px 24px !important;
 }
 
 .modal-busqueda-anadir {
@@ -1108,30 +1126,37 @@ const confirmarCrearTarea = async () => {
   align-items: center !important;
   gap: 8px !important;
   background: #ffffff !important;
-  border: 1px solid rgba(64, 109, 115, 0.15) !important;
-  border-radius: 10px !important;
+  border: 1.5px solid rgba(64,109,115,0.15) !important;
+  border-radius: 12px !important;
   padding: 8px 12px !important;
+  transition: border-color .15s, box-shadow .15s !important;
+}
+
+.modal-busqueda-anadir:focus-within {
+  border-color: #406D73 !important;
+  box-shadow: 0 0 0 3px rgba(64,109,115,0.1) !important;
 }
 
 .modal-busqueda-anadir input {
   border: none !important;
   background: transparent !important;
-  font-size: 12px !important;
-  color: #2f4a4f !important;
+  font-size: 13px !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  color: #1a2e31 !important;
   flex: 1 !important;
   outline: none !important;
 }
 
 .modal-busqueda-anadir input::placeholder {
-  color: rgba(64, 109, 115, 0.4) !important;
+  color: rgba(64,109,115,0.38) !important;
 }
 
 .modal-listado-anadir {
-  max-height: 320px !important;
+  max-height: 300px !important;
   overflow-y: auto !important;
-  border-radius: 10px !important;
+  border-radius: 12px !important;
   background: #ffffff !important;
-  border: 1px solid rgba(64, 109, 115, 0.1) !important;
+  border: 1px solid rgba(64,109,115,0.1) !important;
 }
 
 .item-usuario-anadir {
@@ -1140,12 +1165,12 @@ const confirmarCrearTarea = async () => {
   gap: 12px !important;
   padding: 10px 12px !important;
   cursor: pointer !important;
-  transition: background 0.12s !important;
-  border-bottom: 1px solid rgba(64, 109, 115, 0.05) !important;
+  transition: background .15s !important;
+  border-bottom: 1px solid rgba(64,109,115,0.05) !important;
 }
 
 .item-usuario-anadir:hover {
-  background: rgba(179, 235, 242, 0.15) !important;
+  background: rgba(179,235,242,0.2) !important;
 }
 
 .item-usuario-anadir:last-child {
@@ -1153,52 +1178,44 @@ const confirmarCrearTarea = async () => {
 }
 
 .icon-plus-anadir {
-  transition: transform 0.2s !important;
+  transition: transform .2s ease !important;
 }
 
 .item-usuario-anadir:hover .icon-plus-anadir {
-  transform: scale(1.2) !important;
+  transform: scale(1.25) !important;
 }
 
-/* ---- Media Queries para Responsividad ---- */
-@media (max-width: 768px) {
-  .profile-lower {
-    padding-left: 90px;
-    min-height: 68px;
-  }
-
-  .avatar-cuadrado {
-    width: 56px;
-    height: 56px;
-  }
-
-  .entrada-mensaje {
-    flex-wrap: wrap;
-  }
+.avatar-mini-modal {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  background: linear-gradient(135deg, #406D73, #5a8a94);
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
 }
 
+.info-usuario-modal { flex: 1; }
+.info-usuario-modal .nombre {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1a2e31;
+}
+
+/* ===================================================
+   RESPONSIVE
+   =================================================== */
 @media (max-width: 480px) {
-  .profile-banner {
-    height: 60px;
-  }
-
-  .profile-lower {
-    padding-left: 76px;
-    min-height: 64px;
-  }
-
-  .avatar-cuadrado {
-    width: 48px;
-    height: 48px;
-  }
-
-  .entrada-mensaje {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .btn-adjunto, .btn-enviar {
-    width: 100%;
-  }
+  .chat-header-compact { padding: 8px 12px; min-height: 56px; }
+  .header-avatar { width: 38px; height: 38px; font-size: 15px; }
+  .header-name { font-size: 14px; }
+  .entrada-mensaje { padding: 8px 10px; gap: 6px; }
+  .input-mensaje { padding: 8px 14px; font-size: 14px; }
+  .contenedor-mensajes { padding: 14px 10px 8px; }
 }
 </style>
+

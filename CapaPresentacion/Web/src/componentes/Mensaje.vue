@@ -1,8 +1,11 @@
 <template>
-  <div v-if="esMensajeSistema" class="mensaje-sistema">
-    {{ mensaje.contenido }}
+  <div v-if="esMensajeSistema" class="mensaje-sistema-container">
+    <div class="mensaje-sistema">
+      <v-icon v-if="mensaje.contenido.includes('cifrados')" size="12" color="#406D73" class="mr-1" style="opacity: 0.8;">mdi-lock</v-icon>
+      {{ mensaje.contenido }}
+    </div>
   </div>
-  <div v-else>
+  <div v-else class="mensaje-root" :class="{ propio }">
     <!-- Renderizado especial para tareas locales como tarjeta ancha -->
     <div v-if="esTarea && esConversacionTareas" class="tarea-container">
       <div class="tarea-card" :class="{ 'completada': mensaje.completada }">
@@ -54,27 +57,32 @@
       </div>
 
       <div class="burbuja-footer">
-        <span class="timestamp">{{ formatearFecha(mensaje.fechaEnvio) }}</span>
-        <span v-if="propio && mensaje.leido" class="icono-leido">✓✓</span>
+        <span class="timestamp">{{ formatearHora(mensaje.fechaEnvio) }}</span>
+        <v-icon v-if="propio" size="14" class="ml-1 icono-tick" :color="mensaje.estado === 'LEIDO' ? '#4caf50' : '#8aa8ae'">
+          {{ mensaje.estado === 'LEIDO' ? 'mdi-check-all' : 'mdi-check' }}
+        </v-icon>
       </div>
     </div>
     <!-- Menú de 3 puntos (solo para mensajes propios) -->
     <div v-if="propio" class="menu-mensaje">
-      <v-menu content-class="menu-mensaje-flotante" transition="scale-transition">
+      <v-menu content-class="menu-mensaje-flotante" transition="scale-transition" location="bottom end" :offset="[0, 16]">
         <template v-slot:activator="{ props }">
-          <v-btn
-              icon="mdi-dots-vertical"
-              size="x-small"
-              variant="text"
-              color="#406D73"
-              v-bind="props"
-          />
+          <v-hover v-slot="{ isHovering, props: hoverProps }">
+            <v-btn
+                icon="mdi-dots-vertical"
+                size="x-small"
+                :variant="isHovering ? 'flat' : 'text'"
+                color="#406D73"
+                class="btn-opciones teal-hover-white"
+                v-bind="{ ...props, ...hoverProps }"
+            />
+          </v-hover>
         </template>
-        <v-list>
-          <v-list-item @click="$emit('ver-info', mensaje)" prepend-icon="mdi-information">
+        <v-list class="lista-opciones">
+          <v-list-item @click="$emit('ver-info', mensaje)" prepend-icon="mdi-information" class="item-info">
             <v-list-item-title>Info</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="$emit('eliminar', mensaje)" class="text-error" prepend-icon="mdi-delete">
+          <v-list-item @click="$emit('eliminar', mensaje)" prepend-icon="mdi-delete" class="item-delete text-error">
             <v-list-item-title>Eliminar</v-list-item-title>
           </v-list-item>
         </v-list>
@@ -88,7 +96,7 @@
 import { computed, ref } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
-import { formatearFecha } from '@/utilidades/formateoFechas'
+import { formatearFecha, formatearHora } from '@/utilidades/formateoFechas'
 
 const props = defineProps({
   mensaje: {
@@ -171,11 +179,51 @@ const toggleCompletada = async () => {
 </script>
 
 <style scoped>
+/* ==================================================
+   Mensaje.vue — Burbujas Premium SaaS 2026
+   ================================================== */
+
+/* ---- Mensaje de sistema (cifrado / notificaciones) ---- */
+.mensaje-sistema-container {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+.mensaje-sistema {
+  font-size: 11px;
+  font-weight: 600;
+  color: #406D73;
+  background: #f7fcfd;
+  border: 1px solid rgba(64,109,115,0.15);
+  padding: 6px 14px;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Contenedor root del mensaje ---- */
+.mensaje-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: flex-start;
+}
+.mensaje-root.propio {
+  align-items: flex-end;
+}
+
+/* ---- Contenedor wrap de burbuja ---- */
 .burbuja-wrap {
   display: flex;
-  max-width: 78%;
-  animation: slideIn 0.25s ease-out;
-  gap: 4px;
+  max-width: 76%;
+  animation: fadeInUp .2s ease-out both;
+  gap: 6px;
   align-items: flex-end;
 }
 
@@ -184,194 +232,247 @@ const toggleCompletada = async () => {
   flex-direction: row-reverse;
 }
 
-.mensaje-sistema {
-  width: 100%;
-  text-align: center;
-  font-size: 11px;
-  color: #7f9ea4;
-  margin: 12px 0;
-  font-weight: 600;
-  display: flex;
-  justify-content: center;
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
+/* ---- Burbujas ---- */
 .burbuja {
-  border-radius: 14px;
-  padding: 9px 13px;
+  border-radius: 18px;
+  padding: 9px 13px 7px;
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  position: relative;
+  min-width: 80px;
 }
 
-/* Mensajes ajenos */
+/* Mensajes ajenos — fondo blanco */
 .burbuja-them {
-  background: #b2c5c8;
-  color: #2f4a4f;
+  background: #ffffff;
+  color: #1a2e31;
   border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
 }
 
-/* Mensajes propios */
+/* Mensajes propios — teal pastel */
 .burbuja-me {
-  background: rgba(179, 235, 242, 0.95);
-  border: 1px solid rgba(64, 109, 115, 0.2);
-  color: #2a4d52;
+  background: #cfe9e6;
+  color: #162e31;
   border-bottom-right-radius: 4px;
+  box-shadow: 0 1px 3px rgba(64,109,115,0.1), 0 2px 8px rgba(64,109,115,0.06);
 }
 
+/* ---- Nombre del emisor (grupos) ---- */
 .nombre-emisor {
   display: block;
   font-size: 11px;
   font-weight: 700;
   color: #406D73;
   margin-bottom: 3px;
+  letter-spacing: 0.01em;
 }
 
+/* ---- Contenido ---- */
 .contenido {
   margin: 0;
+  font-size: 14px;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .contenido.eliminado {
-  opacity: 0.6;
+  opacity: 0.55;
   font-style: italic;
-  color: rgba(0, 0, 0, 0.5);
+  font-size: 13px;
 }
 
+/* ---- Footer de burbuja (hora + leído) ---- */
 .burbuja-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
-  margin-top: 4px;
+  gap: 3px;
+  margin-top: 3px;
 }
 
 .timestamp {
   font-size: 10px;
-  opacity: 0.55;
+  color: rgba(64,109,115,0.55);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.burbuja-me .timestamp {
+  color: rgba(22,46,49,0.5);
 }
 
 .icono-leido {
   font-size: 11px;
   color: #406D73;
+  font-weight: 700;
+  letter-spacing: -1px;
 }
 
+/* ---- Menú de 3 puntos ---- */
 .menu-mensaje {
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity .15s ease;
+  align-self: center;
 }
 
 .burbuja-wrap:hover .menu-mensaje {
   opacity: 1;
 }
 
-/* Adjuntos */
+.teal-hover-white.v-btn--variant-flat {
+  color: #ffffff !important;
+}
+.teal-hover-white.v-btn--variant-flat .v-icon,
+.teal-hover-white.v-btn--variant-flat i {
+  color: #ffffff !important;
+}
+
+:deep(.lista-opciones .v-list-item:hover) {
+  background-color: rgba(64,109,115,0.04) !important;
+}
+
+/* ---- Adjuntos ---- */
 .adjunto-imagen {
-  max-width: 280px;
-  max-height: 280px;
-  border-radius: 8px;
+  max-width: 260px;
+  max-height: 260px;
+  border-radius: 12px;
   display: block;
-  margin-top: 8px;
+  margin-top: 7px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform .2s ease;
+}
+
+.adjunto-imagen:hover {
+  transform: scale(1.02);
 }
 
 .adjunto-documento {
   margin-top: 8px;
-  background: rgba(255,255,255,0.04);
-  padding: 8px 10px;
-  border-radius: 8px;
+  background: rgba(64,109,115,0.06);
+  padding: 10px 12px;
+  border-radius: 10px;
   font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .adjunto-documento a {
-  color: #18686b;
+  color: #406D73;
   font-weight: 700;
   text-decoration: none;
+  flex: 1;
+}
+
+.adjunto-documento a:hover {
+  text-decoration: underline;
 }
 
 .nombre-archivo {
-  font-size: 12px;
-  color: #2f4a4f;
-  margin-top: 6px;
+  font-size: 11px;
+  color: #5a8a94;
+  margin-top: 4px;
 }
 
-/* Estilos de Tarea */
+/* ===================================================
+   TARJETA DE TAREA — Premium
+   =================================================== */
 .tarea-container {
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 8px 16px;
-  margin: 6px 0;
+  padding: 6px 12px;
+  margin: 4px 0;
 }
+
 .tarea-card {
   width: 100%;
-  max-width: 600px;
-  background: linear-gradient(145deg, #ffffff, #f7fcfd);
-  border-radius: 12px;
-  padding: 16px 20px;
-  border: 1px solid rgba(64,109,115,0.15);
-  box-shadow: 0 4px 12px rgba(64,109,115,0.08);
-  transition: all 0.2s ease;
+  max-width: 560px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(64,109,115,0.12);
+  box-shadow: 0 2px 12px rgba(64,109,115,0.08), 0 1px 3px rgba(0,0,0,0.05);
+  transition: transform .22s ease, box-shadow .22s ease;
+  animation: fadeInUp .25s ease-out both;
 }
-.tarea-card.completada {
-  opacity: 0.7;
-  background: #f0f7f8;
-  border-color: rgba(106, 158, 125, 0.3);
-}
+
 .tarea-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(64,109,115,0.12);
+  box-shadow: 0 6px 24px rgba(64,109,115,0.13), 0 2px 8px rgba(0,0,0,0.06);
 }
+
+.tarea-card.completada {
+  background: #f5fbf7;
+  border-color: rgba(106,158,125,0.2);
+  opacity: 0.8;
+}
+
 .tarea-header {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
+
 .tarea-checkbox {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.tarea-checkbox input {
-  width: 22px;
-  height: 22px;
-  accent-color: #6A9E7D;
-  cursor: pointer;
-}
-.tarea-titulo {
-  flex: 1;
-  font-size: 16px;
-  color: #2a4d52;
-  font-weight: 600;
-  line-height: 1.4;
-}
-.tarea-card.completada .tarea-titulo {
-  text-decoration: line-through;
-  color: #5a8a94;
-}
-.tarea-cuerpo {
-  font-size: 14px;
-  color: #4a6c72;
-  margin-top: 8px;
-  padding-left: 38px;
-  white-space: pre-wrap;
-  line-height: 1.5;
-}
-.tarea-card.completada .tarea-cuerpo {
-  opacity: 0.7;
-}
-.tarea-footer {
-  margin-top: 12px;
-  font-size: 13px;
-  color: #6A9E7D;
-  font-weight: 500;
-  padding-left: 38px;
-  display: flex;
-  align-items: center;
+  flex-shrink: 0;
 }
 
+.tarea-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #6A9E7D;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.tarea-titulo {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a2e31;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.tarea-card.completada .tarea-titulo {
+  text-decoration: line-through;
+  color: #7aa8ae;
+  font-weight: 500;
+}
+
+.tarea-acciones {
+  flex-shrink: 0;
+}
+
+.tarea-cuerpo {
+  font-size: 13px;
+  color: #4d7278;
+  margin-top: 10px;
+  padding-left: 32px;
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.tarea-card.completada .tarea-cuerpo {
+  opacity: 0.65;
+}
+
+.tarea-footer {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #6A9E7D;
+  font-weight: 500;
+  padding-left: 32px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 </style>
+
