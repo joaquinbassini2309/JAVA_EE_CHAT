@@ -1,5 +1,5 @@
 <template>
-  <div class="componente-chat" style="display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; width: 100%; overflow: hidden; background: #f8f9fa;">
+  <div class="componente-chat" style="display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; width: 100%; overflow: hidden; background: var(--bg);">
     <template v-if="!mostrandoInfo">
 
       <!-- Header Compacto Estilo Telegram/Slack -->
@@ -864,7 +864,7 @@ const confirmarCrearTarea = async () => {
   grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100%;
   width: 100%;
-  background: #f0f5f7;
+  background: var(--bg);
   overflow: hidden;
   box-sizing: border-box;
   font-family: 'Inter', system-ui, sans-serif;
@@ -878,7 +878,7 @@ const confirmarCrearTarea = async () => {
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background: #ffffff;
+  background: var(--surface);
   border-bottom: 1px solid rgba(64,109,115,0.1);
   cursor: pointer;
   flex-shrink: 0;
@@ -997,7 +997,7 @@ const confirmarCrearTarea = async () => {
   flex-direction: column;
   gap: 4px;
   /* Patrón muy sutil como WhatsApp */
-  background-color: #e8f1f3;
+  background-color: var(--chat-bg);
   background-image:
     radial-gradient(circle at 1px 1px, rgba(64,109,115,0.06) 1px, transparent 0);
   background-size: 24px 24px;
@@ -1037,7 +1037,7 @@ const confirmarCrearTarea = async () => {
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background: #ffffff;
+  background: var(--surface);
   flex-shrink: 0;
   z-index: 10;
   border-top: 1px solid rgba(64,109,115,0.08);
@@ -1061,8 +1061,8 @@ const confirmarCrearTarea = async () => {
   border-radius: 24px;
   font-size: 14px;
   font-family: 'Inter', system-ui, sans-serif;
-  color: #1a2e31;
-  background: #f7fbfc;
+  color: var(--text-primary);
+  background: var(--input-bg);
   outline: none;
   min-width: 0;
   max-height: 120px;
@@ -1078,7 +1078,7 @@ const confirmarCrearTarea = async () => {
 .input-mensaje:focus {
   border-color: #406D73;
   box-shadow: 0 0 0 3px rgba(64,109,115,0.12);
-  background: #ffffff;
+  background: var(--surface);
 }
 
 .btn-enviar-pill {
@@ -1114,7 +1114,7 @@ const confirmarCrearTarea = async () => {
   font-size: 11px;
   font-weight: 600;
   color: #406D73;
-  background: #f7fcfd;
+  background: var(--input-bg);
   border: 1px solid rgba(64,109,115,0.15);
   padding: 6px 14px;
   border-radius: 20px;
@@ -1133,7 +1133,7 @@ const confirmarCrearTarea = async () => {
   margin: 16px 0 12px;
 }
 .fecha-header {
-  background: rgba(255,255,255,0.85);
+  background: var(--surface);
   backdrop-filter: blur(4px);
   color: #5a8a94;
   font-size: 11px;
@@ -1205,7 +1205,7 @@ const confirmarCrearTarea = async () => {
 .info-valor {
   margin: 0 !important;
   font-size: 13px !important;
-  color: #1a2e31 !important;
+  color: var(--text-primary) !important;
   font-weight: 500 !important;
 }
 
@@ -1226,7 +1226,7 @@ const confirmarCrearTarea = async () => {
 
 .modal-contenido-anadir {
   padding: 14px !important;
-  background: #f7fbfc !important;
+  background: var(--bg) !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 10px !important;
@@ -1236,7 +1236,7 @@ const confirmarCrearTarea = async () => {
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
-  background: #ffffff !important;
+  background: var(--input-bg) !important;
   border: 1.5px solid rgba(64,109,115,0.15) !important;
   border-radius: 12px !important;
   padding: 8px 12px !important;
@@ -1253,7 +1253,7 @@ const confirmarCrearTarea = async () => {
   background: transparent !important;
   font-size: 13px !important;
   font-family: 'Inter', system-ui, sans-serif !important;
-  color: #1a2e31 !important;
+  color: var(--text-primary) !important;
   flex: 1 !important;
   outline: none !important;
 }
@@ -1266,7 +1266,7 @@ const confirmarCrearTarea = async () => {
   max-height: 300px !important;
   overflow-y: auto !important;
   border-radius: 12px !important;
-  background: #ffffff !important;
+  background: var(--surface) !important;
   border: 1px solid rgba(64,109,115,0.1) !important;
 }
 
@@ -1314,7 +1314,7 @@ const confirmarCrearTarea = async () => {
 .info-usuario-modal .nombre {
   font-weight: 600;
   font-size: 14px;
-  color: #1a2e31;
+  color: var(--text-primary);
 }
 
 /* ===================================================

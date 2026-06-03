@@ -246,7 +246,7 @@ const toggleCompletada = async () => {
   font-size: 11px;
   font-weight: 600;
   color: #406D73;
-  background: #f7fcfd;
+  background: var(--input-bg);
   border: 1px solid rgba(64,109,115,0.15);
   padding: 6px 14px;
   border-radius: 20px;
@@ -296,16 +296,16 @@ const toggleCompletada = async () => {
 
 /* Mensajes ajenos — fondo blanco */
 .burbuja-them {
-  background: #ffffff;
-  color: #1a2e31;
+  background: var(--msg-recibido-bg);
+  color: var(--msg-texto-color);
   border-bottom-left-radius: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
 }
 
 /* Mensajes propios — teal pastel */
 .burbuja-me {
-  background: #cfe9e6;
-  color: #162e31;
+  background: var(--msg-enviado-bg);
+  color: var(--msg-texto-color);
   border-bottom-right-radius: 4px;
   box-shadow: 0 1px 3px rgba(64,109,115,0.1), 0 2px 8px rgba(64,109,115,0.06);
 }
@@ -441,10 +441,10 @@ const toggleCompletada = async () => {
 .tarea-card {
   width: 100%;
   max-width: 560px;
-  background: #ffffff;
+  background: var(--surface);
   border-radius: 16px;
   padding: 16px 18px;
-  border: 1px solid rgba(64,109,115,0.12);
+  border: 1px solid var(--border-color);
   box-shadow: 0 2px 12px rgba(64,109,115,0.08), 0 1px 3px rgba(0,0,0,0.05);
   transition: transform .22s ease, box-shadow .22s ease;
   animation: fadeInUp .25s ease-out both;
@@ -456,7 +456,7 @@ const toggleCompletada = async () => {
 }
 
 .tarea-card.completada {
-  background: #f5fbf7;
+  background: rgba(106,158,125,0.08);
   border-color: rgba(106,158,125,0.2);
   opacity: 0.8;
 }
@@ -486,7 +486,7 @@ const toggleCompletada = async () => {
   flex: 1;
   font-size: 15px;
   font-weight: 600;
-  color: #1a2e31;
+  color: var(--text-primary);
   line-height: 1.4;
   letter-spacing: -0.01em;
 }

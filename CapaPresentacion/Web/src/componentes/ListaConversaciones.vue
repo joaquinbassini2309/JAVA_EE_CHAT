@@ -1144,7 +1144,7 @@ const esConversacionFavorita = (conversacion) => {
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  background: #ffffff;
+  background: var(--sidebar-bg);
   position: relative;
   overflow: hidden;
 }
@@ -1153,7 +1153,7 @@ const esConversacionFavorita = (conversacion) => {
 .panel-usuario-compact {
   flex-shrink: 0;
   padding: 14px 16px 12px;
-  background: #ffffff;
+  background: var(--sidebar-bg);
   border-bottom: 1px solid rgba(64,109,115,0.08);
 }
 
@@ -1200,7 +1200,7 @@ const esConversacionFavorita = (conversacion) => {
 .user-name {
   font-size: 15px;
   font-weight: 700;
-  color: #1a2e31;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
   display: block;
   white-space: nowrap;
@@ -1222,7 +1222,7 @@ const esConversacionFavorita = (conversacion) => {
   height: 32px;
   border-radius: 50%;
   border: 1px solid #406D73;
-  background-color: #ffffff;
+  background-color: var(--surface);
   color: #406D73;
   cursor: pointer;
   outline: none;
@@ -1257,7 +1257,7 @@ const esConversacionFavorita = (conversacion) => {
   align-items: center;
   gap: 4px;
   margin-top: 12px;
-  background: #f4f8f9;
+  background: var(--input-bg);
   border: 1px solid rgba(64,109,115,0.1);
   border-radius: 12px;
   padding: 6px 12px;
@@ -1297,7 +1297,7 @@ const esConversacionFavorita = (conversacion) => {
   border: none;
   background: transparent;
   font-size: 13px;
-  color: #1a2e31;
+  color: var(--text-primary);
   flex: 1;
   outline: none;
   min-width: 0;
@@ -1311,7 +1311,7 @@ const esConversacionFavorita = (conversacion) => {
   flex-direction: column;
   padding: 8px 12px;
   gap: 4px;
-  background: #ffffff;
+  background: var(--sidebar-bg);
   flex-shrink: 0;
 }
 
@@ -1345,7 +1345,7 @@ const esConversacionFavorita = (conversacion) => {
   font-weight: 800;
   color: #5a8a94;
   letter-spacing: 0.08em;
-  background: #ffffff;
+  background: var(--sidebar-bg);
   flex-shrink: 0;
   text-transform: uppercase;
 }
@@ -1355,7 +1355,7 @@ const esConversacionFavorita = (conversacion) => {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  background: #ffffff;
+  background: var(--sidebar-bg);
 }
 
 .item-conversacion {
@@ -1425,7 +1425,7 @@ const esConversacionFavorita = (conversacion) => {
 .info-conversacion .nombre {
   font-weight: 600;
   font-size: 14px;
-  color: #1a2e31;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1442,7 +1442,7 @@ const esConversacionFavorita = (conversacion) => {
 
 .info-conversacion .ultimo-msg {
   font-size: 12px;
-  color: #7f9ea4;
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1502,7 +1502,7 @@ const esConversacionFavorita = (conversacion) => {
 /* ===== MODALES ===== */
 .modal-nueva-conv {
   box-shadow: 0 16px 48px rgba(64,109,115,0.18) !important;
-  background: #ffffff !important;
+  background: var(--surface) !important;
   border-radius: 20px !important;
   overflow: hidden !important;
 }
@@ -1519,7 +1519,7 @@ const esConversacionFavorita = (conversacion) => {
 
 .modal-contenido-conv {
   padding: 16px !important;
-  background: #f8fbfc !important;
+  background: var(--bg) !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 12px !important;
@@ -1530,7 +1530,7 @@ const esConversacionFavorita = (conversacion) => {
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  background: #ffffff;
+  background: var(--surface);
   border-radius: 12px;
   border: 1px solid rgba(64,109,115,0.1);
 }
@@ -1551,8 +1551,8 @@ const esConversacionFavorita = (conversacion) => {
   border: 1.5px solid rgba(64,109,115,0.15);
   border-radius: 10px;
   font-size: 13px;
-  color: #1a2e31;
-  background: #ffffff;
+  color: var(--text-primary);
+  background: var(--input-bg);
   outline: none;
   transition: border-color .15s, box-shadow .15s;
   font-family: inherit;
@@ -1570,7 +1570,7 @@ const esConversacionFavorita = (conversacion) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #ffffff;
+  background: var(--input-bg);
   border: 1px solid rgba(64,109,115,0.1);
   border-radius: 12px;
   padding: 8px 14px;
@@ -1580,7 +1580,7 @@ const esConversacionFavorita = (conversacion) => {
   border: none;
   background: transparent;
   font-size: 13px;
-  color: #1a2e31;
+  color: var(--text-primary);
   flex: 1;
   outline: none;
 }
@@ -1591,7 +1591,7 @@ const esConversacionFavorita = (conversacion) => {
   max-height: 300px;
   overflow-y: auto;
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid rgba(64,109,115,0.08);
 }
 
@@ -1623,12 +1623,12 @@ const esConversacionFavorita = (conversacion) => {
 }
 
 .info-usuario-modal { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-.info-usuario-modal .nombre { font-weight: 600; font-size: 14px; color: #1a2e31; }
-.info-usuario-modal .email { font-size: 12px; color: #7f9ea4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.info-usuario-modal .nombre { font-weight: 600; font-size: 14px; color: var(--text-primary); }
+.info-usuario-modal .email { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .modal-acciones-conv {
   padding: 12px 16px !important;
-  background: #ffffff !important;
+  background: var(--surface) !important;
   border-top: 1px solid rgba(64,109,115,0.06) !important;
 }
 
@@ -1664,7 +1664,7 @@ const esConversacionFavorita = (conversacion) => {
 
 .menu-perfil-flotante .v-list {
   padding: 8px 0 !important;
-  background-color: #ffffff !important;
+  background-color: var(--surface) !important;
 }
 
 .menu-perfil-flotante .v-list-item {
@@ -1674,13 +1674,13 @@ const esConversacionFavorita = (conversacion) => {
 }
 
 .menu-perfil-flotante .v-list-item:hover {
-  background-color: #f0f7f8 !important;
+  background-color: var(--teal-pale) !important;
 }
 
 .menu-perfil-flotante .v-list-item-title {
   font-size: 12px !important;
   font-weight: 500 !important;
-  color: #2f4a4f !important;
+  color: var(--text-primary) !important;
 }
 
 .menu-perfil-flotante .text-error .v-list-item-title {
@@ -1710,7 +1710,7 @@ const esConversacionFavorita = (conversacion) => {
 /* ---- Estilos Mejorados Modal Editar Perfil ---- */
 .modal-editar-perfil {
   box-shadow: 0 10px 40px rgba(64, 109, 115, 0.15) !important;
-  background: #ffffff !important;
+  background: var(--surface) !important;
   border-radius: 24px !important;
   overflow: hidden !important;
 }
@@ -1728,7 +1728,7 @@ const esConversacionFavorita = (conversacion) => {
 
 .modal-contenido-perfil {
   padding: 16px !important;
-  background: #f7fcfd !important;
+  background: var(--bg) !important;
   border-radius: 0 0 24px 24px !important;
   display: flex !important;
   flex-direction: column !important;
@@ -1758,8 +1758,8 @@ const esConversacionFavorita = (conversacion) => {
   border: 1px solid rgba(64, 109, 115, 0.2) !important;
   border-radius: 12px !important;
   font-size: 12px !important;
-  color: #2f4a4f !important;
-  background: #ffffff !important;
+  color: var(--text-primary) !important;
+  background: var(--input-bg) !important;
   outline: none !important;
   transition: all 0.2s !important;
   resize: vertical !important;
@@ -1777,7 +1777,7 @@ const esConversacionFavorita = (conversacion) => {
 
 .modal-acciones-perfil {
   padding: 12px 16px !important;
-  background: #ffffff !important;
+  background: var(--surface) !important;
   border-top: 1px solid rgba(64, 109, 115, 0.08) !important;
   border-radius: 0 0 16px 16px !important;
 }
@@ -1810,7 +1810,7 @@ const esConversacionFavorita = (conversacion) => {
 /* ===== CARPETAS DE CONVERSACIONES ===== */
 .carpetas-conversaciones-container {
   padding: 10px 16px;
-  background: #ffffff;
+  background: var(--sidebar-bg);
   border-bottom: 1px solid rgba(64,109,115,0.06);
   flex-shrink: 0;
 }
@@ -1832,8 +1832,8 @@ const esConversacionFavorita = (conversacion) => {
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
-  background: #f0f5f7;
-  color: #2f4a4f;
+  background: var(--bg);
+  color: var(--text-primary);
   font-size: 12px;
   font-weight: 600;
   border-radius: 50px;
@@ -1906,7 +1906,7 @@ const esConversacionFavorita = (conversacion) => {
 .menu-perfil-flotante .v-list-item-title, .menu-mensaje-flotante .v-list-item-title {
   font-size: 13px !important;
   font-weight: 600 !important;
-  color: #2f4a4f !important;
+  color: var(--text-primary) !important;
 }
 .menu-mensaje-flotante .v-list-item-title {
   font-size: 12px !important;
