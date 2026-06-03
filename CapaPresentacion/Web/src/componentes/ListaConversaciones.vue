@@ -100,6 +100,42 @@
       </button>
     </div>
 
+    <!-- Carpetas de Filtrado de Conversaciones -->
+    <div v-if="tabActivo === 'chats'" class="carpetas-conversaciones-container">
+      <div class="carpetas-scroll-row">
+        <button
+          class="carpeta-pill"
+          :class="{ activa: grupoFiltroActivo === null }"
+          @click="grupoFiltroActivo = null"
+        >
+          Todos
+        </button>
+        <button
+          v-for="grupo in gruposDeConversacion"
+          :key="grupo"
+          class="carpeta-pill"
+          :class="{ activa: grupoFiltroActivo === grupo }"
+          @click="grupoFiltroActivo = grupo"
+        >
+          <v-icon size="12" class="mr-1" style="opacity:0.8; color: inherit;">mdi-folder-outline</v-icon>
+          <span>{{ grupo }}</span>
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            density="compact"
+            size="x-small"
+            color="white"
+            class="ml-1 btn-eliminar-carpeta"
+            @click.stop="eliminarGrupoConversacion(grupo)"
+          />
+        </button>
+        <button class="carpeta-pill btn-crear-carpeta" @click="abrirCrearGrupoConversacion">
+          <v-icon size="12" class="mr-1">mdi-plus</v-icon>
+          Crear grupo
+        </button>
+      </div>
+    </div>
+
     <!-- Subheader según tab -->
     <div v-if="tabActivo === 'chats'" class="seccion-chats-titulo">CHATS RECIENTES</div>
     <div v-else-if="tabActivo === 'canales'" class="seccion-chats-titulo">CANALES DE AVISOS</div>
@@ -120,14 +156,56 @@
             <span v-else>{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id).charAt(0).toUpperCase() }}</span>
           </div>
           <div class="info-conversacion" style="flex: 1; min-width: 0;">
-            <div class="conv-header-row">
-              <span class="nombre text-truncate" style="display: flex; align-items: center; gap: 4px;">
+            <div class="conv-header-row" style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="nombre text-truncate" style="display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0;">
                 {{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id) }}
                 <v-icon v-if="esConversacionFavorita(conversacion)" color="#FFC107" size="16" class="ml-1" title="Favorito">
                   mdi-star
                 </v-icon>
+                <v-chip v-if="obtenerGrupoDeConversacion(conversacion.id)" size="x-small" color="teal-lighten-4" variant="tonal" class="ml-1 px-1 font-weight-bold" style="height: 16px; font-size: 9px; color: #406D73 !important;">
+                  {{ obtenerGrupoDeConversacion(conversacion.id) }}
+                </v-chip>
               </span>
-              <span class="conv-time" v-if="conversacion.fechaUltimoMensaje">{{ formatearHora(conversacion.fechaUltimoMensaje) }}</span>
+              <span class="conv-time" v-if="conversacion.fechaUltimoMensaje" style="margin-left: 6px;">{{ formatearHora(conversacion.fechaUltimoMensaje) }}</span>
+              
+              <!-- Menú de Agrupar Conversación -->
+              <v-menu location="bottom end" transition="scale-transition">
+                <template v-slot:activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-folder-move-outline"
+                    variant="text"
+                    density="compact"
+                    size="small"
+                    color="#406D73"
+                    class="ml-1 btn-opcion-carpeta"
+                    @click.stop
+                    title="Asociar a grupo/carpeta"
+                  />
+                </template>
+                <v-list density="compact" class="py-1">
+                  <v-list-item-title class="text-caption text-grey px-3 py-1 font-weight-bold">Asociar a grupo:</v-list-item-title>
+                  <v-list-item
+                    v-for="grupo in gruposDeConversacion"
+                    :key="grupo"
+                    @click="asignarConversacionAGrupo(conversacion.id, grupo)"
+                    :active="obtenerGrupoDeConversacion(conversacion.id) === grupo"
+                  >
+                    <v-list-item-title>Mover a "{{ grupo }}"</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="abrirCrearGrupoConConversacion(conversacion.id)">
+                    <v-list-item-title class="text-accent font-weight-bold">+ Nuevo Grupo</v-list-item-title>
+                  </v-list-item>
+                  <v-divider v-if="obtenerGrupoDeConversacion(conversacion.id)" />
+                  <v-list-item
+                    v-if="obtenerGrupoDeConversacion(conversacion.id)"
+                    @click="removerConversacionDeGrupo(conversacion.id)"
+                    class="text-error"
+                  >
+                    <v-list-item-title>Quitar del grupo</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
             </div>
             <div class="conv-footer-row" style="display: flex; justify-content: space-between; align-items: center;">
               <span class="ultimo-msg text-truncate" style="flex: 1; min-width: 0;">
@@ -438,6 +516,49 @@
       </v-card>
     </v-dialog>
 
+    <!-- Modal Crear Carpeta / Grupo de Conversaciones -->
+    <v-dialog v-model="mostrarModalCrearGrupo" max-width="380">
+      <v-card rounded="2xl" class="modal-nueva-conv">
+        <v-card-title class="modal-titulo-conv">
+          <v-icon size="18" color="white" class="mr-2">mdi-folder-plus</v-icon>
+          Nuevo Grupo de Chats
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="mostrarModalCrearGrupo = false" />
+        </v-card-title>
+        <v-card-text class="modal-contenido-conv">
+          <div class="modal-seccion-mejorada">
+            <label class="label-input-conv">
+              <v-icon size="14" color="#406D73" class="mr-1">mdi-folder-outline</v-icon>
+              Nombre del grupo de chats
+            </label>
+            <input
+                v-model="nombreNuevoGrupo"
+                type="text"
+                placeholder="Ej: Marketing, Soporte, Personal..."
+                class="input-modal-conv"
+                @keyup.enter="crearGrupoConversacion"
+                autofocus
+            />
+          </div>
+        </v-card-text>
+        <v-card-actions class="modal-acciones-conv">
+          <v-spacer />
+          <v-btn
+              color="accent"
+              variant="flat"
+              rounded="lg"
+              size="small"
+              :disabled="!nombreNuevoGrupo.trim()"
+              prepend-icon="mdi-check-circle"
+              @click="crearGrupoConversacion"
+              class="btn-crear-grupo"
+          >
+            Crear Grupo
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </div>
 </template>
 
@@ -511,6 +632,132 @@ const usuarios = ref([])
 const tabActivo = ref('chats')
 const filtrosSeleccionados = ref(['PRIVADA', 'GRUPO', 'AVISO'])
 let intervaloRefresco = null
+
+// Agrupación de conversaciones (Carpetas)
+const gruposDeConversacion = ref([])
+const mapaConversacionesGrupos = ref({})
+const grupoFiltroActivo = ref(null)
+const mostrarModalCrearGrupo = ref(false)
+const nombreNuevoGrupo = ref('')
+const conversacionIdParaNuevoGrupo = ref(null)
+
+const obtenerLlaveGrupos = () => {
+  const userId = almacen.usuarioActual?.id || 'invitado'
+  return `chat_nombres_grupos_${userId}`
+}
+
+const obtenerLlaveMapa = () => {
+  const userId = almacen.usuarioActual?.id || 'invitado'
+  return `chat_mapa_grupos_${userId}`
+}
+
+const cargarGruposLocalStorage = () => {
+  const llaveGrupos = obtenerLlaveGrupos()
+  const llaveMapa = obtenerLlaveMapa()
+  
+  try {
+    const grupos = localStorage.getItem(llaveGrupos)
+    if (grupos) {
+      gruposDeConversacion.value = JSON.parse(grupos)
+    } else {
+      gruposDeConversacion.value = []
+    }
+  } catch (e) {
+    console.error('Error al cargar grupos de localStorage:', e)
+    gruposDeConversacion.value = []
+  }
+
+  try {
+    const mapa = localStorage.getItem(llaveMapa)
+    if (mapa) {
+      mapaConversacionesGrupos.value = JSON.parse(mapa)
+    } else {
+      mapaConversacionesGrupos.value = {}
+    }
+  } catch (e) {
+    console.error('Error al cargar mapa de grupos de localStorage:', e)
+    mapaConversacionesGrupos.value = {}
+  }
+}
+
+const guardarGruposLocalStorage = () => {
+  const llaveGrupos = obtenerLlaveGrupos()
+  const llaveMapa = obtenerLlaveMapa()
+  
+  try {
+    localStorage.setItem(llaveGrupos, JSON.stringify(gruposDeConversacion.value))
+    localStorage.setItem(llaveMapa, JSON.stringify(mapaConversacionesGrupos.value))
+  } catch (e) {
+    console.error('Error al guardar grupos en localStorage:', e)
+  }
+}
+
+const asignarConversacionAGrupo = (conversacionId, grupo) => {
+  mapaConversacionesGrupos.value[conversacionId] = grupo
+  guardarGruposLocalStorage()
+}
+
+const removerConversacionDeGrupo = (conversacionId) => {
+  delete mapaConversacionesGrupos.value[conversacionId]
+  guardarGruposLocalStorage()
+}
+
+const obtenerGrupoDeConversacion = (conversacionId) => {
+  return mapaConversacionesGrupos.value[conversacionId] || null
+}
+
+const abrirCrearGrupoConConversacion = (conversacionId) => {
+  conversacionIdParaNuevoGrupo.value = conversacionId
+  nombreNuevoGrupo.value = ''
+  mostrarModalCrearGrupo.value = true
+}
+
+const abrirCrearGrupoConversacion = () => {
+  conversacionIdParaNuevoGrupo.value = null
+  nombreNuevoGrupo.value = ''
+  mostrarModalCrearGrupo.value = true
+}
+
+const crearGrupoConversacion = () => {
+  const nombre = nombreNuevoGrupo.value.trim()
+  if (!nombre) return
+  
+  if (!gruposDeConversacion.value.includes(nombre)) {
+    gruposDeConversacion.value.push(nombre)
+  }
+  
+  if (conversacionIdParaNuevoGrupo.value !== null) {
+    mapaConversacionesGrupos.value[conversacionIdParaNuevoGrupo.value] = nombre
+  }
+  
+  guardarGruposLocalStorage()
+  mostrarModalCrearGrupo.value = false
+  nombreNuevoGrupo.value = ''
+  conversacionIdParaNuevoGrupo.value = null
+}
+
+const eliminarGrupoConversacion = (grupo) => {
+  if (confirm(`¿Estás seguro de que deseas eliminar el grupo "${grupo}"? Las conversaciones no se borrarán.`)) {
+    gruposDeConversacion.value = gruposDeConversacion.value.filter(g => g !== grupo)
+    
+    Object.keys(mapaConversacionesGrupos.value).forEach(id => {
+      if (mapaConversacionesGrupos.value[id] === grupo) {
+        delete mapaConversacionesGrupos.value[id]
+      }
+    })
+    
+    guardarGruposLocalStorage()
+    
+    if (grupoFiltroActivo.value === grupo) {
+      grupoFiltroActivo.value = null
+    }
+  }
+}
+
+watch(() => almacen.usuarioActual, () => {
+  cargarGruposLocalStorage()
+  grupoFiltroActivo.value = null
+})
 
 const panelTareasAbierto = computed(() => almacen.panelTareasAbierto)
 
@@ -626,6 +873,12 @@ const conversacionesFiltradas = computed(() => {
   let lista = conversacionesActuales.value.filter(c => {
     return filtrosSeleccionados.value.includes(c.tipo)
   })
+  
+  // Filtrar por grupo de conversación (carpeta) si está activo
+  if (grupoFiltroActivo.value !== null) {
+    lista = lista.filter(c => mapaConversacionesGrupos.value[c.id] === grupoFiltroActivo.value)
+  }
+
   if (termino.value) {
     const t = termino.value.toLowerCase()
     lista = lista.filter(c => obtenerNombreVisibleConversacion(c, usuarioActual.value?.id).toLowerCase().includes(t))
@@ -833,6 +1086,7 @@ const cargarConversaciones = async () => {
 }
 
 onMounted(() => {
+  cargarGruposLocalStorage()
   cargarConversaciones()
   intervaloRefresco = setInterval(cargarConversaciones, 5000)
 
@@ -1509,6 +1763,89 @@ const esConversacionFavorita = (conversacion) => {
   flex-shrink: 0 !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
   line-height: 1 !important;
+}
+
+/* ===== CARPETAS DE CONVERSACIONES ===== */
+.carpetas-conversaciones-container {
+  padding: 10px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(64,109,115,0.06);
+  flex-shrink: 0;
+}
+
+.carpetas-scroll-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 2px 0;
+}
+
+.carpetas-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+.carpeta-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: #f0f5f7;
+  color: #2f4a4f;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 50px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.carpeta-pill:hover {
+  background: #e0f2f1;
+  color: #406D73;
+}
+
+.carpeta-pill.activa {
+  background: #406D73;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(64,109,115,0.25);
+}
+
+.btn-eliminar-carpeta {
+  margin-right: -6px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.btn-eliminar-carpeta:hover {
+  opacity: 1 !important;
+  color: #ff5252 !important;
+}
+
+.btn-crear-carpeta {
+  background: transparent;
+  color: #406D73;
+  border: 1px dashed rgba(64, 109, 115, 0.4);
+}
+
+.btn-crear-carpeta:hover {
+  background: rgba(64,109,115,0.06);
+  border-style: solid;
+}
+
+.btn-opcion-carpeta {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  margin-left: 4px;
+}
+
+.item-conversacion:hover .btn-opcion-carpeta {
+  opacity: 0.8;
+}
+
+.btn-opcion-carpeta:hover {
+  opacity: 1 !important;
 }
 </style>
 
