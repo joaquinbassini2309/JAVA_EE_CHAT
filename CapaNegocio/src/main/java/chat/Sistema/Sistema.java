@@ -643,4 +643,38 @@ public class Sistema implements ISistema {
 
         mensajeHandler().actualizarColorResaltado(mensajeId, colorNormalizado);
     }
+
+    @Override
+    public void fijarMensaje(Long conversacionId, Long mensajeId, Long usuarioId) {
+        Conversacion conversacion = conversacionHandler().buscarConversacionPorId(conversacionId)
+                .orElseThrow(() -> new IllegalArgumentException("Conversación no encontrada"));
+
+        // Validar que el usuario sea participante
+        if (!usuarioEstaEnConversacion(usuarioId, conversacionId)) {
+            throw new IllegalArgumentException("No tienes acceso a esta conversación");
+        }
+
+        Mensaje mensaje = mensajeHandler().buscarPorId(mensajeId)
+                .orElseThrow(() -> new IllegalArgumentException("Mensaje no encontrado"));
+
+        // Validar que el mensaje pertenezca a la conversación
+        if (!mensaje.getConversacion().getId().equals(conversacionId)) {
+            throw new IllegalArgumentException("El mensaje no pertenece a esta conversación");
+        }
+
+        conversacion.setMensajeFijado(mensaje);
+    }
+
+    @Override
+    public void desfijarMensaje(Long conversacionId, Long usuarioId) {
+        Conversacion conversacion = conversacionHandler().buscarConversacionPorId(conversacionId)
+                .orElseThrow(() -> new IllegalArgumentException("Conversación no encontrada"));
+
+        // Validar que el usuario sea participante
+        if (!usuarioEstaEnConversacion(usuarioId, conversacionId)) {
+            throw new IllegalArgumentException("No tienes acceso a esta conversación");
+        }
+
+        conversacion.setMensajeFijado(null);
+    }
 }

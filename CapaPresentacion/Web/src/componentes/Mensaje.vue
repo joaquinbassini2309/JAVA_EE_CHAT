@@ -104,6 +104,9 @@
           <v-list-item @click="$emit('ver-info', mensaje)" prepend-icon="mdi-information" class="item-info">
             <v-list-item-title>Info</v-list-item-title>
           </v-list-item>
+          <v-list-item v-if="puedeFijar" @click="$emit('fijar', mensaje)" prepend-icon="mdi-pin" class="item-pin">
+            <v-list-item-title>Fijar mensaje</v-list-item-title>
+          </v-list-item>
           <v-list-item v-if="propio || esAdminGrupo" @click="$emit('eliminar', mensaje)" prepend-icon="mdi-delete" class="item-delete text-error">
             <v-list-item-title>Eliminar</v-list-item-title>
           </v-list-item>
@@ -127,7 +130,7 @@ const props = defineProps({
   },
 })
 
-defineEmits(['ver-info', 'eliminar'])
+defineEmits(['ver-info', 'eliminar', 'fijar'])
 
 const almacen = useAlmacen()
 const usuarioActual = computed(() => almacen.usuarioActual)
@@ -151,7 +154,11 @@ const esAdminGrupo = computed(() => {
   return conversacionActual.value?.tipo === 'GRUPO' && rolUsuarioActual.value === 'ADMIN'
 })
 
-const mostrarMenu = computed(() => propio.value || puedeResaltar.value)
+const puedeFijar = computed(() => {
+  return !props.mensaje.eliminado && !esMensajeSistema.value && !esTarea.value
+})
+
+const mostrarMenu = computed(() => propio.value || puedeResaltar.value || puedeFijar.value)
 
 const establecerResaltado = async (color) => {
   try {

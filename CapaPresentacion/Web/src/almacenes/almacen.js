@@ -168,6 +168,16 @@ export const useAlmacen = defineStore('principal', () => {
     }
   }
 
+  function actualizarMensajeFijado(conversacionId, mensajeFijado) {
+    const conv = conversaciones.value.find(c => c.id === conversacionId)
+    if (conv) {
+      conv.mensajeFijado = mensajeFijado
+    }
+    if (conversacionActual.value?.id === conversacionId) {
+      conversacionActual.value.mensajeFijado = mensajeFijado
+    }
+  }
+
   function actualizarRolParticipante(conversacionId, participanteId, nuevoRol) {
     const conv = conversaciones.value.find(c => c.id === conversacionId)
     if (conv?.participantes) {
@@ -275,6 +285,7 @@ export const useAlmacen = defineStore('principal', () => {
     agregarMensaje,
     actualizarMensaje,
     actualizarInfoConversacion,
+    actualizarMensajeFijado,
     actualizarRolParticipante,
     eliminarParticipante,
     establecerCargando,

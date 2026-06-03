@@ -68,6 +68,17 @@
         </div>
       </div>
 
+      <!-- Barra de Mensaje Fijado -->
+      <div v-if="conversacionActual?.mensajeFijado" class="barra-mensaje-fijado" @click="irAlMensaje(conversacionActual.mensajeFijado.id)">
+        <v-icon size="16" color="#406D73" class="fijado-icono mr-2">mdi-pin</v-icon>
+        <div class="fijado-cuerpo">
+          <div class="fijado-titulo">Mensaje fijado</div>
+          <div class="fijado-texto">{{ conversacionActual.mensajeFijado.contenido || 'Archivo adjunto' }}</div>
+        </div>
+        <v-spacer />
+        <v-btn icon="mdi-close" variant="text" size="x-small" color="#406D73" class="fijado-btn-cerrar" @click.stop="desfijarMensajeActual" title="Desfijar mensaje" />
+      </div>
+
       <!-- Modal Añadir Miembro -->
       <v-dialog v-model="mostrarModalAñadir" max-width="420">
         <v-card rounded="2xl" class="modal-anadir-miembro">
@@ -222,6 +233,7 @@
           </div>
           
           <div
+              :id="`msg-${mensaje.id}`"
               class="mensaje-wrap"
               :class="{ propio: esPropio(mensaje) }"
           >
@@ -229,6 +241,7 @@
                 :mensaje="mensaje"
                 @ver-info="mostrarInfoMensaje"
                 @eliminar="eliminarMensaje"
+                @fijar="fijarMensaje"
             />
           </div>
         </div>
@@ -649,6 +662,10 @@ const conectarWS = () => {
         }
       } else if (respuesta.tipo === 'mensaje_resaltado') {
         almacen.actualizarMensaje(respuesta.datos)
+      } else if (respuesta.tipo === 'mensajeFijado') {
+        almacen.actualizarMensajeFijado(conversacionActual.value.id, respuesta.datos)
+      } else if (respuesta.tipo === 'mensajeDesfijado') {
+        almacen.actualizarMensajeFijado(conversacionActual.value.id, null)
       }
     }
   }
@@ -743,6 +760,76 @@ const eliminarMensaje = async (mensaje) => {
     mensaje.contenido = 'Mensaje eliminado'
   } catch (error) {
     console.error('Error al eliminar mensaje:', error)
+  }
+}
+
+const fijarMensaje = async (mensaje) => {
+  if (!conversacionActual.value) return
+  try {
+    const dtMensaje = await servicioApi.fijarMensaje(conversacionActual.value.id, mensaje.id)
+    almacen.actualizarMensajeFijado(conversacionActual.value.id, dtMensaje)
+  } catch (error) {
+    console.error('Error al fijar mensaje:', error)
+  }
+}
+
+const desfijarMensajeActual = async () => {
+  if (!conversacionActual.value) return
+  try {
+    await servicioApi.desfijarMensaje(conversacionActual.value.id)
+    almacen.actualizarMensajeFijado(conversacionActual.value.id, null)
+  } catch (error) {
+    console.error('Error al desfijar mensaje:', error)
+  }
+}
+
+const irAlMensaje = async (mensajeId) => {
+  if (!mensajeId) return
+  
+  let el = document.getElementById(`msg-${mensajeId}`)
+  
+  const yaCargado = mensajes.value.some(m => m.id === mensajeId)
+  
+  if (!yaCargado) {
+    try {
+      cargandoMas.value = true
+      let encontrado = false
+      let limiteIntentos = 5
+      while (!encontrado && !todosCargados.value && limiteIntentos > 0) {
+        offsetMensajes.value += 6
+        const anteriores = await servicioApi.obtenerMensajes(conversacionActual.value.id, 6, offsetMensajes.value)
+        if (anteriores.length > 0) {
+          almacen.establecerMensajes([...anteriores, ...mensajes.value])
+          if (anteriores.length < 6) {
+            todosCargados.value = true
+          }
+          if (anteriores.some(m => m.id === mensajeId)) {
+            encontrado = true
+          }
+        } else {
+          todosCargados.value = true
+        }
+        limiteIntentos--
+      }
+    } catch (e) {
+      console.error('Error al intentar cargar mensaje para scroll:', e)
+    } finally {
+      cargandoMas.value = false
+    }
+  }
+
+  await nextTick()
+  el = document.getElementById(`msg-${mensajeId}`)
+  
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    
+    el.classList.add('mensaje-resaltado-temp')
+    setTimeout(() => {
+      el.classList.remove('mensaje-resaltado-temp')
+    }, 2000)
+  } else {
+    console.warn(`No se encontró el elemento con ID msg-${mensajeId}`)
   }
 }
 
@@ -1327,6 +1414,99 @@ const confirmarCrearTarea = async () => {
   .entrada-mensaje { padding: 8px 10px; gap: 6px; }
   .input-mensaje { padding: 8px 14px; font-size: 14px; }
   .contenedor-mensajes { padding: 14px 10px 8px; }
+}
+
+/* ---- Barra Mensaje Fijado ---- */
+.barra-mensaje-fijado {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(64, 109, 115, 0.12);
+  cursor: pointer;
+  z-index: 9;
+  flex-shrink: 0;
+  animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: background-color 0.2s ease;
+}
+
+.barra-mensaje-fijado:hover {
+  background: rgba(240, 247, 248, 0.98);
+}
+
+.fijado-cuerpo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.fijado-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  color: #406D73;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.fijado-texto {
+  font-size: 13px;
+  color: #2f4a4f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90%;
+  margin-top: 2px;
+}
+
+.fijado-icono {
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.barra-mensaje-fijado:hover .fijado-icono {
+  transform: rotate(15deg) scale(1.1);
+}
+
+.fijado-btn-cerrar {
+  margin-left: 8px;
+  transition: transform 0.15s ease !important;
+}
+
+.fijado-btn-cerrar:hover {
+  transform: scale(1.15) !important;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ---- Animación de mensaje resaltado ---- */
+@keyframes highlightFlash {
+  0% {
+    background-color: transparent;
+  }
+  20% {
+    background-color: rgba(64, 109, 115, 0.25);
+    box-shadow: 0 0 12px rgba(64, 109, 115, 0.4);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.mensaje-resaltado-temp {
+  animation: highlightFlash 2s cubic-bezier(0.25, 1, 0.5, 1);
+  border-radius: 12px;
 }
 </style>
 
