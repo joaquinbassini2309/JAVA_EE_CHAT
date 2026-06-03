@@ -22,3 +22,23 @@ export const temaProyecto = {
     'on-surface':  '#1a2e31',
   },
 }
+
+export const temaProyectoOscuro = {
+  dark: true,
+  colors: {
+    primary:       '#6ca0a6',
+    secondary:     '#304547',
+    accent:        '#6ca0a6',
+    error:         '#e57373',
+    warning:       '#ffb74d',
+    info:          '#81b2bf',
+    success:       '#81c784',
+    background:    '#0f171a',
+    surface:       '#152023',
+    'on-primary':  '#152023',
+    'on-accent':   '#152023',
+    'on-secondary':'#eef5f7',
+    'on-surface':  '#eef5f7',
+  },
+}
+

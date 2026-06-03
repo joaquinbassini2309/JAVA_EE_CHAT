@@ -288,8 +288,8 @@ const eliminarTarea = async (tarea) => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: #ffffff;
-  border-left: 1px solid rgba(0,0,0,0.06);
+  background-color: var(--sidebar-bg);
+  border-left: 1px solid var(--border-color);
   width: 100%;
 }
 
@@ -298,7 +298,7 @@ const eliminarTarea = async (tarea) => {
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .titulo-row {
@@ -309,7 +309,7 @@ const eliminarTarea = async (tarea) => {
 .titulo-texto {
   font-weight: 600;
   font-size: 16px;
-  color: #1a2e31;
+  color: var(--text-primary);
 }
 
 .acciones-row {
@@ -319,12 +319,13 @@ const eliminarTarea = async (tarea) => {
 
 .busqueda-container {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .input-busqueda {
   width: 100%;
-  background: #f0f5f7;
+  background: var(--input-bg);
+  color: var(--text-primary);
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 14px;
@@ -335,7 +336,7 @@ const eliminarTarea = async (tarea) => {
 .tabs-container {
   display: flex;
   padding: 0 16px;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid var(--border-color);
   gap: 16px;
 }
 
@@ -399,8 +400,8 @@ const eliminarTarea = async (tarea) => {
 }
 
 .tarjeta-tarea {
-  background: #ffffff;
-  border: 1px solid rgba(0,0,0,0.06);
+  background: var(--surface);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 12px;
   display: flex;
@@ -430,7 +431,7 @@ const eliminarTarea = async (tarea) => {
 .tarea-titulo {
   font-weight: 600;
   font-size: 14px;
-  color: #1a2e31;
+  color: var(--text-primary);
 }
 
 .texto-tachado {
@@ -440,7 +441,7 @@ const eliminarTarea = async (tarea) => {
 
 .tarea-desc {
   font-size: 12px;
-  color: #5c7e82;
+  color: var(--text-secondary);
 }
 
 .tarea-meta {
