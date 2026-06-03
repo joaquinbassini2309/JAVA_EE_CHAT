@@ -27,15 +27,15 @@ public class Tarea {
     @Column(name = "estado", length = 20)
     private EstadoTarea estado = EstadoTarea.PENDIENTE;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_creador", nullable = false)
     private Usuario creador;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_asignado_a")
     private Usuario asignadoA;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_grupo")
     private Conversacion grupo;
 

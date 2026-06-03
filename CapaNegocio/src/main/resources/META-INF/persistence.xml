@@ -26,6 +26,7 @@
         <class>chat.clases.Conversacion</class>
         <class>chat.clases.Mensaje</class>
         <class>chat.clases.Participante</class>
+        <class>chat.clases.Tarea</class>
 
         <properties>
             <!-- Dialecto de Hibernate para PostgreSQL -->

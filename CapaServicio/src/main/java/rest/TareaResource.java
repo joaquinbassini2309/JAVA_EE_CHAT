@@ -9,6 +9,8 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,24 +28,30 @@ public class TareaResource {
     public Response obtenerTareasDeUsuario(@PathParam("usuarioId") Long usuarioId) {
         try {
             List<Tarea> tareas = sistema.obtenerTareasDeUsuario(usuarioId);
-            List<DtTarea> dtoList = tareas.stream().map(t -> new DtTarea(
-                    t.getId(),
-                    t.getTitulo(),
-                    t.getContenido(),
-                    t.getFechaVencimiento(),
-                    t.getFechaCreacion(),
-                    t.getEstado(),
-                    t.getCreador().getId(),
-                    t.getCreador().getUsername(),
-                    t.getAsignadoA() != null ? t.getAsignadoA().getId() : null,
-                    t.getAsignadoA() != null ? t.getAsignadoA().getUsername() : null,
-                    t.getGrupo() != null ? t.getGrupo().getId() : null,
-                    t.getGrupo() != null ? t.getGrupo().getNombre() : null
-            )).collect(Collectors.toList());
+            List<DtTarea> dtoList = tareas.stream().map(t -> {
+                try {
+                    Long asignadoId = null;
+                    String asignadoUsername = null;
+                    Long grupoId = null;
+                    String grupoNombre = null;
+                    try { if (t.getAsignadoA() != null) { asignadoId = t.getAsignadoA().getId(); asignadoUsername = t.getAsignadoA().getUsername(); } } catch (Exception ignored) {}
+                    try { if (t.getGrupo() != null) { grupoId = t.getGrupo().getId(); grupoNombre = t.getGrupo().getNombre(); } } catch (Exception ignored) {}
+                    return new DtTarea(
+                            t.getId(), t.getTitulo(), t.getContenido(),
+                            t.getFechaVencimiento(), t.getFechaCreacion(), t.getEstado(),
+                            t.getCreador().getId(), t.getCreador().getUsername(),
+                            asignadoId, asignadoUsername, grupoId, grupoNombre
+                    );
+                } catch (Exception ex) {
+                    throw new RuntimeException("Error mapeando tarea id=" + t.getId() + ": " + ex.getMessage(), ex);
+                }
+            }).collect(Collectors.toList());
             return Response.ok(dtoList).build();
         } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorResponse(e.getMessage()))
+                    .entity(new ErrorResponse(sw.toString()))
                     .build();
         }
     }

@@ -36,6 +36,7 @@
         </div>
 
         <div class="user-actions-row">
+<<<<<<< HEAD
           <button
             @click="abrirNuevoGrupo"
             title="Nuevo grupo"
@@ -57,6 +58,17 @@
           >
             <v-icon size="17">mdi-logout</v-icon>
           </button>
+=======
+          <v-hover v-slot="{ isHovering, props }">
+            <v-btn v-bind="props" icon="mdi-account-multiple-plus" :variant="isHovering ? 'flat' : 'outlined'" color="#406D73" :class="{'text-white': isHovering, 'header-action-btn': true}" size="small" @click="abrirNuevoGrupo" title="Nuevo grupo" rounded />
+          </v-hover>
+          <v-hover v-slot="{ isHovering, props }">
+            <v-btn v-bind="props" icon="mdi-message-plus" :variant="isHovering ? 'flat' : 'outlined'" color="#406D73" :class="{'text-white': isHovering, 'header-action-btn': true}" size="small" @click="abrirNuevaConversacion" title="Nueva conversación" rounded />
+          </v-hover>
+          <v-hover v-slot="{ isHovering, props }">
+            <v-btn v-bind="props" icon="mdi-logout" :variant="isHovering ? 'flat' : 'outlined'" color="error" size="small" @click="cerrarSesionLocal" title="Cerrar sesión" class="header-action-btn" rounded />
+          </v-hover>
+>>>>>>> a7601092436e980d3f5c2e406be69f71195bd104
         </div>
       </div>
 
@@ -141,9 +153,12 @@
               </span>
               <span class="conv-time" v-if="conversacion.fechaUltimoMensaje">{{ formatearHora(conversacion.fechaUltimoMensaje) }}</span>
             </div>
-            <div class="conv-footer-row">
-              <span class="ultimo-msg text-truncate">
+            <div class="conv-footer-row" style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="ultimo-msg text-truncate" style="flex: 1; min-width: 0;">
                 {{ conversacion.ultimoMensaje || '...' }}
+              </span>
+              <span v-if="conversacion.noLeidos > 0" class="badge-no-leidos">
+                {{ conversacion.noLeidos }}
               </span>
             </div>
           </div>
@@ -799,9 +814,42 @@ const cerrarSesionLocal = () => {
   window.location.href = `${contextPath}/login`
 }
 
+const verificarNuevosMensajes = (nuevasConvs) => {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
+
+  const yoId = almacen.usuarioActual?.id
+  if (!yoId) return
+
+  nuevasConvs.forEach(conv => {
+    const oldConv = almacen.conversaciones.find(c => c.id === conv.id)
+    const esNuevo = !oldConv || (conv.fechaUltimoMensaje && conv.fechaUltimoMensaje !== oldConv.fechaUltimoMensaje)
+    
+    if (esNuevo) {
+      const emisorEsYo = conv.ultimoMensajeEmisorId === yoId
+      const esConversacionActiva = almacen.conversacionActual && almacen.conversacionActual.id === conv.id
+      const chatFocado = esConversacionActiva && document.hasFocus()
+
+      if (!emisorEsYo && !chatFocado && conv.ultimoMensaje && conv.ultimoMensaje !== '...' && conv.ultimoMensaje !== 'Los mensajes están cifrados de extremo a extremo') {
+        const titulo = obtenerNombreVisibleConversacion(conv, yoId) || 'Nuevo mensaje'
+        const cuerpo = conv.ultimoMensaje
+
+        try {
+          new Notification(titulo, {
+            body: cuerpo,
+            icon: conv.fotoUrl || null
+          })
+        } catch (e) {
+          console.error('Error al mostrar notificación:', e)
+        }
+      }
+    }
+  })
+}
+
 const cargarConversaciones = async () => {
   try {
       const convs = await servicioApi.obtenerConversaciones()
+      verificarNuevosMensajes(convs)
       almacen.establecerConversaciones(convs)
   } catch (error) {
       console.error('Error al refrescar conversaciones:', error)
@@ -811,6 +859,11 @@ const cargarConversaciones = async () => {
 onMounted(() => {
   cargarConversaciones()
   intervaloRefresco = setInterval(cargarConversaciones, 5000)
+
+  // Solicitar permisos de notificación nativa
+  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+    Notification.requestPermission()
+  }
 })
 
 const esConversacionFavorita = (conversacion) => {
@@ -1484,6 +1537,24 @@ const esConversacionFavorita = (conversacion) => {
   font-weight: 600 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.02em !important;
+}
+
+.badge-no-leidos {
+  background-color: #00bcd4 !important;
+  color: white !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  border-radius: 50% !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-left: 8px !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  line-height: 1 !important;
 }
 </style>
 

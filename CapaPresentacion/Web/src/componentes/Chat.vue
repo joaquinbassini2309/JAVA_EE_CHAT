@@ -485,6 +485,10 @@ const cargarMensajes = async () => {
     }
     scrollToBottom()
     await servicioApi.marcarConversacionLeida(conversacionActual.value.id)
+    const conv = almacen.conversaciones.find(c => c.id === conversacionActual.value.id)
+    if (conv) {
+      conv.noLeidos = 0
+    }
   } catch (error) {
     console.error('Error al cargar mensajes:', error)
   }
@@ -624,8 +628,25 @@ const conectarWS = () => {
     ws.value.onmessage = (event) => {
       const respuesta = JSON.parse(event.data)
       if (respuesta.tipo === 'mensaje') {
-        almacen.agregarMensaje(respuesta.datos)
+        const msg = respuesta.datos
+        almacen.agregarMensaje(msg)
         scrollToBottom()
+        
+        // Si el chat está abierto pero la ventana no tiene el foco, disparar notificación nativa
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          if (!document.hasFocus() && msg.emisorId !== usuarioActual.value?.id) {
+            const titulo = destinatario.value.nombre || 'Nuevo mensaje'
+            new Notification(titulo, {
+              body: msg.contenido,
+              icon: conversacionActual.value?.fotoUrl || null
+            })
+          }
+        }
+
+        // Si la pestaña está enfocada, marcar inmediatamente como leída
+        if (document.hasFocus()) {
+          servicioApi.marcarConversacionLeida(conversacionActual.value.id)
+        }
       } else if (respuesta.tipo === 'mensaje_resaltado') {
         almacen.actualizarMensaje(respuesta.datos)
       }
@@ -739,7 +760,18 @@ watch(conversacionActual, (nueva, vieja) => {
   }
 })
 
+const handleWindowFocus = () => {
+  if (conversacionActual.value) {
+    servicioApi.marcarConversacionLeida(conversacionActual.value.id)
+    const conv = almacen.conversaciones.find(c => c.id === conversacionActual.value.id)
+    if (conv) {
+      conv.noLeidos = 0
+    }
+  }
+}
+
 onMounted(() => {
+  window.addEventListener('focus', handleWindowFocus)
   if (conversacionActual.value) {
     determinarRolUsuario()
     cargarMensajes()
@@ -748,6 +780,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('focus', handleWindowFocus)
   if (ws.value) ws.value.close()
 })
 

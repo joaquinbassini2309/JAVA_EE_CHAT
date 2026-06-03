@@ -14,7 +14,7 @@
           </div>
 
           <!-- Vista desktop -->
-          <div v-if="!esModoMovil" class="chat-desktop-layout" :style="{ gridTemplateColumns: panelTareasAbierto ? '390px 1fr 320px' : '390px 1fr' }">
+          <div v-if="!esModoMovil" class="chat-desktop-layout" :style="{ gridTemplateColumns: panelTareasAbierto ? '390px 1fr 380px' : '390px 1fr' }">
             <div style="border-right: 1px solid rgba(0,0,0,0.1); height: 100%; overflow: hidden; display: flex; flex-direction: column; min-height: 0;">
               <ListaConversaciones />
             </div>

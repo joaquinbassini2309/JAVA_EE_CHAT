@@ -102,10 +102,20 @@
           Nueva Tarea
         </v-card-title>
         <v-card-text class="pa-4">
-          <v-text-field v-model="nuevaTarea.titulo" label="Título" variant="outlined" density="comfortable" class="mb-2" hide-details></v-text-field>
-          <v-textarea v-model="nuevaTarea.contenido" label="Descripción" variant="outlined" density="comfortable" class="mb-2" hide-details rows="3"></v-textarea>
-          <v-text-field v-model="nuevaTarea.fechaVencimiento" label="Fecha de vencimiento" type="datetime-local" variant="outlined" density="comfortable" class="mb-2" hide-details></v-text-field>
-          <!-- Aqui deberian ir selects para Asignar y Grupo, simplificado de momento -->
+          <v-text-field v-model="nuevaTarea.titulo" placeholder="Título" variant="outlined" density="comfortable" class="mb-4" hide-details></v-text-field>
+          <v-textarea v-model="nuevaTarea.contenido" placeholder="Descripción" variant="outlined" density="comfortable" class="mb-4" hide-details rows="3"></v-textarea>
+          
+          <div class="d-flex gap-2 mb-4">
+            <v-select v-model="nuevaTarea.grupoId" :items="gruposDisponibles" item-title="nombre" item-value="id" placeholder="Vincular a grupo (Opcional)" variant="outlined" density="comfortable" hide-details clearable style="flex: 1;"></v-select>
+            <v-select v-model="nuevaTarea.asignadoAId" :items="usuariosSistema" item-title="username" item-value="id" placeholder="Asignar a (Opcional)" variant="outlined" density="comfortable" hide-details clearable style="flex: 1;" class="ml-2"></v-select>
+          </div>
+
+          <v-divider class="mb-4"></v-divider>
+          
+          <p class="text-caption text-medium-emphasis mb-2">Selecciona la fecha y hora de vencimiento</p>
+          <div class="d-flex align-center gap-2 mb-4">
+            <v-text-field v-model="nuevaTarea.fechaVencimiento" type="datetime-local" variant="outlined" density="comfortable" hide-details style="flex: 1;"></v-text-field>
+          </div>
         </v-card-text>
         <v-card-actions class="pa-4 pt-0">
           <v-spacer></v-spacer>
@@ -118,7 +128,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 
@@ -132,13 +142,21 @@ const guardando = ref(false)
 const nuevaTarea = ref({
   titulo: '',
   contenido: '',
-  fechaVencimiento: ''
+  fechaVencimiento: '',
+  grupoId: null,
+  asignadoAId: null
+})
+
+const usuariosSistema = ref([])
+
+const gruposDisponibles = computed(() => {
+  return almacen.conversaciones.filter(c => c.tipo === 'GRUPO')
 })
 
 const formatearFecha = (fechaStr) => {
   if (!fechaStr) return ''
   const d = new Date(fechaStr)
-  return d.toLocaleDateString()
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
 const cargarTareas = async () => {
@@ -151,12 +169,30 @@ const cargarTareas = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   cargarTareas()
+  try {
+    usuariosSistema.value = await servicioApi.obtenerUsuarios()
+  } catch (e) {
+    console.error("Error al cargar usuarios:", e)
+  }
+})
+
+watch(() => almacen.usuarioActual, (nuevoUser) => {
+  if (nuevoUser) cargarTareas()
 })
 
 const tareasPendientes = computed(() => {
-  return almacen.tareas.filter(t => t.estado === 'PENDIENTE')
+  const now = new Date().getTime()
+  return almacen.tareas.filter(t => {
+    if (t.estado === 'COMPLETADA') return false
+    if (t.estado === 'ATRASADA') return false
+    if (t.fechaVencimiento) {
+      const v = new Date(t.fechaVencimiento).getTime()
+      if (now > v) return false // Se considera atrasada
+    }
+    return true
+  })
 })
 
 const tareasCompletadas = computed(() => {
@@ -164,7 +200,16 @@ const tareasCompletadas = computed(() => {
 })
 
 const tareasAtrasadas = computed(() => {
-  return almacen.tareas.filter(t => t.estado === 'ATRASADA')
+  const now = new Date().getTime()
+  return almacen.tareas.filter(t => {
+    if (t.estado === 'COMPLETADA') return false
+    if (t.estado === 'ATRASADA') return true
+    if (t.fechaVencimiento) {
+      const v = new Date(t.fechaVencimiento).getTime()
+      if (now > v) return true // Se considera atrasada dinámicamente
+    }
+    return false
+  })
 })
 
 const tareasMostradas = computed(() => {
@@ -185,7 +230,7 @@ const cerrarPanel = () => {
 }
 
 const abrirNuevaTarea = () => {
-  nuevaTarea.value = { titulo: '', contenido: '', fechaVencimiento: '' }
+  nuevaTarea.value = { titulo: '', contenido: '', fechaVencimiento: '', grupoId: null, asignadoAId: null }
   modalNuevaTarea.value = true
 }
 
@@ -198,8 +243,8 @@ const guardarNuevaTarea = async () => {
       nuevaTarea.value.contenido,
       nuevaTarea.value.fechaVencimiento ? nuevaTarea.value.fechaVencimiento + ":00" : null,
       almacen.usuarioActual.id,
-      null, // asignadoA
-      null  // grupoId
+      nuevaTarea.value.asignadoAId || null,
+      nuevaTarea.value.grupoId || null
     )
     almacen.tareas.push(t)
     modalNuevaTarea.value = false
