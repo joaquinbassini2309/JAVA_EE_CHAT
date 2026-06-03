@@ -217,66 +217,38 @@ class ServicioAPI {
     return data
   }
 
-  // ========== TAREAS (local, sin tocar backend) ==========
-  // Las tareas se guardan en localStorage por usuario bajo la clave `tareas_<userId>`.
-  _keyTareas(userId) {
-      return `tareas_${userId}`
-  }
+  // ========== TAREAS ==========
 
   async obtenerTareas(userId) {
-      if (!userId) return []
-      try {
-          const raw = localStorage.getItem(this._keyTareas(userId))
-          const arr = raw ? JSON.parse(raw) : []
-          // Asegurar orden por fecha (más reciente al final)
-          arr.sort((a, b) => new Date(a.fechaEnvio) - new Date(b.fechaEnvio))
-          return arr
-      } catch (e) {
-          console.error('Error leyendo tareas locales', e)
-          return []
-      }
+    if (!userId) return []
+    const { data } = await this.cliente.get(`/tareas/${userId}`)
+    return data
   }
 
-  async crearTarea(userId, titulo, contenido, fechaVencimiento) {
-      if (!userId) throw new Error('userId required')
-      const key = this._keyTareas(userId)
-      const raw = localStorage.getItem(key)
-      const arr = raw ? JSON.parse(raw) : []
-      const nueva = {
-          id: Date.now(),
-          conversacionId: `tareas_${userId}`,
-          emisorId: userId,
-          titulo: titulo || '',
-          contenido: contenido || '',
-          fechaEnvio: new Date().toISOString(),
-          fechaVencimiento: fechaVencimiento || null,
-          completada: false
-      }
-      arr.push(nueva)
-      localStorage.setItem(key, JSON.stringify(arr))
-      return nueva
+  async crearTarea(titulo, contenido, fechaVencimiento, creadorId, asignadoAId, grupoId) {
+    if (!creadorId) throw new Error('creadorId required')
+    const { data } = await this.cliente.post('/tareas', {
+      titulo,
+      contenido,
+      fechaVencimiento,
+      creadorId,
+      asignadoAId,
+      grupoId
+    })
+    return data
   }
 
-  async actualizarTarea(userId, tarea) {
-      if (!userId || !tarea || !tarea.id) throw new Error('invalid params')
-      const key = this._keyTareas(userId)
-      const raw = localStorage.getItem(key)
-      const arr = raw ? JSON.parse(raw) : []
-      const idx = arr.findIndex(t => t.id === tarea.id)
-      if (idx === -1) throw new Error('Tarea no encontrada')
-      arr[idx] = { ...arr[idx], ...tarea }
-      localStorage.setItem(key, JSON.stringify(arr))
-      return arr[idx]
+  async actualizarEstadoTarea(tareaId, estado, usuarioId) {
+    const { data } = await this.cliente.put(`/tareas/${tareaId}/estado`, {
+      estado,
+      usuarioId
+    })
+    return data
   }
 
-  async eliminarTarea(userId, tareaId) {
-      if (!userId || !tareaId) throw new Error('invalid params')
-      const key = this._keyTareas(userId)
-      const raw = localStorage.getItem(key)
-      const arr = raw ? JSON.parse(raw) : []
-      const nueva = arr.filter(t => t.id !== tareaId)
-      localStorage.setItem(key, JSON.stringify(nueva))
-      return true
+  async eliminarTarea(tareaId, usuarioId) {
+    const { data } = await this.cliente.delete(`/tareas/${tareaId}?usuarioId=${usuarioId}`)
+    return data
   }
 
   // ========== WEBSOCKET ==========

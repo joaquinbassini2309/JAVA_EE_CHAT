@@ -201,6 +201,18 @@ export const useAlmacen = defineStore('principal', () => {
     }
   }
 
+  // ========== NUEVO: ESTADO DE TAREAS Y PANELES ==========
+  const panelTareasAbierto = ref(true)
+  const tareas = ref([])
+
+  function togglePanelTareas() {
+    panelTareasAbierto.value = !panelTareasAbierto.value
+  }
+
+  function establecerTareas(nuevasTareas) {
+    tareas.value = nuevasTareas
+  }
+
   return {
     // Estado
     usuarioActual,
@@ -210,6 +222,8 @@ export const useAlmacen = defineStore('principal', () => {
     mensajes,
     cargando,
     error,
+    panelTareasAbierto,
+    tareas,
 
     // Getters
     estaAutenticado,
@@ -232,6 +246,8 @@ export const useAlmacen = defineStore('principal', () => {
     establecerError,
     limpiarError,
     cerrarSesion,
-    cargarDelAlmacenamientoLocal
+    cargarDelAlmacenamientoLocal,
+    togglePanelTareas,
+    establecerTareas
   }
 })

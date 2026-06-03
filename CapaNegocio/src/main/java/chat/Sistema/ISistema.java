@@ -171,4 +171,10 @@ public interface ISistema {
     Conversacion crearCanalAvisos(String nombre, Long creadorId);
     List<Conversacion> listarCanalesAvisos();
     Participante unirseACanalAvisos(Long canalId, Long usuarioId);
+
+    // ========== CASOS DE USO: TAREAS ==========
+    chat.clases.Tarea crearTarea(String titulo, String contenido, java.time.LocalDateTime fechaVencimiento, Long creadorId, Long asignadoAId, Long grupoId);
+    List<chat.clases.Tarea> obtenerTareasDeUsuario(Long usuarioId);
+    chat.clases.Tarea actualizarEstadoTarea(Long tareaId, chat.Enum.EstadoTarea nuevoEstado, Long usuarioId);
+    void eliminarTarea(Long tareaId, Long usuarioId);
 }
