@@ -187,7 +187,7 @@
       </v-dialog>
 
       <!-- Área de mensajes -->
-      <div ref="contenedorMensajes" class="contenedor-mensajes">
+      <div ref="contenedorMensajes" class="contenedor-mensajes" :style="estiloWallpaper">
         <!-- Cifrado estático al inicio -->
         <div class="mensaje-sistema-container">
           <div class="mensaje-sistema">
@@ -331,6 +331,19 @@ const esGrupo = computed(() => conversacionActual.value?.tipo === 'GRUPO')
 const esAviso = computed(() => conversacionActual.value?.tipo === 'AVISO')
 const rolUsuario = ref('ADMIN')
 
+const estiloWallpaper = computed(() => {
+  const url = conversacionActual.value?.imagenBanner || usuarioActual.value?.imagenBanner
+  if (url) {
+    return {
+      backgroundImage: `url('${url}')`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    }
+  }
+  return {}
+})
+
 const determinarRolUsuario = async () => {
   if (!conversacionActual.value) return
   if (esAviso.value) {
@@ -356,8 +369,8 @@ const destinatario = computed(() => {
 })
 
 const otroUsuario = computed(() => {
-  if (esGrupo.value) return null
-  const participante = conversacionActual.value?.participantes?.find(p => p.usuario.id !== usuarioActual.value?.id)
+  if (esGrupo.value || esAviso.value) return null
+  const participante = conversacionActual.value?.participantes?.find(p => p.usuario?.id !== usuarioActual.value?.id)
   return participante?.usuario
 })
 

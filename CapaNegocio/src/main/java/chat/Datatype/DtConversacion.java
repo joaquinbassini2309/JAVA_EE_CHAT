@@ -112,4 +112,6 @@ public class DtConversacion {
     public void setNoLeidos(Integer noLeidos) { this.noLeidos = noLeidos; }
     public String getFotoUrl() { return fotoUrl; }
     public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+    public String getImagenBanner() { return imagenBanner; }
+    public void setImagenBanner(String imagenBanner) { this.imagenBanner = imagenBanner; }
 }

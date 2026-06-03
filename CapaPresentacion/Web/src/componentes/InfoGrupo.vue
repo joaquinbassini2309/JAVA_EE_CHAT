@@ -65,6 +65,9 @@
             <v-list-item @click="abrirEdicionGrupo('fotoUrl')" prepend-icon="mdi-camera">
               <v-list-item-title>Cambiar foto de grupo</v-list-item-title>
             </v-list-item>
+            <v-list-item @click="abrirEdicionGrupo('imagenBanner')" prepend-icon="mdi-image-area">
+              <v-list-item-title>Cambiar fondo del grupo</v-list-item-title>
+            </v-list-item>
           </v-list>
         </v-menu>
       </div>
@@ -167,9 +170,33 @@
           <div class="campo-edicion">
             <label class="label-input-mejorado">
               <v-icon size="14" color="#406D73" class="mr-1">mdi-link</v-icon>
-              {{ tipoEdicion === 'fotoUrl' ? 'URL de la foto' : 'URL del banner' }}
+              {{ tipoEdicion === 'fotoUrl' ? 'URL de la foto' : 'URL del fondo del grupo' }}
             </label>
             <input v-model="valorEdicion" type="text" class="input-modal-mejorado" placeholder="https://ejemplo.com/imagen.jpg" />
+            
+            <template v-if="tipoEdicion === 'imagenBanner'">
+              <div class="o-separador-text my-2 text-center text-caption text-grey" style="font-size: 11px; letter-spacing: 0.05em; font-weight: bold; opacity: 0.7;">O SUBIR UNA IMAGEN</div>
+              <v-btn
+                color="#406D73"
+                variant="outlined"
+                prepend-icon="mdi-upload"
+                size="small"
+                block
+                :loading="subiendoWallpaper"
+                @click="seleccionarWallpaper"
+                class="text-none font-weight-bold"
+                style="border-radius: 10px;"
+              >
+                Seleccionar archivo
+              </v-btn>
+              <input
+                ref="wallpaperInput"
+                type="file"
+                accept="image/*"
+                style="display: none"
+                @change="handleWallpaperSelected"
+              />
+            </template>
           </div>
         </v-card-text>
         <v-card-actions class="modal-acciones-perfil">
@@ -223,6 +250,46 @@ const props = defineProps({
 
 const emit = defineEmits(['volver'])
 const almacen = useAlmacen()
+
+const subiendoWallpaper = ref(false)
+const wallpaperInput = ref(null)
+
+const seleccionarWallpaper = () => {
+  if (wallpaperInput.value) wallpaperInput.value.click()
+}
+
+const handleWallpaperSelected = async (event) => {
+  const f = event.target.files && event.target.files[0]
+  if (!f) return
+
+  const MAX_BYTES = 15 * 1024 * 1024
+  if (f.size > MAX_BYTES) {
+    alert('El archivo supera el tamaño máximo permitido (15 MB).')
+    return
+  }
+
+  try {
+    subiendoWallpaper.value = true
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const base64 = e.target.result
+        const resp = await servicioApi.uploadFile(f.name, base64)
+        valorEdicion.value = resp.url
+      } catch (err) {
+        console.error('Error al subir wallpaper del grupo:', err)
+        alert('Error al subir la imagen. Intenta de nuevo.')
+      } finally {
+        subiendoWallpaper.value = false
+        if (wallpaperInput.value) wallpaperInput.value.value = null
+      }
+    }
+    reader.readAsDataURL(f)
+  } catch (err) {
+    console.error('Error al procesar archivo de wallpaper de grupo:', err)
+    subiendoWallpaper.value = false
+  }
+}
 
 const editandoNombre = ref(false)
 const nuevoNombre = ref(props.conversacion.nombre)
@@ -287,7 +354,7 @@ async function guardarNuevoNombre() {
 const abrirEdicionGrupo = (tipo) => {
   tipoEdicion.value = tipo
   valorEdicion.value = props.conversacion[tipo] || ''
-  tituloModal.value = tipo === 'fotoUrl' ? 'Cambiar foto de grupo' : 'Cambiar banner del grupo'
+  tituloModal.value = tipo === 'fotoUrl' ? 'Cambiar foto de grupo' : 'Cambiar fondo de pantalla del grupo'
   mostrarModalEdicion.value = true
 }
 

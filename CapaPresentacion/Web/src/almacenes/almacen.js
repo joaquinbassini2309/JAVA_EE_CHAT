@@ -82,6 +82,12 @@ export const useAlmacen = defineStore('principal', () => {
 
   function establecerConversaciones(nuevasConversaciones) {
     conversaciones.value = nuevasConversaciones
+    if (conversacionActual.value) {
+      const convActualizada = nuevasConversaciones.find(c => c.id === conversacionActual.value.id)
+      if (convActualizada) {
+        conversacionActual.value = convActualizada
+      }
+    }
   }
 
   function establecerConversacionActual(conversacion) {

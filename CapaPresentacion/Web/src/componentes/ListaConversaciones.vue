@@ -18,6 +18,9 @@
             <v-list-item @click="abrirEdicionPerfil('fotoUrl')" prepend-icon="mdi-camera">
               <v-list-item-title>Cambiar Foto de perfil</v-list-item-title>
             </v-list-item>
+            <v-list-item @click="abrirEdicionPerfil('imagenBanner')" prepend-icon="mdi-image-area">
+              <v-list-item-title>Fondo de pantalla del chat</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="abrirEdicionPerfil('descripcion')" prepend-icon="mdi-card-text-outline">
               <v-list-item-title>Cambiar descripción</v-list-item-title>
             </v-list-item>
@@ -152,7 +155,7 @@
             v-for="canal in canalesFiltrados"
             :key="canal.id"
             class="item-conversacion d-flex align-center justify-space-between"
-            :class="{ 'cursor-pointer': usuarioPerteneceAlCanal(canal) }"
+            :class="{ 'cursor-pointer': usuarioPerteneceAlCanal(canal), activa: esActiva(canal) }"
             @click="usuarioPerteneceAlCanal(canal) ? abrirCanalYaMiembro(canal) : null"
         >
           <div class="d-flex align-center" style="flex: 1; min-width: 0;">
@@ -386,9 +389,32 @@
           <div v-else-if="tipoEdicionPerfil === 'imagenBanner'" class="campo-edicion">
             <label class="label-input-mejorado">
               <v-icon size="14" color="#406D73" class="mr-1">mdi-link</v-icon>
-              URL de la imagen de banner
+              URL de la imagen de fondo
             </label>
-            <input v-model="valorEdicionPerfil" type="text" class="input-modal-mejorado" placeholder="https://ejemplo.com/mibanner.jpg" />
+            <input v-model="valorEdicionPerfil" type="text" class="input-modal-mejorado" placeholder="https://ejemplo.com/mifondo.jpg" />
+
+            <div class="o-separador-text my-2 text-center text-caption text-grey" style="font-size: 11px; letter-spacing: 0.05em; font-weight: bold; opacity: 0.7;">O SUBIR UNA IMAGEN</div>
+
+            <v-btn
+              color="#406D73"
+              variant="outlined"
+              prepend-icon="mdi-upload"
+              size="small"
+              block
+              :loading="subiendoWallpaper"
+              @click="seleccionarWallpaper"
+              class="text-none font-weight-bold"
+              style="border-radius: 10px;"
+            >
+              Seleccionar archivo
+            </v-btn>
+            <input
+              ref="wallpaperInput"
+              type="file"
+              accept="image/*"
+              style="display: none"
+              @change="handleWallpaperSelected"
+            />
           </div>
         </v-card-text>
         <v-card-actions class="modal-acciones-perfil">
@@ -422,6 +448,56 @@ import { useRouter } from 'vue-router'
 
 const almacen = useAlmacen()
 const router = useRouter()
+
+const subiendoWallpaper = ref(false)
+const wallpaperInput = ref(null)
+
+// Variables para Canales de Aviso
+const canalesAvisos = ref([])
+const uniendoseCanalId = ref(null)
+const nombreCanal = ref('')
+const terminoCanalUsuario = ref('')
+const seleccionadosCanal = ref([])
+const mostrarModalCanal = ref(false)
+const usuariosCanal = ref([])
+const creandoCanal = ref(false)
+
+const seleccionarWallpaper = () => {
+  if (wallpaperInput.value) wallpaperInput.value.click()
+}
+
+const handleWallpaperSelected = async (event) => {
+  const f = event.target.files && event.target.files[0]
+  if (!f) return
+
+  const MAX_BYTES = 15 * 1024 * 1024
+  if (f.size > MAX_BYTES) {
+    alert('El archivo supera el tamaño máximo permitido (15 MB).')
+    return
+  }
+
+  try {
+    subiendoWallpaper.value = true
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const base64 = e.target.result
+        const resp = await servicioApi.uploadFile(f.name, base64)
+        valorEdicionPerfil.value = resp.url
+      } catch (err) {
+        console.error('Error al subir wallpaper:', err)
+        alert('Error al subir la imagen. Intenta de nuevo.')
+      } finally {
+        subiendoWallpaper.value = false
+        if (wallpaperInput.value) wallpaperInput.value.value = null
+      }
+    }
+    reader.readAsDataURL(f)
+  } catch (err) {
+    console.error('Error al procesar archivo de wallpaper:', err)
+    subiendoWallpaper.value = false
+  }
+}
 const termino = ref('')
 const terminoUsuario = ref('')
 const mostrarModal = ref(false)
@@ -459,11 +535,8 @@ const usuarioPerteneceAlCanal = (canal) => {
 }
 
 const abrirCanalYaMiembro = (canal) => {
-  const conv = almacen.conversaciones.find(c => c.id === canal.id)
-  if (conv) {
-    almacen.establecerConversacionActual(conv)
-    tabActivo.value = 'chats'
-  }
+  const conv = almacen.conversaciones.find(c => c.id === canal.id) || canal
+  almacen.establecerConversacionActual(conv)
 }
 
 const unirseACanal = async (canal) => {
@@ -472,11 +545,8 @@ const unirseACanal = async (canal) => {
     await servicioApi.unirseACanalAvisos(canal.id)
     await cargarConversaciones()
     
-    const conv = almacen.conversaciones.find(c => c.id === canal.id)
-    if (conv) {
-      almacen.establecerConversacionActual(conv)
-    }
-    tabActivo.value = 'chats'
+    const conv = almacen.conversaciones.find(c => c.id === canal.id) || canal
+    almacen.establecerConversacionActual(conv)
   } catch (error) {
     console.error('Error al unirse al canal de avisos:', error)
   } finally {
@@ -675,7 +745,7 @@ const abrirEdicionPerfil = (tipo) => {
 
   if (tipo === 'username') tituloModalPerfil.value = 'Cambiar nombre de usuario'
   else if (tipo === 'fotoUrl') tituloModalPerfil.value = 'Cambiar foto de perfil'
-  else if (tipo === 'imagenBanner') tituloModalPerfil.value = 'Colocar imagen de banner'
+  else if (tipo === 'imagenBanner') tituloModalPerfil.value = 'Cambiar fondo de pantalla del chat'
   else if (tipo === 'descripcion') tituloModalPerfil.value = 'Cambiar descripción'
 
   mostrarModalPerfil.value = true

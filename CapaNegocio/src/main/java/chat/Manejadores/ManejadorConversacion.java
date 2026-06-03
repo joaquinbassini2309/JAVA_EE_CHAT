@@ -32,9 +32,12 @@ public class ManejadorConversacion {
 
     public List<Conversacion> obtenerConversacionesDeUsuario(Long usuarioId) {
         TypedQuery<Conversacion> q = em.createQuery(
-                "SELECT DISTINCT p.conversacion FROM Participante p WHERE p.usuario.id = :uid",
+                "SELECT DISTINCT p.conversacion FROM Participante p " +
+                "WHERE p.usuario.id = :uid " +
+                "AND (p.conversacion.tipo <> :tipoPrivada OR EXISTS (SELECT m FROM Mensaje m WHERE m.conversacion = p.conversacion))",
                 Conversacion.class);
         q.setParameter("uid", usuarioId);
+        q.setParameter("tipoPrivada", TipoConversacion.PRIVADA);
         return q.getResultList();
     }
 
