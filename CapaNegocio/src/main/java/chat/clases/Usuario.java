@@ -39,6 +39,9 @@ public class Usuario {
     @Column(name = "activo")
     private Boolean activo = true;
 
+    @Column(name = "favoritos", length = 255)
+    private String favoritos = "";
+
     @Column(name = "fecha_registro")
     private LocalDateTime fechaRegistro;
 
@@ -51,6 +54,7 @@ public class Usuario {
     @PrePersist
     private void prePersist() {
         if (fechaRegistro == null) fechaRegistro = LocalDateTime.now();
+        if (favoritos == null) favoritos = "";
     }
 
     // Configuración completa de Getters y Setters
@@ -80,6 +84,9 @@ public class Usuario {
 
     public Boolean isActivo() { return activo; }
     public void setActivo(Boolean activo) { this.activo = activo; }
+
+    public String getFavoritos() { return favoritos; }
+    public void setFavoritos(String favoritos) { this.favoritos = favoritos; }
 
     public LocalDateTime getFechaRegistro() { return fechaRegistro; }
     public void setFechaRegistro(LocalDateTime fechaRegistro) { this.fechaRegistro = fechaRegistro; }

@@ -119,7 +119,12 @@
           </div>
           <div class="info-conversacion" style="flex: 1; min-width: 0;">
             <div class="conv-header-row">
-              <span class="nombre text-truncate">{{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id) }}</span>
+              <span class="nombre text-truncate" style="display: flex; align-items: center; gap: 4px;">
+                {{ obtenerNombreVisibleConversacion(conversacion, usuarioActual?.id) }}
+                <v-icon v-if="esConversacionFavorita(conversacion)" color="#FFC107" size="16" class="ml-1" title="Favorito">
+                  mdi-star
+                </v-icon>
+              </span>
               <span class="conv-time" v-if="conversacion.fechaUltimoMensaje">{{ formatearHora(conversacion.fechaUltimoMensaje) }}</span>
             </div>
             <div class="conv-footer-row">
@@ -1038,6 +1043,23 @@ const toggleCompletadaLista = async (tarea) => {
     console.error('Error al actualizar estado de la tarea:', error)
     tarea.completada = !tarea.completada
   }
+}
+
+const esConversacionFavorita = (conversacion) => {
+  if (conversacion.tipo !== 'PRIVADA') return false
+  const yo = almacen.usuarioActual
+  if (!yo || !yo.favoritos) return false
+  const favIds = yo.favoritos.split(',').filter(x => x).map(Number)
+  
+  let otroId = null
+  if (conversacion.participantes) {
+    const otro = conversacion.participantes.find(p => p.usuario && p.usuario.id !== yo.id)
+    if (otro && otro.usuario) otroId = otro.usuario.id
+  }
+  if (otroId === null && conversacion.participanteIds) {
+    otroId = conversacion.participanteIds.find(id => id !== yo.id)
+  }
+  return otroId !== null && favIds.includes(otroId)
 }
 </script>
 

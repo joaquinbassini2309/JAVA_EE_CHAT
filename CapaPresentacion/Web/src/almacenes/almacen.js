@@ -18,7 +18,36 @@ export const useAlmacen = defineStore('principal', () => {
   const estaAutenticado = computed(() => !!token.value && !!usuarioActual.value)
 
   const conversacionesOrdenadas = computed(() => {
+    const favIds = usuarioActual.value?.favoritos
+      ? usuarioActual.value.favoritos.split(',').filter(x => x).map(Number)
+      : []
+
+    const obtenerFavIndex = (c) => {
+      if (c.tipo !== 'PRIVADA') return -1
+      let otroId = null
+      if (c.participantes) {
+        const otro = c.participantes.find(p => p.usuario && p.usuario.id !== usuarioActual.value?.id)
+        if (otro && otro.usuario) otroId = otro.usuario.id
+      }
+      if (otroId === null && c.participanteIds) {
+        otroId = c.participanteIds.find(id => id !== usuarioActual.value?.id)
+      }
+      return otroId !== null ? favIds.indexOf(otroId) : -1
+    }
+
     return [...conversaciones.value].sort((a, b) => {
+      const indexA = obtenerFavIndex(a)
+      const indexB = obtenerFavIndex(b)
+
+      const esFavA = indexA !== -1
+      const esFavB = indexB !== -1
+
+      if (esFavA && esFavB) {
+        return indexA - indexB
+      }
+      if (esFavA) return -1
+      if (esFavB) return 1
+
       const fechaA = new Date(a.fechaUltimoMensaje || a.fechaCreacion)
       const fechaB = new Date(b.fechaUltimoMensaje || b.fechaCreacion)
       return fechaB - fechaA

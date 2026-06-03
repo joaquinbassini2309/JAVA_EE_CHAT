@@ -11,7 +11,22 @@
             <span v-if="!esGrupo && otroUsuario?.estado === 'ONLINE'" class="header-dot"></span>
           </div>
           <div class="header-info">
-            <span class="header-name">{{ destinatario.nombre }}</span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="header-name">{{ destinatario.nombre }}</span>
+              <v-btn
+                v-if="!esGrupo && otroUsuario"
+                icon
+                variant="text"
+                density="compact"
+                size="small"
+                @click.stop="toggleFavorito"
+                title="Favorito"
+              >
+                <v-icon :color="esFavorito ? '#FFC107' : '#FFD54F'" size="20">
+                  {{ esFavorito ? 'mdi-star' : 'mdi-star-outline' }}
+                </v-icon>
+              </v-btn>
+            </div>
             <span class="header-status">
               <template v-if="!esGrupo && otroUsuario">
                 <span :class="otroUsuario.estado === 'ONLINE' ? 'status-online' : 'status-offline'">
@@ -345,6 +360,54 @@ const otroUsuario = computed(() => {
   const participante = conversacionActual.value?.participantes?.find(p => p.usuario.id !== usuarioActual.value?.id)
   return participante?.usuario
 })
+
+const esFavorito = computed(() => {
+  if (!otroUsuario.value || !usuarioActual.value) return false
+  const favIds = usuarioActual.value.favoritos
+    ? usuarioActual.value.favoritos.split(',').filter(x => x).map(Number)
+    : []
+  return favIds.includes(otroUsuario.value.id)
+})
+
+const togglingFavorito = ref(false)
+const toggleFavorito = async () => {
+  if (!otroUsuario.value || !usuarioActual.value || togglingFavorito.value) return
+  togglingFavorito.value = true
+  try {
+    const favIds = usuarioActual.value.favoritos
+      ? usuarioActual.value.favoritos.split(',').filter(x => x).map(Number)
+      : []
+    const index = favIds.indexOf(otroUsuario.value.id)
+    if (index !== -1) {
+      favIds.splice(index, 1)
+    } else {
+      if (favIds.length >= 3) {
+        alert('Se podrá tener hasta un máximo de 3 contactos en favoritos.')
+        togglingFavorito.value = false
+        return
+      }
+      favIds.push(otroUsuario.value.id)
+    }
+
+    const nuevosFavoritos = favIds.join(',')
+    const payload = {
+      username: usuarioActual.value.username,
+      fotoUrl: usuarioActual.value.fotoUrl,
+      descripcion: usuarioActual.value.descripcion,
+      imagenBanner: usuarioActual.value.imagenBanner,
+      estado: usuarioActual.value.estado,
+      favoritos: nuevosFavoritos
+    }
+
+    const usrActualizado = await servicioApi.actualizarPerfil(payload)
+    almacen.establecerUsuario(usrActualizado)
+    localStorage.setItem('usuario', JSON.stringify(usrActualizado))
+  } catch (error) {
+    console.error('Error al actualizar favoritos:', error)
+  } finally {
+    togglingFavorito.value = false
+  }
+}
 
 const usuariosFiltrados = computed(() => {
   const participantes = conversacionActual.value?.participanteIds || []

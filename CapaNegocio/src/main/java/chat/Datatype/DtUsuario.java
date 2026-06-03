@@ -45,6 +45,7 @@ public final class DtUsuario {
         private String imagenBanner;
         private EstadoUsuario estado;
         private LocalDateTime fechaRegistro;
+        private String favoritos;
 
         public UsuarioResponseDTO() {}
 
@@ -80,6 +81,7 @@ public final class DtUsuario {
             dto.imagenBanner = usuario.getImagenBanner();
             dto.estado = usuario.getEstado();
             dto.fechaRegistro = usuario.getFechaRegistro();
+            dto.favoritos = usuario.getFavoritos();
             return dto;
         }
 
@@ -109,6 +111,9 @@ public final class DtUsuario {
 
         public LocalDateTime getFechaRegistro() { return fechaRegistro; }
         public void setFechaRegistro(LocalDateTime fechaRegistro) { this.fechaRegistro = fechaRegistro; }
+
+        public String getFavoritos() { return favoritos; }
+        public void setFavoritos(String favoritos) { this.favoritos = favoritos; }
     }
 
     // DTO para actualizar perfil
@@ -118,6 +123,7 @@ public final class DtUsuario {
         private String descripcion;
         private String imagenBanner;
         private EstadoUsuario estado;
+        private String favoritos;
 
         public ActualizarUsuarioDTO() {}
 
@@ -146,6 +152,9 @@ public final class DtUsuario {
 
         // Compatibilidad temporal para capas que aún envían String
         public void setEstado(String estado) { this.estado = parseEstado(estado); }
+
+        public String getFavoritos() { return favoritos; }
+        public void setFavoritos(String favoritos) { this.favoritos = favoritos; }
     }
 
     // DTO para login

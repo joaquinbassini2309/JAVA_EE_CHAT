@@ -78,6 +78,9 @@ public class ManejadorUsuario {
             if (dto.getEstado() != null) {
                 u.setEstado(dto.getEstado());
             }
+            if (dto.getFavoritos() != null) {
+                u.setFavoritos(dto.getFavoritos());
+            }
             em.merge(u);
         }
     }
