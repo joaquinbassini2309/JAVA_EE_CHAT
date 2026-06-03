@@ -36,7 +36,6 @@
         </div>
 
         <div class="user-actions-row">
-<<<<<<< HEAD
           <button
             @click="abrirNuevoGrupo"
             title="Nuevo grupo"
@@ -58,17 +57,6 @@
           >
             <v-icon size="17">mdi-logout</v-icon>
           </button>
-=======
-          <v-hover v-slot="{ isHovering, props }">
-            <v-btn v-bind="props" icon="mdi-account-multiple-plus" :variant="isHovering ? 'flat' : 'outlined'" color="#406D73" :class="{'text-white': isHovering, 'header-action-btn': true}" size="small" @click="abrirNuevoGrupo" title="Nuevo grupo" rounded />
-          </v-hover>
-          <v-hover v-slot="{ isHovering, props }">
-            <v-btn v-bind="props" icon="mdi-message-plus" :variant="isHovering ? 'flat' : 'outlined'" color="#406D73" :class="{'text-white': isHovering, 'header-action-btn': true}" size="small" @click="abrirNuevaConversacion" title="Nueva conversación" rounded />
-          </v-hover>
-          <v-hover v-slot="{ isHovering, props }">
-            <v-btn v-bind="props" icon="mdi-logout" :variant="isHovering ? 'flat' : 'outlined'" color="error" size="small" @click="cerrarSesionLocal" title="Cerrar sesión" class="header-action-btn" rounded />
-          </v-hover>
->>>>>>> a7601092436e980d3f5c2e406be69f71195bd104
         </div>
       </div>
 
