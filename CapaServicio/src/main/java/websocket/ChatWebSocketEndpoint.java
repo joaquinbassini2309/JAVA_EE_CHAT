@@ -157,12 +157,21 @@ public class ChatWebSocketEndpoint {
         excepcion.printStackTrace();
     }
 
-    /**
-     * Difunde un mensaje a todos los usuarios conectados en una conversación
-     */
     private void difundirMensaje(Long idConversacion, DtMensaje mensaje) throws IOException {
         String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta("mensaje", mensaje));
         difundir(idConversacion, datosJson);
+    }
+
+    /**
+     * Difunde un mensaje resaltado a todos los usuarios conectados en una conversación
+     */
+    public void difundirMensajeResaltado(Long idConversacion, DtMensaje mensaje) {
+        try {
+            String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta("mensaje_resaltado", mensaje));
+            difundir(idConversacion, datosJson);
+        } catch (Exception e) {
+            System.err.println("Error al difundir mensaje resaltado: " + e.getMessage());
+        }
     }
 
     /**

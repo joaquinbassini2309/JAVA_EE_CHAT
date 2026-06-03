@@ -16,6 +16,7 @@ public class DtMensaje {
     private LocalDateTime fechaEnvio;
     private String emisorNombre; // Added for convenience in DTO
     private String emisorFoto;   // Added for avatars
+    private String colorResaltado;
 
     public DtMensaje() {
     }
@@ -35,6 +36,7 @@ public class DtMensaje {
         dto.setFechaEnvio(mensaje.getFechaEnvio());
         dto.setEmisorNombre(mensaje.getEmisor() != null ? mensaje.getEmisor().getUsername() : null);
         dto.setEmisorFoto(mensaje.getEmisor() != null ? mensaje.getEmisor().getFotoUrl() : null);
+        dto.setColorResaltado(mensaje.getColorResaltado());
         return dto;
     }
 
@@ -59,4 +61,7 @@ public class DtMensaje {
     public void setEmisorNombre(String emisorNombre) { this.emisorNombre = emisorNombre; }
     public String getEmisorFoto() { return emisorFoto; }
     public void setEmisorFoto(String emisorFoto) { this.emisorFoto = emisorFoto; }
+
+    public String getColorResaltado() { return colorResaltado; }
+    public void setColorResaltado(String colorResaltado) { this.colorResaltado = colorResaltado; }
 }

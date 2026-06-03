@@ -217,6 +217,12 @@ class ServicioAPI {
     return data
   }
 
+  async resaltarMensaje(idMensaje, color) {
+    const colorParam = color ? `?color=${encodeURIComponent(color)}` : '';
+    const { data } = await this.cliente.post(`/mensajes/${idMensaje}/resaltar${colorParam}`)
+    return data
+  }
+
   // ========== TAREAS ==========
 
   async obtenerTareas(userId) {

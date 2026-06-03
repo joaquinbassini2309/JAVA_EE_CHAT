@@ -603,4 +603,34 @@ public class Sistema implements ISistema {
         
         tareaHandler.eliminarTarea(tareaId);
     }
+
+    @Override
+    public void resaltarMensaje(Long mensajeId, String color, Long actorId) {
+        Mensaje mensaje = mensajeHandler().buscarPorId(mensajeId)
+                .orElseThrow(() -> new IllegalArgumentException("Mensaje no encontrado"));
+
+        Conversacion c = mensaje.getConversacion();
+        if (c.getTipo() != chat.Enum.TipoConversacion.GRUPO) {
+            throw new IllegalArgumentException("Solo se pueden resaltar mensajes en grupos");
+        }
+
+        Participante actor = participanteHandler().buscarParticipante(c.getId(), actorId)
+                .orElseThrow(() -> new IllegalArgumentException("No eres miembro de este grupo"));
+
+        if (actor.getRol() != RolParticipante.ADMIN && actor.getRol() != RolParticipante.MODERADOR) {
+            throw new IllegalArgumentException("No tienes permiso para resaltar mensajes en este grupo");
+        }
+
+        // Validar color si no es nulo o vacío
+        String colorNormalizado = null;
+        if (color != null && !color.isBlank()) {
+            java.util.List<String> coloresValidos = java.util.List.of("rojo", "violeta", "azul", "verde", "amarillo");
+            colorNormalizado = color.trim().toLowerCase();
+            if (!coloresValidos.contains(colorNormalizado)) {
+                throw new IllegalArgumentException("Color de resaltado no válido");
+            }
+        }
+
+        mensajeHandler().actualizarColorResaltado(mensajeId, colorNormalizado);
+    }
 }

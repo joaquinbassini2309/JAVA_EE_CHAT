@@ -33,6 +33,9 @@ public class MensajeResource {
     @Inject
     private AuthService authService;
 
+    @Inject
+    private websocket.ChatWebSocketEndpoint chatWebSocketEndpoint;
+
     @Context
     private SecurityContext securityContext;
 
@@ -289,6 +292,46 @@ public class MensajeResource {
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(new ErrorResponse(500, "Error getting message info", e.getMessage())).build();
+        }
+    }
+
+    /**
+     * POST /api/v1/mensajes/{id}/resaltar
+     * Resalta un mensaje con un color
+     * Query param: color (puede ser null o vacío para quitar el resaltado)
+     */
+    @POST
+    @Path("/{id}/resaltar")
+    public Response resaltarMensaje(
+            @PathParam("id") Long mensajeId,
+            @QueryParam("color") String color) {
+        Long usuarioId = authService.getAuthenticatedUserId(securityContext);
+        if (usuarioId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
+        }
+
+        if (mensajeId == null || mensajeId <= 0) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(400, "Invalid message ID")).build();
+        }
+
+        try {
+            sistema.resaltarMensaje(mensajeId, color, usuarioId);
+
+            Optional<Mensaje> mensajeOpt = sistema.mensajeHandler().buscarPorId(mensajeId);
+            if (mensajeOpt.isPresent()) {
+                DtMensaje dt = DtMensaje.from(mensajeOpt.get());
+                chatWebSocketEndpoint.difundirMensajeResaltado(mensajeOpt.get().getConversacion().getId(), dt);
+                return Response.ok(dt).build();
+            }
+            return Response.ok().build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(400, e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(500, "Error highlighting message", e.getMessage())).build();
         }
     }
 

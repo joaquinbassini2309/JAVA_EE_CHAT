@@ -613,6 +613,8 @@ const conectarWS = () => {
       if (respuesta.tipo === 'mensaje') {
         almacen.agregarMensaje(respuesta.datos)
         scrollToBottom()
+      } else if (respuesta.tipo === 'mensaje_resaltado') {
+        almacen.actualizarMensaje(respuesta.datos)
       }
     }
   }

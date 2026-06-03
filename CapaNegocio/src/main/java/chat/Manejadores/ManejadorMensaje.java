@@ -92,4 +92,12 @@ public class ManejadorMensaje {
     public Optional<Mensaje> obtenerMensajeConInfo(Long mensajeId) {
         return Optional.ofNullable(em.find(Mensaje.class, mensajeId));
     }
+
+    public void actualizarColorResaltado(Long mensajeId, String color) {
+        Mensaje m = em.find(Mensaje.class, mensajeId);
+        if (m != null) {
+            m.setColorResaltado(color);
+            em.merge(m);
+        }
+    }
 }

@@ -41,6 +41,9 @@ public class Mensaje {
     @Column(name = "fecha_envio")
     private LocalDateTime fechaEnvio;
 
+    @Column(name = "color_resaltado", length = 30)
+    private String colorResaltado;
+
     @PrePersist
     private void prePersist() {
         if (fechaEnvio == null) fechaEnvio = LocalDateTime.now();
@@ -73,4 +76,7 @@ public class Mensaje {
 
     public LocalDateTime getFechaEnvio() { return fechaEnvio; }
     public void setFechaEnvio(LocalDateTime fechaEnvio) { this.fechaEnvio = fechaEnvio; }
+
+    public String getColorResaltado() { return colorResaltado; }
+    public void setColorResaltado(String colorResaltado) { this.colorResaltado = colorResaltado; }
 }

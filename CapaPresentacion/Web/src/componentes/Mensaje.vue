@@ -41,7 +41,7 @@
     </div>
     <!-- Fin tarjeta tarea -->
     <div v-else class="burbuja-wrap" :class="{ propio }">
-      <div class="burbuja" :class="propio ? 'burbuja-me' : 'burbuja-them'">
+      <div class="burbuja" :class="[propio ? 'burbuja-me' : 'burbuja-them', mensaje.colorResaltado ? 'resaltado-' + mensaje.colorResaltado : '']">
       <span v-if="mostrarNombre" class="nombre-emisor">{{ mensaje.emisorNombre }}</span>
       <p class="contenido" :class="{ eliminado: mensaje.eliminado }">
         {{ mensaje.eliminado ? 'Mensaje eliminado' : (mensaje.contenido && !esSoloAdjunto ? mensaje.contenido : '') }}
@@ -63,8 +63,8 @@
         </v-icon>
       </div>
     </div>
-    <!-- Menú de 3 puntos (solo para mensajes propios) -->
-    <div v-if="propio" class="menu-mensaje">
+    <!-- Menú de 3 puntos (para mensajes propios o si tiene permisos en el grupo) -->
+    <div v-if="mostrarMenu" class="menu-mensaje">
       <v-menu content-class="menu-mensaje-flotante" transition="scale-transition" location="bottom end" :offset="[0, 16]">
         <template v-slot:activator="{ props }">
           <v-hover v-slot="{ isHovering, props: hoverProps }">
@@ -78,11 +78,33 @@
             />
           </v-hover>
         </template>
-        <v-list class="lista-opciones">
+        <v-list class="lista-opciones" density="compact">
+          <!-- Opciones de resaltado (solo admins y moderadores de grupo) -->
+          <v-list-item v-if="puedeResaltar">
+            <div class="colores-resaltado-row">
+              <button
+                v-for="col in ['rojo', 'violeta', 'azul', 'verde', 'amarillo']"
+                :key="col"
+                class="btn-color-dot"
+                :class="[col, { activo: mensaje.colorResaltado === col }]"
+                @click="establecerResaltado(col)"
+                :title="'Resaltar ' + col"
+              ></button>
+              <button
+                v-if="mensaje.colorResaltado"
+                class="btn-color-dot clear"
+                @click="establecerResaltado(null)"
+                title="Quitar resaltado"
+              >
+                <v-icon size="12" color="error">mdi-close</v-icon>
+              </button>
+            </div>
+          </v-list-item>
+          <v-divider v-if="puedeResaltar" class="my-1" />
           <v-list-item @click="$emit('ver-info', mensaje)" prepend-icon="mdi-information" class="item-info">
             <v-list-item-title>Info</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="$emit('eliminar', mensaje)" prepend-icon="mdi-delete" class="item-delete text-error">
+          <v-list-item v-if="propio || esAdminGrupo" @click="$emit('eliminar', mensaje)" prepend-icon="mdi-delete" class="item-delete text-error">
             <v-list-item-title>Eliminar</v-list-item-title>
           </v-list-item>
         </v-list>
@@ -111,6 +133,34 @@ const almacen = useAlmacen()
 const usuarioActual = computed(() => almacen.usuarioActual)
 
 const propio = computed(() => props.mensaje.emisorId === usuarioActual.value?.id)
+
+const conversacionActual = computed(() => almacen.conversacionActual)
+
+const rolUsuarioActual = computed(() => {
+  if (!conversacionActual.value || conversacionActual.value.tipo !== 'GRUPO') return null
+  const participante = conversacionActual.value.participantes?.find(p => p.usuario.id === usuarioActual.value?.id)
+  return participante?.rol
+})
+
+const puedeResaltar = computed(() => {
+  return conversacionActual.value?.tipo === 'GRUPO' && 
+         (rolUsuarioActual.value === 'ADMIN' || rolUsuarioActual.value === 'MODERADOR')
+})
+
+const esAdminGrupo = computed(() => {
+  return conversacionActual.value?.tipo === 'GRUPO' && rolUsuarioActual.value === 'ADMIN'
+})
+
+const mostrarMenu = computed(() => propio.value || puedeResaltar.value)
+
+const establecerResaltado = async (color) => {
+  try {
+    const mActualizado = await servicioApi.resaltarMensaje(props.mensaje.id, color)
+    almacen.actualizarMensaje(mActualizado)
+  } catch (error) {
+    console.error('Error al resaltar mensaje:', error)
+  }
+}
 
 const esMensajeSistema = computed(() => {
   return props.mensaje.contenido === 'Los mensajes están cifrados de extremo a extremo' || props.mensaje.contenido.includes('ha sido eliminado por')
@@ -473,6 +523,92 @@ const toggleCompletada = async () => {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+/* ---- Mensajes Resaltados (Colores suaves premium) ---- */
+.resaltado-rojo {
+  background-color: #ffebee !important;
+  border: 1px solid #ffcdd2 !important;
+  color: #b71c1c !important;
+}
+.resaltado-rojo .timestamp {
+  color: rgba(183, 28, 28, 0.6) !important;
+}
+
+.resaltado-violeta {
+  background-color: #f3e5f5 !important;
+  border: 1px solid #e1bee7 !important;
+  color: #4a148c !important;
+}
+.resaltado-violeta .timestamp {
+  color: rgba(74, 20, 140, 0.6) !important;
+}
+
+.resaltado-azul {
+  background-color: #e3f2fd !important;
+  border: 1px solid #bbdefb !important;
+  color: #0d47a1 !important;
+}
+.resaltado-azul .timestamp {
+  color: rgba(13, 71, 161, 0.6) !important;
+}
+
+.resaltado-verde {
+  background-color: #e8f5e9 !important;
+  border: 1px solid #c8e6c9 !important;
+  color: #1b5e20 !important;
+}
+.resaltado-verde .timestamp {
+  color: rgba(27, 94, 32, 0.6) !important;
+}
+
+.resaltado-amarillo {
+  background-color: #fffde7 !important;
+  border: 1px solid #fff9c4 !important;
+  color: #f57f17 !important;
+}
+.resaltado-amarillo .timestamp {
+  color: rgba(245, 127, 23, 0.6) !important;
+}
+
+/* Color picker row for highlights */
+.colores-resaltado-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+}
+
+.btn-color-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.btn-color-dot:hover {
+  transform: scale(1.25);
+}
+
+.btn-color-dot.activo {
+  border-color: #37474f !important;
+  transform: scale(1.1);
+}
+
+.btn-color-dot.rojo { background-color: #ffcdd2; }
+.btn-color-dot.violeta { background-color: #e1bee7; }
+.btn-color-dot.azul { background-color: #bbdefb; }
+.btn-color-dot.verde { background-color: #c8e6c9; }
+.btn-color-dot.amarillo { background-color: #fff9c4; }
+
+.btn-color-dot.clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
 }
 </style>
 

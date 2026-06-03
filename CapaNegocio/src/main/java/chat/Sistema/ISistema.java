@@ -177,4 +177,7 @@ public interface ISistema {
     List<chat.clases.Tarea> obtenerTareasDeUsuario(Long usuarioId);
     chat.clases.Tarea actualizarEstadoTarea(Long tareaId, chat.Enum.EstadoTarea nuevoEstado, Long usuarioId);
     void eliminarTarea(Long tareaId, Long usuarioId);
+
+    // Resalta un mensaje con un color (solo admins y moderadores de grupo pueden hacerlo)
+    void resaltarMensaje(Long mensajeId, String color, Long actorId);
 }
