@@ -22,9 +22,12 @@ public class DtConversacion {
     private Integer noLeidos;
     private Long ultimoMensajeEmisorId;
 
-    public DtConversacion() {}
+    public DtConversacion() {
+    }
 
-    public DtConversacion(Long id, String nombre, TipoConversacion tipo, LocalDateTime fechaCreacion, List<DtParticipante> participantes, String ultimoMensaje, LocalDateTime fechaUltimoMensaje, Integer noLeidos, String fotoUrl, String imagenBanner, Long ultimoMensajeEmisorId) {
+    public DtConversacion(Long id, String nombre, TipoConversacion tipo, LocalDateTime fechaCreacion,
+            List<DtParticipante> participantes, String ultimoMensaje, LocalDateTime fechaUltimoMensaje,
+            Integer noLeidos, String fotoUrl, String imagenBanner, Long ultimoMensajeEmisorId) {
         this.id = id;
         this.nombre = nombre;
         this.tipo = tipo;
@@ -55,10 +58,10 @@ public class DtConversacion {
                 .map(DtParticipante::from)
                 .collect(Collectors.toList());
 
-        String ultimoContenido = "..."; 
+        String ultimoContenido = "...";
         LocalDateTime ultimaFecha = conversacion.getFechaCreacion();
         Long ultimoEmisorId = null;
-        
+
         if (ultimoM != null) {
             ultimoContenido = ultimoM.getContenido();
             ultimaFecha = ultimoM.getFechaEnvio();
@@ -77,7 +80,7 @@ public class DtConversacion {
                     .filter(u -> u != null && !usuarioActualId.equals(u.getId()))
                     .findFirst()
                     .orElse(null);
-            
+
             if (otro != null) {
                 nombreVisible = otro.getUsername();
                 fotoVisible = otro.getFotoUrl();
@@ -96,29 +99,95 @@ public class DtConversacion {
                 0, // Default no leidos
                 fotoVisible,
                 bannerVisible,
-                ultimoEmisorId
-        );
+                ultimoEmisorId);
     }
 
     // Getters y Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
-    public TipoConversacion getTipo() { return tipo; }
-    public void setTipo(TipoConversacion tipo) { this.tipo = tipo; }
-    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
-    public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
-    public List<DtParticipante> getParticipantes() { return participantes; }
-    public void setParticipantes(List<DtParticipante> participantes) { this.participantes = participantes; }
-    public String getUltimoMensaje() { return ultimoMensaje; }
-    public void setUltimoMensaje(String ultimoMensaje) { this.ultimoMensaje = ultimoMensaje; }
-    public LocalDateTime getFechaUltimoMensaje() { return fechaUltimoMensaje; }
-    public void setFechaUltimoMensaje(LocalDateTime fechaUltimoMensaje) { this.fechaUltimoMensaje = fechaUltimoMensaje; }
-    public Integer getNoLeidos() { return noLeidos; }
-    public void setNoLeidos(Integer noLeidos) { this.noLeidos = noLeidos; }
-    public String getFotoUrl() { return fotoUrl; }
-    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
-    public Long getUltimoMensajeEmisorId() { return ultimoMensajeEmisorId; }
-    public void setUltimoMensajeEmisorId(Long ultimoMensajeEmisorId) { this.ultimoMensajeEmisorId = ultimoMensajeEmisorId; }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public TipoConversacion getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(TipoConversacion tipo) {
+        this.tipo = tipo;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public List<DtParticipante> getParticipantes() {
+        return participantes;
+    }
+
+    public void setParticipantes(List<DtParticipante> participantes) {
+        this.participantes = participantes;
+    }
+
+    public String getUltimoMensaje() {
+        return ultimoMensaje;
+    }
+
+    public void setUltimoMensaje(String ultimoMensaje) {
+        this.ultimoMensaje = ultimoMensaje;
+    }
+
+    public LocalDateTime getFechaUltimoMensaje() {
+        return fechaUltimoMensaje;
+    }
+
+    public void setFechaUltimoMensaje(LocalDateTime fechaUltimoMensaje) {
+        this.fechaUltimoMensaje = fechaUltimoMensaje;
+    }
+
+    public Integer getNoLeidos() {
+        return noLeidos;
+    }
+
+    public void setNoLeidos(Integer noLeidos) {
+        this.noLeidos = noLeidos;
+    }
+
+    public String getFotoUrl() {
+        return fotoUrl;
+    }
+
+    public void setFotoUrl(String fotoUrl) {
+        this.fotoUrl = fotoUrl;
+    }
+
+    public String getImagenBanner() {
+        return imagenBanner;
+    }
+
+    public void setImagenBanner(String imagenBanner) {
+        this.imagenBanner = imagenBanner;
+    }
+
+    public Long getUltimoMensajeEmisorId() {
+        return ultimoMensajeEmisorId;
+    }
+
+    public void setUltimoMensajeEmisorId(Long ultimoMensajeEmisorId) {
+        this.ultimoMensajeEmisorId = ultimoMensajeEmisorId;
+    }
 }

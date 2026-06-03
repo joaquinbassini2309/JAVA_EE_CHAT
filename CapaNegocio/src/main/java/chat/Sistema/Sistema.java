@@ -162,8 +162,10 @@ public class Sistema implements ISistema {
         Conversacion conversacion = conversacionHandler().crearConversacion(nombreChat, TipoConversacion.PRIVADA);
 
         // Agregar ambos usuarios como participantes
-        participanteHandler().agregarParticipante(conversacion.getId(), usuario1Id, RolParticipante.MIEMBRO);
-        participanteHandler().agregarParticipante(conversacion.getId(), usuario2Id, RolParticipante.MIEMBRO);
+        chat.clases.Participante p1 = participanteHandler().agregarParticipante(conversacion.getId(), usuario1Id, RolParticipante.MIEMBRO);
+        chat.clases.Participante p2 = participanteHandler().agregarParticipante(conversacion.getId(), usuario2Id, RolParticipante.MIEMBRO);
+        conversacion.getParticipantes().add(p1);
+        conversacion.getParticipantes().add(p2);
 
         observable.notificar(new EventoChat(EventoTipo.CONVERSACION_CREADA, conversacion));
         return conversacion;
