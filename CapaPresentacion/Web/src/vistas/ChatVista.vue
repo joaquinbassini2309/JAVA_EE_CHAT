@@ -14,7 +14,7 @@
           </div>
 
           <!-- Vista desktop -->
-          <div v-if="!esModoMovil" style="display: grid; grid-template-columns: 390px 1fr; height: 100%; min-height: 0; overflow: hidden;">
+          <div v-if="!esModoMovil" class="chat-desktop-layout" :style="{ gridTemplateColumns: panelTareasAbierto ? '390px 1fr 320px' : '390px 1fr' }">
             <div style="border-right: 1px solid rgba(0,0,0,0.1); height: 100%; overflow: hidden; display: flex; flex-direction: column; min-height: 0;">
               <ListaConversaciones />
             </div>
@@ -25,6 +25,9 @@
                 <p>Selecciona un chat</p>
               </div>
             </div>
+            <div v-if="panelTareasAbierto" style="height: 100%; overflow: hidden; display: flex; flex-direction: column; min-height: 0;">
+              <PanelTareas />
+            </div>
           </div>
 
         </v-sheet>
@@ -34,17 +37,20 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
 import Chat from '@/componentes/Chat.vue'
 import ListaConversaciones from '@/componentes/ListaConversaciones.vue'
+import PanelTareas from '@/componentes/PanelTareas.vue'
 
 const router = useRouter()
 const almacen = useAlmacen()
 const esModoMovil = ref(false)
+
+const panelTareasAbierto = computed(() => almacen.panelTareasAbierto)
 
 const conversacionActual = computed(() => almacen.conversacionActual)
 
@@ -123,8 +129,14 @@ onUnmounted(() => {
 
 .chat-desktop-grid {
   display: grid;
-  grid-template-columns: 320px 1fr;
   height: 100%;
+  overflow: hidden;
+}
+
+.chat-desktop-layout {
+  display: grid;
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
 }
 

@@ -533,4 +533,74 @@ public class Sistema implements ISistema {
         observable.notificar(new EventoChat(EventoTipo.PARTICIPANTE_AGREGADO, p));
         return p;
     }
+
+    @Inject
+    private chat.Manejadores.ManejadorTarea tareaHandler;
+
+    // ========== IMPLEMENTACIÓN: TAREAS ==========
+
+    @Override
+    public chat.clases.Tarea crearTarea(String titulo, String contenido, java.time.LocalDateTime fechaVencimiento, Long creadorId, Long asignadoAId, Long grupoId) {
+        Usuario creador = buscarUsuarioPorId(creadorId)
+                .orElseThrow(() -> new IllegalArgumentException("Creador no encontrado"));
+        
+        Usuario asignadoA = null;
+        if (asignadoAId != null) {
+            asignadoA = buscarUsuarioPorId(asignadoAId)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuario asignado no encontrado"));
+        }
+
+        Conversacion grupo = null;
+        if (grupoId != null) {
+            grupo = buscarConversacionPorId(grupoId)
+                    .orElseThrow(() -> new IllegalArgumentException("Grupo no encontrado"));
+        }
+
+        chat.clases.Tarea tarea = new chat.clases.Tarea();
+        tarea.setTitulo(titulo);
+        tarea.setContenido(contenido);
+        tarea.setFechaVencimiento(fechaVencimiento);
+        tarea.setCreador(creador);
+        tarea.setAsignadoA(asignadoA);
+        tarea.setGrupo(grupo);
+
+        return tareaHandler.crearTarea(tarea);
+    }
+
+    @Override
+    public List<chat.clases.Tarea> obtenerTareasDeUsuario(Long usuarioId) {
+        return tareaHandler.obtenerTareasDeUsuario(usuarioId);
+    }
+
+    @Override
+    public chat.clases.Tarea actualizarEstadoTarea(Long tareaId, chat.Enum.EstadoTarea nuevoEstado, Long usuarioId) {
+        chat.clases.Tarea tarea = tareaHandler.buscarPorId(tareaId)
+                .orElseThrow(() -> new IllegalArgumentException("Tarea no encontrada"));
+        
+        // TODO: Validate user has permission to update the task
+        tarea.setEstado(nuevoEstado);
+        return tareaHandler.actualizar(tarea);
+    }
+
+    @Override
+    public void eliminarTarea(Long tareaId, Long usuarioId) {
+        chat.clases.Tarea tarea = tareaHandler.buscarPorId(tareaId)
+                .orElseThrow(() -> new IllegalArgumentException("Tarea no encontrada"));
+        
+        // Solo el creador o un admin del grupo puede eliminarla
+        boolean puedeEliminar = tarea.getCreador().getId().equals(usuarioId);
+        
+        if (!puedeEliminar && tarea.getGrupo() != null) {
+            Optional<Participante> p = participanteHandler().buscarParticipante(tarea.getGrupo().getId(), usuarioId);
+            if (p.isPresent() && p.get().getRol() == RolParticipante.ADMIN) {
+                puedeEliminar = true;
+            }
+        }
+        
+        if (!puedeEliminar) {
+            throw new IllegalArgumentException("No tienes permisos para eliminar esta tarea");
+        }
+        
+        tareaHandler.eliminarTarea(tareaId);
+    }
 }
