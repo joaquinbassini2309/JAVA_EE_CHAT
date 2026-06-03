@@ -25,6 +25,10 @@
               <v-list-item-title>Cambiar descripción</v-list-item-title>
             </v-list-item>
             <v-divider class="my-1" />
+            <v-list-item @click="alternarTema" :prepend-icon="almacen.temaOscuro ? 'mdi-weather-sunny' : 'mdi-weather-night'">
+              <v-list-item-title>{{ almacen.temaOscuro ? 'Modo Claro' : 'Modo Oscuro' }}</v-list-item-title>
+            </v-list-item>
+            <v-divider class="my-1" />
             <v-list-item @click="cerrarSesionLocal" class="text-error" prepend-icon="mdi-logout">
               <v-list-item-title>Cerrar Sesión</v-list-item-title>
             </v-list-item>
@@ -1045,6 +1049,10 @@ const guardarPerfil = async () => {
   } finally {
     guardandoPerfil.value = false
   }
+}
+
+const alternarTema = () => {
+  almacen.establecerTemaOscuro(!almacen.temaOscuro)
 }
 
 const cerrarSesionLocal = () => {

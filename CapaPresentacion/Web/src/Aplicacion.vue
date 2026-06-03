@@ -5,16 +5,31 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
+import { useTheme } from 'vuetify'
 import { useAlmacen } from '@/almacenes/almacen'
 
 const almacen = useAlmacen()
+const theme = useTheme()
+
+// Watch para alternar temas de Vuetify y la clase CSS global del modo oscuro
+watch(() => almacen.temaOscuro, (nuevoValor) => {
+  theme.global.name.value = nuevoValor ? 'temaProyectoOscuro' : 'temaProyecto'
+  if (nuevoValor) {
+    document.documentElement.classList.add('dark-mode')
+    document.body.style.backgroundColor = '#0a1012'
+  } else {
+    document.documentElement.classList.remove('dark-mode')
+    document.body.style.backgroundColor = '#eef5f7'
+  }
+}, { immediate: true })
 
 onMounted(() => {
   // Cargar datos del localStorage al iniciar
   almacen.cargarDelAlmacenamientoLocal()
 })
 </script>
+
 
 <style>
 * {

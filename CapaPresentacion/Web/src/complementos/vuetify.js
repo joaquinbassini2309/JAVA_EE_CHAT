@@ -1,7 +1,7 @@
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { defaultThemeName, temaProyecto } from '@/configuracion/temaProyecto.js'
+import { defaultThemeName, temaProyecto, temaProyectoOscuro } from '@/configuracion/temaProyecto.js'
 
 // 1. Importar la fuente de íconos de Material Design Icons
 import '@mdi/font/css/materialdesignicons.css'
@@ -35,8 +35,10 @@ export default createVuetify({
     defaultTheme: defaultThemeName,
     themes: {
       [defaultThemeName]: temaProyecto,
+      temaProyectoOscuro: temaProyectoOscuro,
     },
   },
   // 3. Usar la nueva configuración de íconos
   icons: iconos,
 })
+

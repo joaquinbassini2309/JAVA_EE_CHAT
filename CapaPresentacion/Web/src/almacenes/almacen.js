@@ -12,6 +12,7 @@ export const useAlmacen = defineStore('principal', () => {
   const mensajes = ref([])
   const cargando = ref(false)
   const error = ref(null)
+  const temaOscuro = ref(false)
 
   // ===== GETTERS =====
 
@@ -224,15 +225,24 @@ export const useAlmacen = defineStore('principal', () => {
     localStorage.removeItem('usuario')
   }
 
+  function establecerTemaOscuro(valor) {
+    temaOscuro.value = valor
+    localStorage.setItem('temaOscuro', valor ? 'true' : 'false')
+  }
+
   function cargarDelAlmacenamientoLocal() {
     const tokenGuardado = localStorage.getItem('token')
     const usuarioGuardado = localStorage.getItem('usuario')
+    const temaGuardado = localStorage.getItem('temaOscuro')
 
     if (tokenGuardado) {
       token.value = tokenGuardado
     }
     if (usuarioGuardado) {
       usuarioActual.value = JSON.parse(usuarioGuardado)
+    }
+    if (temaGuardado === 'true') {
+      temaOscuro.value = true
     }
   }
 
@@ -259,6 +269,7 @@ export const useAlmacen = defineStore('principal', () => {
     error,
     panelTareasAbierto,
     tareas,
+    temaOscuro,
 
     // Getters
     estaAutenticado,
@@ -283,6 +294,7 @@ export const useAlmacen = defineStore('principal', () => {
     cerrarSesion,
     cargarDelAlmacenamientoLocal,
     togglePanelTareas,
-    establecerTareas
+    establecerTareas,
+    establecerTemaOscuro
   }
 })

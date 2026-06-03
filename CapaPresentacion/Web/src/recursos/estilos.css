@@ -143,3 +143,30 @@ html, body, #app {
   font-weight: 600 !important;
   letter-spacing: 0 !important;
 }
+
+/* ---------- Modo Oscuro Variables ---------- */
+.dark-mode {
+  --teal:           #6ca0a6;
+  --teal-hover:     #5c8b91;
+  --teal-dark:      #4f777d;
+  --teal-light:     #81b2bf;
+  --teal-pale:      rgba(108, 160, 166, 0.12);
+  --teal-glow:      rgba(108, 160, 166, 0.25);
+  --teal-border:    rgba(108, 160, 166, 0.22);
+  --celeste:        #304547;
+  --celeste-pale:   rgba(48, 69, 71, 0.35);
+  --green:          #81c784;
+  --red:            #e57373;
+
+  /* Surfaces */
+  --surface:        #152023;
+  --surface-2:      #1c2a2e;
+  --bg:             #0a1012;
+  --sidebar-bg:     #152023;
+  --chat-bg:        #0f171a;
+
+  /* Text */
+  --text-primary:   #e2edef;
+  --text-secondary: #a1bec3;
+  --text-muted:     #769399;
+}
