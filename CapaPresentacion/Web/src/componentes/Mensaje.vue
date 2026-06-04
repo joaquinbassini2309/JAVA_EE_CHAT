@@ -43,8 +43,7 @@
     <div v-else class="burbuja-wrap" :class="{ propio }">
       <div class="burbuja" :class="[propio ? 'burbuja-me' : 'burbuja-them', mensaje.colorResaltado ? 'resaltado-' + mensaje.colorResaltado : '']">
       <span v-if="mostrarNombre" class="nombre-emisor">{{ mensaje.emisorNombre }}</span>
-      <p class="contenido" :class="{ eliminado: mensaje.eliminado }">
-        {{ mensaje.eliminado ? 'Mensaje eliminado' : (mensaje.contenido && !esSoloAdjunto ? mensaje.contenido : '') }}
+      <p class="contenido" :class="{ eliminado: mensaje.eliminado }" v-html="contenidoFormateado">
       </p>
 
       <!-- Adjuntos: imagen inline -->
@@ -134,6 +133,49 @@ defineEmits(['ver-info', 'eliminar', 'fijar'])
 
 const almacen = useAlmacen()
 const usuarioActual = computed(() => almacen.usuarioActual)
+
+const contenidoFormateado = computed(() => {
+  if (props.mensaje.eliminado) return 'Mensaje eliminado'
+  if (esSoloAdjunto.value) return ''
+  if (!props.mensaje.contenido) return ''
+  
+  // Escapar HTML básico para prevenir XSS
+  let texto = props.mensaje.contenido
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+  
+  // Obtener usernames de los participantes de la conversación actual
+  const usernames = []
+  if (conversacionActual.value && conversacionActual.value.participantes) {
+    conversacionActual.value.participantes.forEach(p => {
+      if (p.usuario && p.usuario.username) {
+        usernames.push(p.usuario.username)
+      }
+    })
+  }
+  usernames.push('todos')
+  
+  // Ordenar de mayor a menor longitud para evitar conflictos (por ejemplo: "Tester" vs "Tester Two")
+  usernames.sort((a, b) => b.length - a.length)
+  
+  // Escapar caracteres especiales de regex
+  const escaparRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  
+  const partes = usernames.map(escaparRegex)
+  // Añadir patrón genérico como alternativa para otras menciones que no sean miembros cargados
+  partes.push('[a-zA-Z0-9_áéíóúÁÉÍÓÚñÑüÜ]+')
+  
+  const regexMencion = new RegExp(`@(${partes.join('|')})`, 'g')
+  
+  texto = texto.replace(regexMencion, (match) => {
+    return `<span style="color: #00bcd4 !important; font-weight: 600; background-color: rgba(0, 188, 212, 0.08); padding: 1px 4px; border-radius: 4px; display: inline-block;">${match}</span>`
+  })
+  
+  return texto
+})
 
 const propio = computed(() => props.mensaje.emisorId === usuarioActual.value?.id)
 
@@ -616,6 +658,15 @@ const toggleCompletada = async () => {
   justify-content: center;
   background-color: #f5f5f5;
   border: 1px solid #e0e0e0;
+}
+
+.mencion-resaltada {
+  color: #00bcd4 !important;
+  font-weight: 600;
+  background-color: rgba(0, 188, 212, 0.08);
+  padding: 1px 4px;
+  border-radius: 4px;
+  display: inline-block;
 }
 </style>
 

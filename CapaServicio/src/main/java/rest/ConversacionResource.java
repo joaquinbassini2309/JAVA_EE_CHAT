@@ -44,6 +44,7 @@ public class ConversacionResource {
         }
 
         List<chat.clases.Conversacion> convs = sistema.obtenerConversacionesDeUsuario(userId);
+        final String username = sistema.buscarUsuarioPorId(userId).map(chat.clases.Usuario::getUsername).orElse("");
 
         List<DtConversacion> dtos = convs.stream()
                 .map(conv -> {
@@ -51,6 +52,12 @@ public class ConversacionResource {
                     DtConversacion dto = DtConversacion.from(conv, userId, ultimo);
                     int noLeidos = sistema.mensajeHandler().contarMensajesSinLeer(conv.getId(), userId).intValue();
                     dto.setNoLeidos(noLeidos);
+                    
+                    int menciones = 0;
+                    if (!username.isEmpty()) {
+                        menciones = sistema.mensajeHandler().contarMencionesSinLeer(conv.getId(), userId, username).intValue();
+                    }
+                    dto.setMencionesSinLeer(menciones);
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -127,6 +134,13 @@ public class ConversacionResource {
         DtConversacion dto = DtConversacion.from(opt.get(), userId);
         int noLeidos = sistema.mensajeHandler().contarMensajesSinLeer(id, userId).intValue();
         dto.setNoLeidos(noLeidos);
+        
+        String username = sistema.buscarUsuarioPorId(userId).map(chat.clases.Usuario::getUsername).orElse("");
+        int menciones = 0;
+        if (!username.isEmpty()) {
+            menciones = sistema.mensajeHandler().contarMencionesSinLeer(id, userId, username).intValue();
+        }
+        dto.setMencionesSinLeer(menciones);
         return Response.ok(dto).build();
     }
 
@@ -231,11 +245,18 @@ public class ConversacionResource {
         }
 
         List<chat.clases.Conversacion> canales = sistema.listarCanalesAvisos();
+        final String username = sistema.buscarUsuarioPorId(userId).map(chat.clases.Usuario::getUsername).orElse("");
         List<DtConversacion> dtos = canales.stream()
                 .map(canal -> {
                     DtConversacion dto = DtConversacion.from(canal, userId);
                     int noLeidos = sistema.mensajeHandler().contarMensajesSinLeer(canal.getId(), userId).intValue();
                     dto.setNoLeidos(noLeidos);
+                    
+                    int menciones = 0;
+                    if (!username.isEmpty()) {
+                        menciones = sistema.mensajeHandler().contarMencionesSinLeer(canal.getId(), userId, username).intValue();
+                    }
+                    dto.setMencionesSinLeer(menciones);
                     return dto;
                 })
                 .collect(Collectors.toList());

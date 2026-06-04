@@ -254,7 +254,29 @@
         <v-icon size="18" color="#406D73">mdi-lock</v-icon>
         Solo los administradores pueden enviar mensajes en este canal.
       </div>
-      <div v-else class="entrada-mensaje">
+      <div v-else class="entrada-mensaje" style="position: relative;">
+        <!-- Lista de sugerencias de mención -->
+        <div v-if="mostrarSugerenciasMencion && sugerenciasFiltradas.length > 0" class="sugerencias-mencion-card">
+          <div
+            v-for="(sug, index) in sugerenciasFiltradas"
+            :key="sug.esTodos ? 'todos' : sug.id"
+            class="item-sugerencia"
+            :class="{ activo: index === indiceSugerenciaMencion }"
+            @click="seleccionarMencion(sug)"
+          >
+            <div v-if="sug.esTodos" class="avatar-mini-mencion todos">
+              <v-icon size="14" color="white">mdi-account-group</v-icon>
+            </div>
+            <div v-else class="avatar-mini-mencion">
+              {{ sug.username.charAt(0).toUpperCase() }}
+            </div>
+            <div class="info-sugerencia">
+              <span class="username">{{ sug.esTodos ? '@todos' : '@' + sug.username }}</span>
+              <span class="rol">{{ sug.esTodos ? 'Notificar a todos en el grupo' : (sug.email || 'Miembro') }}</span>
+            </div>
+          </div>
+        </div>
+
         <input
             ref="fileInput"
             type="file"
@@ -274,11 +296,24 @@
             :loading="subiendoArchivo"
           ></v-btn>
         </v-hover>
+        <v-hover v-if="esGrupo || esAviso" v-slot="{ isHovering, props }">
+          <v-btn
+            v-bind="props"
+            icon="mdi-at"
+            :variant="isHovering ? 'flat' : 'text'"
+            color="#406D73"
+            class="btn-adjunto teal-hover-white mr-1"
+            @click="insertarArroba"
+            title="Mencionar a alguien"
+          ></v-btn>
+        </v-hover>
         <textarea
+            ref="textareaMensaje"
             v-model="contenidoNuevo"
             class="input-mensaje"
             :placeholder="String(conversacionActual?.id).startsWith('tareas_') ? '✏️  Escribe una nueva tarea...' : '✉️  Escribe un mensaje...'"
             @keydown="handleKeydown"
+            @input="handleTextareaInput"
             rows="1"
             style="resize: none; overflow-y: hidden;"
         ></textarea>
@@ -321,6 +356,125 @@ const terminoUsuario = ref('')
 const usuariosDisponibles = ref([])
 const mostrarModalInfo = ref(false)
 const mensajeParaInfo = ref(null)
+
+// --- MENCIONES EN GRUPOS ---
+const mostrarSugerenciasMencion = ref(false)
+const indiceSugerenciaMencion = ref(0)
+const busquedaMencion = ref('')
+const posicionArroba = ref(-1)
+const textareaMensaje = ref(null)
+
+const miembrosGrupo = computed(() => {
+  if (!conversacionActual.value || (conversacionActual.value.tipo !== 'GRUPO' && conversacionActual.value.tipo !== 'AVISO')) return []
+  return conversacionActual.value.participantes
+    ? conversacionActual.value.participantes.map(p => p.usuario).filter(u => u && u.id !== usuarioActual.value?.id)
+    : []
+})
+
+const sugerenciasFiltradas = computed(() => {
+  const lista = []
+  
+  // Agregar opción @todos
+  lista.push({ username: 'todos', esTodos: true })
+  
+  // Agregar miembros del grupo
+  lista.push(...miembrosGrupo.value)
+  
+  if (!busquedaMencion.value) {
+    return lista
+  }
+  
+  const q = busquedaMencion.value.toLowerCase()
+  return lista.filter(item => item.username.toLowerCase().includes(q))
+})
+
+const handleTextareaInput = (e) => {
+  const el = e.target
+  const val = el.value
+  const selStart = el.selectionStart || 0
+  
+  // Buscar hacia atrás desde el cursor el primer '@'
+  const textBeforeCursor = val.slice(0, selStart)
+  const lastAtIdx = textBeforeCursor.lastIndexOf('@')
+  
+  if (lastAtIdx !== -1) {
+    // Validar que el '@' esté al principio de la línea o precedido por un espacio
+    const charBeforeAt = lastAtIdx > 0 ? textBeforeCursor.charAt(lastAtIdx - 1) : ' '
+    if (charBeforeAt === ' ' || charBeforeAt === '\n') {
+      const query = textBeforeCursor.slice(lastAtIdx + 1)
+      // La búsqueda no debe tener espacios
+      if (!query.includes(' ')) {
+        mostrarSugerenciasMencion.value = true
+        busquedaMencion.value = query
+        posicionArroba.value = lastAtIdx
+        
+        // Resetear índice de navegación si el filtro cambió y se reduce
+        nextTick(() => {
+          if (indiceSugerenciaMencion.value >= sugerenciasFiltradas.value.length) {
+            indiceSugerenciaMencion.value = 0
+          }
+        })
+        return
+      }
+    }
+  }
+  
+  mostrarSugerenciasMencion.value = false
+  posicionArroba.value = -1
+  busquedaMencion.value = ''
+}
+
+const insertarArroba = () => {
+  if (!conversacionActual.value || (conversacionActual.value.tipo !== 'GRUPO' && conversacionActual.value.tipo !== 'AVISO')) return
+  
+  const el = textareaMensaje.value
+  if (!el) return
+  
+  const selStart = el.selectionStart || 0
+  const val = contenidoNuevo.value
+  
+  // Insertar '@' en la posición del cursor
+  contenidoNuevo.value = val.slice(0, selStart) + '@' + val.slice(selStart)
+  
+  nextTick(() => {
+    el.focus()
+    el.setSelectionRange(selStart + 1, selStart + 1)
+    
+    // Disparar detección
+    mostrarSugerenciasMencion.value = true
+    busquedaMencion.value = ''
+    posicionArroba.value = selStart
+    indiceSugerenciaMencion.value = 0
+  })
+}
+
+const seleccionarMencion = (sug) => {
+  const el = textareaMensaje.value
+  if (!el || posicionArroba.value === -1) return
+  
+  const val = contenidoNuevo.value
+  const selStart = el.selectionStart || 0
+  
+  const usernameMencion = sug.esTodos ? 'todos' : sug.username
+  const textoMencion = `@${usernameMencion} `
+  
+  // Reemplazar desde posicionArroba hasta el cursor
+  const nuevoValor = val.slice(0, posicionArroba.value) + textoMencion + val.slice(selStart)
+  contenidoNuevo.value = nuevoValor
+  
+  const arrobaPos = posicionArroba.value
+  
+  // Cerrar sugerencias
+  mostrarSugerenciasMencion.value = false
+  posicionArroba.value = -1
+  busquedaMencion.value = ''
+  
+  nextTick(() => {
+    el.focus()
+    const nuevaPos = arrobaPos + textoMencion.length
+    el.setSelectionRange(nuevaPos, nuevaPos)
+  })
+}
 
 // Modal fecha y estado de creación de tarea
 const mostrarModalFecha = ref(false)
@@ -501,6 +655,7 @@ const cargarMensajes = async () => {
     const conv = almacen.conversaciones.find(c => c.id === conversacionActual.value.id)
     if (conv) {
       conv.noLeidos = 0
+      conv.mencionesSinLeer = 0
     }
   } catch (error) {
     console.error('Error al cargar mensajes:', error)
@@ -648,7 +803,13 @@ const conectarWS = () => {
         // Si el chat está abierto pero la ventana no tiene el foco, disparar notificación nativa
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
           if (!document.hasFocus() && msg.emisorId !== usuarioActual.value?.id) {
-            const titulo = destinatario.value.nombre || 'Nuevo mensaje'
+            const username = almacen.usuarioActual?.username
+            const esMencion = username && (msg.contenido.includes(`@${username}`) || msg.contenido.includes('@todos'))
+            
+            const titulo = esMencion 
+              ? `🔔 ¡Fuiste mencionado en ${destinatario.value.nombre || 'un grupo'}!` 
+              : (destinatario.value.nombre || 'Nuevo mensaje')
+            
             new Notification(titulo, {
               body: msg.contenido,
               icon: conversacionActual.value?.fotoUrl || null
@@ -672,6 +833,30 @@ const conectarWS = () => {
 }
 
 const handleKeydown = (e) => {
+  if (mostrarSugerenciasMencion.value && sugerenciasFiltradas.value.length > 0) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      indiceSugerenciaMencion.value = (indiceSugerenciaMencion.value + 1) % sugerenciasFiltradas.value.length
+      return
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      indiceSugerenciaMencion.value = (indiceSugerenciaMencion.value - 1 + sugerenciasFiltradas.value.length) % sugerenciasFiltradas.value.length
+      return
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      const sug = sugerenciasFiltradas.value[indiceSugerenciaMencion.value]
+      if (sug) seleccionarMencion(sug)
+      return
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      mostrarSugerenciasMencion.value = false
+      return
+    }
+  }
+
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
     enviarMensaje()
@@ -853,6 +1038,7 @@ const handleWindowFocus = () => {
     const conv = almacen.conversaciones.find(c => c.id === conversacionActual.value.id)
     if (conv) {
       conv.noLeidos = 0
+      conv.mencionesSinLeer = 0
     }
   }
 }
@@ -1507,6 +1693,89 @@ const confirmarCrearTarea = async () => {
 .mensaje-resaltado-temp {
   animation: highlightFlash 2s cubic-bezier(0.25, 1, 0.5, 1);
   border-radius: 12px;
+}
+
+/* ---- Card de Sugerencias de Mención ---- */
+.sugerencias-mencion-card {
+  position: absolute;
+  bottom: 100%;
+  left: 14px;
+  right: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(64,109,115,0.15);
+  border-radius: 16px;
+  box-shadow: 0 -4px 24px rgba(64,109,115,0.12), 0 4px 12px rgba(0,0,0,0.05);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+  margin-bottom: 8px;
+  animation: slideUpPopup 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideUpPopup {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.item-sugerencia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.item-sugerencia:hover,
+.item-sugerencia.activo {
+  background-color: rgba(64, 109, 115, 0.06);
+}
+
+.avatar-mini-mencion {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #406D73, #5a8a94);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.avatar-mini-mencion.todos {
+  background: linear-gradient(135deg, #00bcd4, #00acc1);
+}
+
+.info-sugerencia {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.info-sugerencia .username {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a2e31;
+}
+
+.info-sugerencia .rol {
+  font-size: 11px;
+  color: #8aa5ab;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
 

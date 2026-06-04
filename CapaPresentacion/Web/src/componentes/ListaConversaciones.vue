@@ -227,6 +227,9 @@
               <span class="ultimo-msg text-truncate" style="flex: 1; min-width: 0;">
                 {{ conversacion.ultimoMensaje || '...' }}
               </span>
+              <span v-if="conversacion.mencionesSinLeer > 0" class="badge-mencion-no-leida">
+                @
+              </span>
               <span v-if="conversacion.noLeidos > 0" class="badge-no-leidos">
                 {{ conversacion.noLeidos }}
               </span>
@@ -344,6 +347,7 @@
               <v-checkbox
                   v-if="esGrupo"
                   :model-value="seleccionados.includes(usuario.id)"
+                  @update:model-value="toggleSeleccion(usuario.id)"
                   color="accent"
                   hide-details
                   density="compact"
@@ -360,7 +364,7 @@
               variant="flat"
               rounded="lg"
               size="small"
-              :disabled="!nombreGrupo || seleccionados.length === 0"
+              :disabled="!nombreGrupo.trim() || seleccionados.length === 0"
               prepend-icon="mdi-check-circle"
               @click="crearGrupo"
               class="btn-crear-grupo"
@@ -964,8 +968,11 @@ const toggleSeleccion = (idUsuario) => {
     return
   }
   const index = seleccionados.value.indexOf(idUsuario)
-  if (index === -1) seleccionados.value.push(idUsuario)
-  else seleccionados.value.splice(index, 1)
+  if (index === -1) {
+    seleccionados.value = [...seleccionados.value, idUsuario]
+  } else {
+    seleccionados.value = seleccionados.value.filter(id => id !== idUsuario)
+  }
 }
 
 const cerrarModal = () => {
@@ -1079,7 +1086,12 @@ const verificarNuevosMensajes = (nuevasConvs) => {
       const chatFocado = esConversacionActiva && document.hasFocus()
 
       if (!emisorEsYo && !chatFocado && conv.ultimoMensaje && conv.ultimoMensaje !== '...' && conv.ultimoMensaje !== 'Los mensajes están cifrados de extremo a extremo') {
-        const titulo = obtenerNombreVisibleConversacion(conv, yoId) || 'Nuevo mensaje'
+        const username = almacen.usuarioActual?.username
+        const esMencion = username && (conv.ultimoMensaje.includes(`@${username}`) || conv.ultimoMensaje.includes('@todos'))
+        
+        const titulo = esMencion
+          ? `🔔 ¡Fuiste mencionado en ${obtenerNombreVisibleConversacion(conv, yoId) || 'un grupo'}!`
+          : (obtenerNombreVisibleConversacion(conv, yoId) || 'Nuevo mensaje')
         const cuerpo = conv.ultimoMensaje
 
         try {
@@ -1095,10 +1107,16 @@ const verificarNuevosMensajes = (nuevasConvs) => {
   })
 }
 
+const esPrimeraCarga = ref(true)
+
 const cargarConversaciones = async () => {
   try {
       const convs = await servicioApi.obtenerConversaciones()
-      verificarNuevosMensajes(convs)
+      if (!esPrimeraCarga.value) {
+          verificarNuevosMensajes(convs)
+      } else {
+          esPrimeraCarga.value = false
+      }
       almacen.establecerConversaciones(convs)
   } catch (error) {
       console.error('Error al refrescar conversaciones:', error)
@@ -1790,6 +1808,24 @@ const esConversacionFavorita = (conversacion) => {
 }
 
 .badge-no-leidos {
+  background-color: #00bcd4 !important;
+  color: white !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  border-radius: 50% !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-left: 8px !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  line-height: 1 !important;
+}
+
+.badge-mencion-no-leida {
   background-color: #00bcd4 !important;
   color: white !important;
   font-size: 10px !important;

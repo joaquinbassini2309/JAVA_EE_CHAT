@@ -22,6 +22,7 @@ public class DtConversacion {
     private Integer noLeidos;
     private Long ultimoMensajeEmisorId;
     private DtMensaje mensajeFijado;
+    private Integer mencionesSinLeer = 0;
 
     public DtConversacion() {
     }
@@ -205,5 +206,13 @@ public class DtConversacion {
 
     public void setMensajeFijado(DtMensaje mensajeFijado) {
         this.mensajeFijado = mensajeFijado;
+    }
+
+    public Integer getMencionesSinLeer() {
+        return mencionesSinLeer;
+    }
+
+    public void setMencionesSinLeer(Integer mencionesSinLeer) {
+        this.mencionesSinLeer = mencionesSinLeer;
     }
 }
