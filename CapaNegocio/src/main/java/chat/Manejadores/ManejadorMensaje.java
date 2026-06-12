@@ -109,4 +109,18 @@ public class ManejadorMensaje {
             em.merge(m);
         }
     }
+
+    public Long contarMencionesSinLeer(Long conversacionId, Long usuarioId, String username) {
+        TypedQuery<Long> q = em.createQuery(
+                "SELECT COUNT(m) FROM Mensaje m WHERE m.conversacion.id = :cid " +
+                "AND m.emisor.id != :uid " +
+                "AND m.leido = false " +
+                "AND (m.contenido LIKE :mention OR m.contenido LIKE :todos)",
+                Long.class);
+        q.setParameter("cid", conversacionId);
+        q.setParameter("uid", usuarioId);
+        q.setParameter("mention", "%@" + username + "%");
+        q.setParameter("todos", "%@todos%");
+        return q.getSingleResult();
+    }
 }

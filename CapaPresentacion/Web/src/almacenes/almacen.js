@@ -114,6 +114,22 @@ export const useAlmacen = defineStore('principal', () => {
       const conv = conversaciones.value[index]
       conv.ultimoMensaje = nuevoMensaje.contenido
       conv.fechaUltimoMensaje = nuevoMensaje.fechaEnvio
+
+      // Incrementar noLeidos y mencionesSinLeer si no es la conversacionActual y no fue enviado por mí
+      const esActiva = conversacionActual.value && conversacionActual.value.id === conv.id
+      const esYo = nuevoMensaje.emisorId === usuarioActual.value?.id
+
+      if (!esYo && !esActiva) {
+        conv.noLeidos = (conv.noLeidos || 0) + 1
+        
+        // Verificar si contiene mención a mí o @todos
+        const username = usuarioActual.value?.username
+        const esMencion = username && (nuevoMensaje.contenido.includes(`@${username}`) || nuevoMensaje.contenido.includes('@todos'))
+        if (esMencion) {
+          conv.mencionesSinLeer = (conv.mencionesSinLeer || 0) + 1
+        }
+      }
+
       // Forzar actualización de la lista
       conversaciones.value = [...conversaciones.value]
     }
@@ -166,6 +182,16 @@ export const useAlmacen = defineStore('principal', () => {
       if (nombre !== undefined) conversacionActual.value.nombre = nombre
       if (fotoUrl !== undefined) conversacionActual.value.fotoUrl = fotoUrl
       if (imagenBanner !== undefined) conversacionActual.value.imagenBanner = imagenBanner
+    }
+  }
+
+  function actualizarMensajeFijado(conversacionId, mensajeFijado) {
+    const conv = conversaciones.value.find(c => c.id === conversacionId)
+    if (conv) {
+      conv.mensajeFijado = mensajeFijado
+    }
+    if (conversacionActual.value?.id === conversacionId) {
+      conversacionActual.value.mensajeFijado = mensajeFijado
     }
   }
 
@@ -286,6 +312,7 @@ export const useAlmacen = defineStore('principal', () => {
     agregarMensaje,
     actualizarMensaje,
     actualizarInfoConversacion,
+    actualizarMensajeFijado,
     actualizarRolParticipante,
     eliminarParticipante,
     establecerCargando,

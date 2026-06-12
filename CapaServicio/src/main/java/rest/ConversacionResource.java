@@ -44,6 +44,7 @@ public class ConversacionResource {
         }
 
         List<chat.clases.Conversacion> convs = sistema.obtenerConversacionesDeUsuario(userId);
+        final String username = sistema.buscarUsuarioPorId(userId).map(chat.clases.Usuario::getUsername).orElse("");
 
         List<DtConversacion> dtos = convs.stream()
                 .map(conv -> {
@@ -51,6 +52,12 @@ public class ConversacionResource {
                     DtConversacion dto = DtConversacion.from(conv, userId, ultimo);
                     int noLeidos = sistema.mensajeHandler().contarMensajesSinLeer(conv.getId(), userId).intValue();
                     dto.setNoLeidos(noLeidos);
+                    
+                    int menciones = 0;
+                    if (!username.isEmpty()) {
+                        menciones = sistema.mensajeHandler().contarMencionesSinLeer(conv.getId(), userId, username).intValue();
+                    }
+                    dto.setMencionesSinLeer(menciones);
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -127,6 +134,13 @@ public class ConversacionResource {
         DtConversacion dto = DtConversacion.from(opt.get(), userId);
         int noLeidos = sistema.mensajeHandler().contarMensajesSinLeer(id, userId).intValue();
         dto.setNoLeidos(noLeidos);
+        
+        String username = sistema.buscarUsuarioPorId(userId).map(chat.clases.Usuario::getUsername).orElse("");
+        int menciones = 0;
+        if (!username.isEmpty()) {
+            menciones = sistema.mensajeHandler().contarMencionesSinLeer(id, userId, username).intValue();
+        }
+        dto.setMencionesSinLeer(menciones);
         return Response.ok(dto).build();
     }
 
@@ -231,11 +245,18 @@ public class ConversacionResource {
         }
 
         List<chat.clases.Conversacion> canales = sistema.listarCanalesAvisos();
+        final String username = sistema.buscarUsuarioPorId(userId).map(chat.clases.Usuario::getUsername).orElse("");
         List<DtConversacion> dtos = canales.stream()
                 .map(canal -> {
                     DtConversacion dto = DtConversacion.from(canal, userId);
                     int noLeidos = sistema.mensajeHandler().contarMensajesSinLeer(canal.getId(), userId).intValue();
                     dto.setNoLeidos(noLeidos);
+                    
+                    int menciones = 0;
+                    if (!username.isEmpty()) {
+                        menciones = sistema.mensajeHandler().contarMencionesSinLeer(canal.getId(), userId, username).intValue();
+                    }
+                    dto.setMencionesSinLeer(menciones);
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -280,6 +301,61 @@ public class ConversacionResource {
 
         String rol = partOpt.get().getRol().toString();
         return Response.ok("{\"rol\":\"" + rol + "\"}").build();
+    }
+
+    @POST
+    @Path("/{id}/fijar/{mensajeId}")
+    public Response fijarMensaje(@PathParam("id") Long conversacionId,
+                                 @PathParam("mensajeId") Long mensajeId,
+                                 @Context SecurityContext securityContext) {
+        Long userId = authService.getAuthenticatedUserId(securityContext);
+        if (userId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
+        }
+
+        try {
+            sistema.fijarMensaje(conversacionId, mensajeId, userId);
+            
+            chat.clases.Mensaje mensaje = sistema.mensajeHandler().buscarPorId(mensajeId)
+                    .orElseThrow(() -> new IllegalArgumentException("Mensaje no encontrado"));
+            
+            DtMensaje dtMensaje = DtMensaje.from(mensaje);
+            websocket.ChatWebSocketEndpoint.notificarMensajeFijado(conversacionId, dtMensaje);
+            
+            return Response.ok(dtMensaje).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(400, e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(500, "Error al fijar mensaje", e.getMessage())).build();
+        }
+    }
+
+    @POST
+    @Path("/{id}/desfijar")
+    public Response desfijarMensaje(@PathParam("id") Long conversacionId,
+                                    @Context SecurityContext securityContext) {
+        Long userId = authService.getAuthenticatedUserId(securityContext);
+        if (userId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
+        }
+
+        try {
+            sistema.desfijarMensaje(conversacionId, userId);
+            
+            websocket.ChatWebSocketEndpoint.notificarMensajeDesfijado(conversacionId);
+            
+            return Response.ok("{\"message\": \"Mensaje desfijado exitosamente\"}").build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(400, e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(500, "Error al desfijar mensaje", e.getMessage())).build();
+        }
     }
 
     // --- DTOs ---

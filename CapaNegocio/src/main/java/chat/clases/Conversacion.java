@@ -36,6 +36,10 @@ public class Conversacion {
     @OneToMany(mappedBy = "conversacion", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Mensaje> mensajes = new HashSet<>();
 
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_mensaje_fijado")
+    private Mensaje mensajeFijado;
+
     @PrePersist
     private void prePersist() {
         if (fechaCreacion == null) fechaCreacion = LocalDateTime.now();
@@ -65,4 +69,7 @@ public class Conversacion {
 
     public Set<Mensaje> getMensajes() { return mensajes; }
     public void setMensajes(Set<Mensaje> mensajes) { this.mensajes = mensajes; }
+
+    public Mensaje getMensajeFijado() { return mensajeFijado; }
+    public void setMensajeFijado(Mensaje mensajeFijado) { this.mensajeFijado = mensajeFijado; }
 }

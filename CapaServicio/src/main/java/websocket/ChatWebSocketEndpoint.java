@@ -175,6 +175,32 @@ public class ChatWebSocketEndpoint {
     }
 
     /**
+     * Notifica a todos los participantes conectados que un mensaje fue fijado
+     */
+    public static void notificarMensajeFijado(Long idConversacion, DtMensaje mensajeFijado) {
+        try {
+            String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta("mensajeFijado", mensajeFijado));
+            difundir(idConversacion, datosJson);
+        } catch (Exception e) {
+            System.err.println("Error al difundir mensaje fijado por WebSocket: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Notifica a todos los participantes conectados que el mensaje fijado fue quitado
+     */
+    public static void notificarMensajeDesfijado(Long idConversacion) {
+        try {
+            Map<String, Object> notificacion = new HashMap<>();
+            notificacion.put("idConversacion", idConversacion);
+            String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta("mensajeDesfijado", notificacion));
+            difundir(idConversacion, datosJson);
+        } catch (Exception e) {
+            System.err.println("Error al difundir mensaje desfijado por WebSocket: " + e.getMessage());
+        }
+    }
+
+    /**
      * Notifica cuando un usuario se conecta o desconecta
      */
     private void notificarConexionDesconexion(Long idConversacion, Long idUsuario, boolean conectado) {
@@ -196,7 +222,7 @@ public class ChatWebSocketEndpoint {
     /**
      * Envía datos a todos los usuarios de una conversación
      */
-    private void difundir(Long idConversacion, String datosJson) {
+    private static void difundir(Long idConversacion, String datosJson) {
         for (Map.Entry<String, Set<Session>> entrada : sesionesActivas.entrySet()) {
             String[] partes = entrada.getKey().split(":");
             if (Long.parseLong(partes[0]) == idConversacion) {

@@ -21,13 +21,15 @@ public class DtConversacion {
     private LocalDateTime fechaUltimoMensaje;
     private Integer noLeidos;
     private Long ultimoMensajeEmisorId;
+    private DtMensaje mensajeFijado;
+    private Integer mencionesSinLeer = 0;
 
     public DtConversacion() {
     }
 
     public DtConversacion(Long id, String nombre, TipoConversacion tipo, LocalDateTime fechaCreacion,
             List<DtParticipante> participantes, String ultimoMensaje, LocalDateTime fechaUltimoMensaje,
-            Integer noLeidos, String fotoUrl, String imagenBanner, Long ultimoMensajeEmisorId) {
+            Integer noLeidos, String fotoUrl, String imagenBanner, Long ultimoMensajeEmisorId, DtMensaje mensajeFijado) {
         this.id = id;
         this.nombre = nombre;
         this.tipo = tipo;
@@ -39,6 +41,7 @@ public class DtConversacion {
         this.fotoUrl = fotoUrl;
         this.imagenBanner = imagenBanner;
         this.ultimoMensajeEmisorId = ultimoMensajeEmisorId;
+        this.mensajeFijado = mensajeFijado;
     }
 
     public static DtConversacion from(Conversacion conversacion) {
@@ -88,6 +91,11 @@ public class DtConversacion {
             }
         }
 
+        DtMensaje dtFijado = null;
+        if (conversacion.getMensajeFijado() != null) {
+            dtFijado = DtMensaje.from(conversacion.getMensajeFijado());
+        }
+
         return new DtConversacion(
                 conversacion.getId(),
                 nombreVisible,
@@ -99,7 +107,8 @@ public class DtConversacion {
                 0, // Default no leidos
                 fotoVisible,
                 bannerVisible,
-                ultimoEmisorId);
+                ultimoEmisorId,
+                dtFijado);
     }
 
     // Getters y Setters
@@ -189,5 +198,21 @@ public class DtConversacion {
 
     public void setUltimoMensajeEmisorId(Long ultimoMensajeEmisorId) {
         this.ultimoMensajeEmisorId = ultimoMensajeEmisorId;
+    }
+
+    public DtMensaje getMensajeFijado() {
+        return mensajeFijado;
+    }
+
+    public void setMensajeFijado(DtMensaje mensajeFijado) {
+        this.mensajeFijado = mensajeFijado;
+    }
+
+    public Integer getMencionesSinLeer() {
+        return mencionesSinLeer;
+    }
+
+    public void setMencionesSinLeer(Integer mencionesSinLeer) {
+        this.mencionesSinLeer = mencionesSinLeer;
     }
 }

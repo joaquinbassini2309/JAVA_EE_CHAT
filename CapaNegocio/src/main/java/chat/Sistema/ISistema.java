@@ -180,4 +180,8 @@ public interface ISistema {
 
     // Resalta un mensaje con un color (solo admins y moderadores de grupo pueden hacerlo)
     void resaltarMensaje(Long mensajeId, String color, Long actorId);
+
+    // Fijar y desfijar mensaje
+    void fijarMensaje(Long conversacionId, Long mensajeId, Long usuarioId);
+    void desfijarMensaje(Long conversacionId, Long usuarioId);
 }

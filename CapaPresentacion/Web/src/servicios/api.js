@@ -223,6 +223,16 @@ class ServicioAPI {
     return data
   }
 
+  async fijarMensaje(conversacionId, mensajeId) {
+    const { data } = await this.cliente.post(`/conversaciones/${conversacionId}/fijar/${mensajeId}`)
+    return data
+  }
+
+  async desfijarMensaje(conversacionId) {
+    const { data } = await this.cliente.post(`/conversaciones/${conversacionId}/desfijar`)
+    return data
+  }
+
   // ========== TAREAS ==========
 
   async obtenerTareas(userId) {
