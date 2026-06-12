@@ -198,51 +198,53 @@
       </v-dialog>
 
       <!-- Área de mensajes -->
-      <div ref="contenedorMensajes" class="contenedor-mensajes" :style="estiloWallpaper">
-        <!-- Cifrado estático al inicio -->
-        <div class="mensaje-sistema-container">
-          <div class="mensaje-sistema">
-            <v-icon size="12" color="#406D73" class="mr-1" style="opacity: 0.8;">mdi-lock</v-icon>
-            Los mensajes están cifrados de extremo a extremo
+      <div class="area-mensajes" :style="estiloWallpaper">
+        <div ref="contenedorMensajes" class="contenedor-mensajes">
+          <!-- Cifrado estático al inicio -->
+          <div class="mensaje-sistema-container">
+            <div class="mensaje-sistema">
+              <v-icon size="12" color="#406D73" class="mr-1" style="opacity: 0.8;">mdi-lock</v-icon>
+              Los mensajes están cifrados de extremo a extremo
+            </div>
           </div>
-        </div>
 
-        <!-- Botón Cargar Más -->
-        <div v-if="!todosCargados && mensajesFiltrados.length > 0" class="d-flex justify-center my-3">
-          <v-btn
-            variant="flat"
-            color="#455A64"
-            class="text-white btn-cargar-mas"
-            size="small"
-            rounded="pill"
-            :loading="cargandoAnteriores"
-            prepend-icon="mdi-history"
-            @click="cargarMasMensajes"
-          >
-            Cargar mensajes anteriores
-          </v-btn>
-        </div>
-        <div
-            v-for="(mensaje, index) in mensajesFiltrados"
-            :key="mensaje.id"
-            class="mensaje-agrupador"
-        >
-          <!-- Date Header -->
-          <div v-if="mostrarFechaHeader(index)" class="fecha-header-container">
-            <div class="fecha-header">{{ formatearSoloFecha(mensaje.fechaEnvio) }}</div>
+          <!-- Botón Cargar Más -->
+          <div v-if="!todosCargados && mensajesFiltrados.length > 0" class="d-flex justify-center my-3">
+            <v-btn
+              variant="flat"
+              color="#455A64"
+              class="text-white btn-cargar-mas"
+              size="small"
+              rounded="pill"
+              :loading="cargandoAnteriores"
+              prepend-icon="mdi-history"
+              @click="cargarMasMensajes"
+            >
+              Cargar mensajes anteriores
+            </v-btn>
           </div>
-          
           <div
-              :id="`msg-${mensaje.id}`"
-              class="mensaje-wrap"
-              :class="{ propio: esPropio(mensaje) }"
+              v-for="(mensaje, index) in mensajesFiltrados"
+              :key="mensaje.id"
+              class="mensaje-agrupador"
           >
-            <Mensaje
-                :mensaje="mensaje"
-                @ver-info="mostrarInfoMensaje"
-                @eliminar="eliminarMensaje"
-                @fijar="fijarMensaje"
-            />
+            <!-- Date Header -->
+            <div v-if="mostrarFechaHeader(index)" class="fecha-header-container">
+              <div class="fecha-header">{{ formatearSoloFecha(mensaje.fechaEnvio) }}</div>
+            </div>
+            
+            <div
+                :id="`msg-${mensaje.id}`"
+                class="mensaje-wrap"
+                :class="{ propio: esPropio(mensaje) }"
+            >
+              <Mensaje
+                  :mensaje="mensaje"
+                  @ver-info="mostrarInfoMensaje"
+                  @eliminar="eliminarMensaje"
+                  @fijar="fijarMensaje"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -1308,20 +1310,17 @@ const confirmarCrearTarea = async () => {
 /* ===================================================
    ÁREA DE MENSAJES
    =================================================== */
-.contenedor-mensajes {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px 16px 12px;
+.area-mensajes {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  position: relative;
   background-color: var(--chat-bg);
-  z-index: 1;
+  flex: 1;
+  min-height: 0;
 }
 
-.contenedor-mensajes::before {
+.area-mensajes::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1333,9 +1332,22 @@ const confirmarCrearTarea = async () => {
   background-position: center;
   background-repeat: var(--chat-wallpaper-repeat, repeat);
   opacity: var(--chat-wallpaper-opacity, 1);
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
+}
+
+.contenedor-mensajes {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  background: transparent;
+  z-index: 1;
 }
 
 .mensaje-agrupador {
