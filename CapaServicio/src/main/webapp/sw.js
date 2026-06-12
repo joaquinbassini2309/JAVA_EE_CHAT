@@ -15,6 +15,21 @@ self.addEventListener('install', (e) => {
   );
 });
 
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            console.log('Deleting old cache:', key);
+            return caches.delete(key);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
 self.addEventListener('fetch', (e) => {
   // Solo cachear peticiones GET locales
   if (e.request.method === 'GET' && e.request.url.startsWith(self.location.origin)) {
@@ -23,5 +38,11 @@ self.addEventListener('fetch', (e) => {
         return res || fetch(e.request);
       })
     );
+  }
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });

@@ -95,29 +95,42 @@
       </div>
     </div>
 
-    <!-- Modal Nueva Tarea (Simplificado para el demo) -->
+    <!-- Modal Nueva Tarea Premium -->
     <v-dialog v-model="modalNuevaTarea" max-width="450">
-      <v-card rounded="xl">
-        <v-card-title class="bg-primary text-white pa-4 text-subtitle-1">
+      <v-card rounded="xl" class="modal-nueva-tarea">
+        <v-card-title class="modal-titulo-tarea">
+          <v-icon size="18" color="white" class="mr-2">mdi-clipboard-plus-outline</v-icon>
           Nueva Tarea
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="modalNuevaTarea = false" />
         </v-card-title>
-        <v-card-text class="pa-4">
-          <v-text-field v-model="nuevaTarea.titulo" placeholder="Título" variant="outlined" density="comfortable" class="mb-4" hide-details></v-text-field>
-          <v-textarea v-model="nuevaTarea.contenido" placeholder="Descripción" variant="outlined" density="comfortable" class="mb-4" hide-details rows="3"></v-textarea>
+        <v-card-text class="modal-contenido-tarea">
+          <div class="campo-grupo">
+            <label class="label-input">Título de la tarea</label>
+            <input v-model="nuevaTarea.titulo" type="text" placeholder="Ej: Redactar reporte mensual" class="input-mejorado" />
+          </div>
+          <div class="campo-grupo">
+            <label class="label-input">Descripción</label>
+            <textarea v-model="nuevaTarea.contenido" placeholder="Escribe detalles sobre la tarea..." class="input-mejorado text-area-mejorado" rows="3"></textarea>
+          </div>
           
-          <div class="d-flex gap-2 mb-4">
-            <v-select v-model="nuevaTarea.grupoId" :items="gruposDisponibles" item-title="nombre" item-value="id" placeholder="Vincular a grupo (Opcional)" variant="outlined" density="comfortable" hide-details clearable style="flex: 1;"></v-select>
-            <v-select v-model="nuevaTarea.asignadoAId" :items="usuariosSistema" item-title="username" item-value="id" placeholder="Asignar a (Opcional)" variant="outlined" density="comfortable" hide-details clearable style="flex: 1;" class="ml-2"></v-select>
+          <div class="d-flex gap-2" style="width: 100%;">
+            <div class="campo-grupo select-wrapper">
+              <label class="label-input">Grupo (Opcional)</label>
+              <v-select v-model="nuevaTarea.grupoId" :items="gruposDisponibles" item-title="nombre" item-value="id" placeholder="Ninguno" variant="outlined" density="compact" hide-details clearable bg-color="var(--surface)"></v-select>
+            </div>
+            <div class="campo-grupo select-wrapper ml-2">
+              <label class="label-input">Asignar a (Opcional)</label>
+              <v-select v-model="nuevaTarea.asignadoAId" :items="usuariosSistema" item-title="username" item-value="id" placeholder="Ninguno" variant="outlined" density="compact" hide-details clearable bg-color="var(--surface)"></v-select>
+            </div>
           </div>
 
-          <v-divider class="mb-4"></v-divider>
-          
-          <p class="text-caption text-medium-emphasis mb-2">Selecciona la fecha y hora de vencimiento</p>
-          <div class="d-flex align-center gap-2 mb-4">
-            <v-text-field v-model="nuevaTarea.fechaVencimiento" type="datetime-local" variant="outlined" density="comfortable" hide-details style="flex: 1;"></v-text-field>
+          <div class="campo-grupo">
+            <label class="label-input">Fecha y hora de vencimiento</label>
+            <input v-model="nuevaTarea.fechaVencimiento" type="datetime-local" class="input-mejorado" />
           </div>
         </v-card-text>
-        <v-card-actions class="pa-4 pt-0">
+        <v-card-actions class="modal-acciones-tarea">
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="modalNuevaTarea = false">Cancelar</v-btn>
           <v-btn color="primary" variant="flat" :loading="guardando" @click="guardarNuevaTarea">Crear Tarea</v-btn>
@@ -454,8 +467,81 @@ const eliminarTarea = async (tarea) => {
 
 .meta-item {
   font-size: 11px;
-  color: #8da6a9;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
+}
+
+/* Modal Nueva Tarea Premium */
+.modal-nueva-tarea {
+  box-shadow: 0 16px 48px var(--teal-glow) !important;
+  background: var(--surface) !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+}
+
+.modal-titulo-tarea {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%) !important;
+  color: white !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 14px 16px !important;
+}
+
+.modal-contenido-tarea {
+  padding: 20px 16px !important;
+  background: var(--bg) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+.campo-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.select-wrapper {
+  flex: 1;
+}
+
+.label-input {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--teal);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.input-mejorado {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--teal-border);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--surface);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  font-family: inherit;
+}
+
+.input-mejorado:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px var(--teal-glow);
+}
+
+.text-area-mejorado {
+  resize: vertical;
+}
+
+.modal-acciones-tarea {
+  background: var(--surface) !important;
+  border-top: 1px solid var(--border-color) !important;
+  padding: 12px 16px !important;
 }
 </style>

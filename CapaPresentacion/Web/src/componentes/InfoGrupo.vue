@@ -423,9 +423,9 @@ const confirmarEliminarMiembro = async () => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #ffffff;
+  background: var(--surface);
   overflow: hidden;
-  border-left: 1px solid rgba(64,109,115,0.08);
+  border-left: 1px solid var(--border-color);
 }
 
 /* ===================================================
@@ -435,8 +435,8 @@ const confirmarEliminarMiembro = async () => {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  background: #ffffff;
-  border-bottom: 1px solid rgba(64,109,115,0.1);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
   gap: 12px;
   min-height: 62px;
@@ -457,7 +457,7 @@ const confirmarEliminarMiembro = async () => {
 }
 
 .btn-atras:hover {
-  background: rgba(64,109,115,0.08);
+  background: var(--teal-pale);
   transform: translateX(-2px);
 }
 
@@ -469,7 +469,7 @@ const confirmarEliminarMiembro = async () => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #406D73 0%, #5a8a94 100%);
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -477,7 +477,7 @@ const confirmarEliminarMiembro = async () => {
   font-size: 18px;
   font-weight: 700;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(64,109,115,0.2);
+  box-shadow: 0 2px 8px var(--teal-glow);
 }
 
 .header-avatar-img {
@@ -497,7 +497,7 @@ const confirmarEliminarMiembro = async () => {
 .info-name {
   font-size: 15px;
   font-weight: 700;
-  color: #1a2e31;
+  color: var(--text-primary);
   line-height: 1.3;
   letter-spacing: -0.01em;
 }
@@ -505,12 +505,12 @@ const confirmarEliminarMiembro = async () => {
 .input-nombre-grupo {
   font-size: 15px;
   font-weight: 700;
-  color: #1a2e31;
+  color: var(--text-primary);
 }
 
 .info-subtitle {
   font-size: 12px;
-  color: #5a8a94;
+  color: var(--text-secondary);
   margin-top: 2px;
 }
 
@@ -538,18 +538,18 @@ const confirmarEliminarMiembro = async () => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: #f8fbfc;
+  background: var(--surface-2);
 }
 
 /* ===================================================
    SECCIONES Y TARJETAS
    =================================================== */
 .seccion {
-  background: #ffffff;
+  background: var(--surface);
   border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(64,109,115,0.06), 0 4px 12px rgba(64,109,115,0.03);
-  border: 1px solid rgba(64,109,115,0.08);
+  box-shadow: 0 1px 3px var(--border-color), 0 4px 12px rgba(64,109,115,0.03);
+  border: 1px solid var(--border-color);
 }
 
 .seccion-titulo {
@@ -557,7 +557,7 @@ const confirmarEliminarMiembro = async () => {
   align-items: center;
   font-size: 11px;
   font-weight: 700;
-  color: #406D73;
+  color: var(--teal);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: 14px;
@@ -565,7 +565,7 @@ const confirmarEliminarMiembro = async () => {
 
 .descripcion-usuario {
   font-size: 13px;
-  color: #2f4a4f;
+  color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
 }
@@ -589,14 +589,14 @@ const confirmarEliminarMiembro = async () => {
 }
 
 .item-miembro:hover {
-  background: rgba(179, 235, 242, 0.15);
+  background: var(--teal-pale);
 }
 
 .avatar-mini {
   width: 40px;
   height: 40px;
   min-width: 40px;
-  background: linear-gradient(135deg, #B2C5C8, #9fb3b6);
+  background: linear-gradient(135deg, var(--text-muted), var(--text-secondary));
   color: #ffffff;
   border-radius: 50%;
   display: flex;
@@ -624,7 +624,7 @@ const confirmarEliminarMiembro = async () => {
 .info-usuario .nombre {
   font-weight: 600;
   font-size: 14px;
-  color: #1a2e31;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
@@ -638,11 +638,11 @@ const confirmarEliminarMiembro = async () => {
    MODALES (Heredan de estilos.css globales pero ajustes finos aquí)
    =================================================== */
 .modal-editar-perfil {
-  box-shadow: 0 16px 48px rgba(64,109,115,0.18) !important;
+  box-shadow: 0 16px 48px var(--teal-glow) !important;
 }
 
 .modal-titulo-perfil {
-  background: linear-gradient(135deg, #406D73 0%, #5a8a94 100%) !important;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%) !important;
   color: white !important;
   font-size: 14px !important;
   font-weight: 600 !important;
@@ -653,7 +653,7 @@ const confirmarEliminarMiembro = async () => {
 
 .modal-contenido-perfil {
   padding: 20px 16px !important;
-  background: #f7fbfc !important;
+  background: var(--surface-2) !important;
 }
 
 .campo-edicion {
@@ -667,28 +667,28 @@ const confirmarEliminarMiembro = async () => {
   align-items: center;
   font-size: 12px;
   font-weight: 600;
-  color: #2f4a4f;
+  color: var(--text-secondary);
 }
 
 .input-modal-mejorado {
   padding: 10px 14px;
-  border: 1.5px solid rgba(64,109,115,0.2);
+  border: 1.5px solid var(--teal-border);
   border-radius: 10px;
   font-size: 13px;
-  color: #1a2e31;
-  background: #ffffff;
+  color: var(--text-primary);
+  background: var(--surface);
   outline: none;
   transition: border-color .15s, box-shadow .15s;
 }
 
 .input-modal-mejorado:focus {
-  border-color: #406D73;
-  box-shadow: 0 0 0 3px rgba(64,109,115,0.1);
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px var(--teal-glow);
 }
 
 .modal-acciones-perfil {
-  background: #ffffff !important;
-  border-top: 1px solid rgba(64,109,115,0.08) !important;
+  background: var(--surface) !important;
+  border-top: 1px solid var(--border-color) !important;
   padding: 12px 16px !important;
 }
 

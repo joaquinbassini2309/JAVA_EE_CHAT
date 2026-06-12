@@ -72,21 +72,21 @@
               <v-icon size="20">mdi-filter-variant</v-icon>
             </button>
           </template>
-          <v-card min-width="220" rounded="xl" style="overflow: hidden; box-shadow: 0 8px 24px rgba(64,109,115,0.15) !important;">
-            <v-card-title style="background: #406D73; color: white; font-size: 13px; padding: 10px 16px; display:flex; align-items:center; gap:6px;">
+          <v-card class="menu-filtro-card" min-width="220" rounded="xl" style="overflow: hidden; box-shadow: 0 8px 24px rgba(64,109,115,0.15) !important;">
+            <v-card-title class="menu-filtro-title">
               <v-icon size="16">mdi-filter-variant</v-icon>
               Mostrar en lista
             </v-card-title>
-            <v-list density="compact" class="py-1" bg-color="#ffffff">
+            <v-list density="compact" class="py-1 menu-filtro-list">
               <template v-if="tabActivo === 'chats'">
-                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Contactos" value="PRIVADA" color="#406D73" hide-details /></v-list-item>
-                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Grupos" value="GRUPO" color="#406D73" hide-details /></v-list-item>
-                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Canales de aviso" value="AVISO" color="#406D73" hide-details /></v-list-item>
-                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Lista de tareas" value="TAREAS" color="#406D73" hide-details /></v-list-item>
+                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Contactos" value="PRIVADA" color="primary" hide-details /></v-list-item>
+                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Grupos" value="GRUPO" color="primary" hide-details /></v-list-item>
+                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Canales de aviso" value="AVISO" color="primary" hide-details /></v-list-item>
+                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Lista de tareas" value="TAREAS" color="primary" hide-details /></v-list-item>
               </template>
               <template v-else-if="tabActivo === 'tareas'">
-                <v-list-item><v-checkbox-btn v-model="filtrosTareas" label="Tareas pendientes" value="PENDIENTES" color="#406D73" hide-details /></v-list-item>
-                <v-list-item><v-checkbox-btn v-model="filtrosTareas" label="Tareas completadas" value="COMPLETADAS" color="#406D73" hide-details /></v-list-item>
+                <v-list-item><v-checkbox-btn v-model="filtrosTareas" label="Tareas pendientes" value="PENDIENTES" color="primary" hide-details /></v-list-item>
+                <v-list-item><v-checkbox-btn v-model="filtrosTareas" label="Tareas completadas" value="COMPLETADAS" color="primary" hide-details /></v-list-item>
               </template>
               <template v-else>
                 <v-list-item><v-list-item-title class="text-caption text-grey py-2 px-2">Solo filtro por texto</v-list-item-title></v-list-item>
@@ -482,6 +482,29 @@
               URL de la foto de perfil
             </label>
             <input v-model="valorEdicionPerfil" type="text" class="input-modal-mejorado" placeholder="https://ejemplo.com/mifoto.jpg" />
+
+            <div class="o-separador-text my-2 text-center text-caption text-grey" style="font-size: 11px; letter-spacing: 0.05em; font-weight: bold; opacity: 0.7;">O SUBIR UNA IMAGEN</div>
+
+            <v-btn
+              color="#406D73"
+              variant="outlined"
+              prepend-icon="mdi-upload"
+              size="small"
+              block
+              :loading="subiendoWallpaper"
+              @click="seleccionarWallpaper"
+              class="text-none font-weight-bold"
+              style="border-radius: 10px;"
+            >
+              Seleccionar archivo
+            </v-btn>
+            <input
+              ref="wallpaperInput"
+              type="file"
+              accept="image/*"
+              style="display: none"
+              @change="handleWallpaperSelected"
+            />
           </div>
           <div v-else-if="tipoEdicionPerfil === 'imagenBanner'" class="campo-edicion">
             <label class="label-input-mejorado">
@@ -1265,8 +1288,8 @@ const esConversacionFavorita = (conversacion) => {
 }
 
 .campo-busqueda-modern:focus-within {
-  border-color: #406D73;
-  box-shadow: 0 0 0 3px rgba(64,109,115,0.07);
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px var(--teal-glow);
 }
 
 .btn-filtro {
@@ -1276,14 +1299,33 @@ const esConversacionFavorita = (conversacion) => {
   background: none;
   border: none;
   cursor: pointer;
-  color: #406D73;
+  color: var(--teal);
   padding: 3px;
   border-radius: 6px;
   transition: background .15s;
   flex-shrink: 0;
 }
 
-.btn-filtro:hover { background: rgba(64,109,115,0.08); }
+.btn-filtro:hover { background: var(--teal-pale); }
+
+.menu-filtro-card {
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color);
+}
+.menu-filtro-title {
+  background: var(--teal) !important;
+  color: white !important;
+  font-size: 13px;
+  padding: 10px 16px;
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+}
+.menu-filtro-list {
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+}
 
 .divider-v {
   width: 1px;

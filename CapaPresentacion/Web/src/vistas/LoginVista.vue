@@ -1,10 +1,19 @@
 <template>
   <div class="contenedor-login">
+    <!-- Botón flotante para alternar tema -->
+    <button class="btn-tema" @click="alternarTema" :title="almacen.temaOscuro ? 'Modo Claro' : 'Modo Oscuro'">
+      <v-icon size="20" :color="almacen.temaOscuro ? '#e2edef' : '#406D73'">
+        {{ almacen.temaOscuro ? 'mdi-weather-sunny' : 'mdi-weather-night' }}
+      </v-icon>
+    </button>
+
     <div class="tarjeta-login">
       <!-- Panel Izquierdo: Formulario -->
       <div class="panel-formulario">
         <div class="avatar-placeholder">
-          <div class="circulo-gris"></div>
+          <div class="circulo-gris">
+            <v-icon size="40" color="var(--text-muted)">mdi-account</v-icon>
+          </div>
         </div>
 
         <form @submit.prevent="iniciarSesion">
@@ -76,6 +85,10 @@ const contraseña = ref('')
 const cargando = ref(false)
 const error = ref(null)
 
+const alternarTema = () => {
+  almacen.establecerTemaOscuro(!almacen.temaOscuro)
+}
+
 const iniciarSesion = async () => {
   if (!email.value || !contraseña.value) {
     error.value = 'Por favor completa todos los campos'
@@ -127,7 +140,7 @@ const inicializarGoogle = () => {
     })
     window.google.accounts.id.renderButton(
       document.getElementById('googleBtn'),
-      { theme: 'outline', size: 'large', width: '100%' }
+      { theme: almacen.temaOscuro ? 'filled_blue' : 'outline', size: 'large', width: '100%' }
     )
   }
 }
@@ -152,19 +165,46 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #e4f6f9; /* background from temaProyecto */
+  background-color: var(--bg);
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.btn-tema {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: var(--t-fast);
+  z-index: 10;
+}
+
+.btn-tema:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+  background: var(--teal-pale);
 }
 
 .tarjeta-login {
   display: flex;
   flex-direction: row;
-  background: #f7fcfd; /* surface from temaProyecto */
+  background: var(--surface);
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
   width: 90%;
   max-width: 800px;
   height: 500px;
   overflow: hidden;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 @media (max-width: 768px) {
@@ -193,13 +233,17 @@ onMounted(() => {
 .circulo-gris {
   width: 80px;
   height: 80px;
-  background-color: #bdc3c7;
+  background-color: var(--teal-pale);
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
 }
 
 .panel-bienvenida {
   flex: 1;
-  background: linear-gradient(135deg, #B3EBF2 0%, #406D73 100%);
+  background: linear-gradient(135deg, var(--teal-light) 0%, var(--teal-dark) 100%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -224,30 +268,42 @@ form {
 
 label {
   font-size: 14px;
-  color: #2f4a4f;
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
 input {
   padding: 8px;
-  border: 1px solid #B2C5C8;
+  border: 1px solid var(--teal-border);
   border-radius: 4px;
-  background: white;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--t-fast);
+}
+
+input:focus {
+  border-color: var(--teal);
 }
 
 .btn-iniciar {
   margin-top: 8px;
   padding: 10px;
-  background-color: #406D73;
+  background-color: var(--teal);
   color: white;
   border: none;
   border-radius: 4px;
   font-weight: bold;
   cursor: pointer;
+  transition: background-color var(--t-fast);
+}
+
+.btn-iniciar:hover {
+  background-color: var(--teal-hover);
 }
 
 .alerta-error {
-  color: #C85A5A;
+  color: var(--red);
   font-size: 13px;
   margin-bottom: 8px;
 }
@@ -256,7 +312,7 @@ input {
   margin-top: 16px;
   text-align: center;
   font-size: 13px;
-  color: #2f4a4f;
+  color: var(--text-secondary);
 }
 
 .separador {
@@ -264,14 +320,14 @@ input {
   align-items: center;
   text-align: center;
   margin: 16px 0;
-  color: #8fa4a6;
+  color: var(--text-muted);
 }
 
 .separador::before,
 .separador::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid #e0e8e9;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .separador:not(:empty)::before {
@@ -289,9 +345,13 @@ input {
 }
 
 a {
-  color: #406D73;
+  color: var(--teal);
   text-decoration: none;
   font-weight: bold;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {

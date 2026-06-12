@@ -261,6 +261,33 @@
             :loading="subiendoArchivo"
           ></v-btn>
         </v-hover>
+        <!-- Botón Emoji -->
+        <v-menu :close-on-content-click="false" location="top start" transition="slide-y-transition">
+          <template v-slot:activator="{ props }">
+            <v-hover v-slot="{ isHovering, props: hoverProps }">
+              <v-btn
+                v-bind="{ ...props, ...hoverProps }"
+                icon="mdi-emoticon-outline"
+                :variant="isHovering ? 'flat' : 'text'"
+                color="#406D73"
+                class="btn-emoji mr-1 teal-hover-white"
+                title="Insertar emoji"
+              ></v-btn>
+            </v-hover>
+          </template>
+          <v-card class="emoji-picker-card" rounded="xl" width="280">
+            <div class="emoji-picker-grid">
+              <button
+                v-for="emoji in listaEmojis"
+                :key="emoji"
+                class="btn-emoji-item"
+                @click="insertarEmoji(emoji)"
+              >
+                {{ emoji }}
+              </button>
+            </div>
+          </v-card>
+        </v-menu>
         <textarea
             v-model="contenidoNuevo"
             class="input-mensaje"
@@ -335,10 +362,10 @@ const estiloWallpaper = computed(() => {
   const url = conversacionActual.value?.imagenBanner || usuarioActual.value?.imagenBanner
   if (url) {
     return {
-      backgroundImage: `url('${url}')`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat'
+      '--chat-wallpaper-url': `url('${url}')`,
+      '--chat-wallpaper-size': 'cover',
+      '--chat-wallpaper-repeat': 'no-repeat',
+      '--chat-wallpaper-opacity': '0.38'
     }
   }
   return {}
@@ -357,6 +384,24 @@ const determinarRolUsuario = async () => {
   } else {
     rolUsuario.value = 'ADMIN'
   }
+}
+
+const listaEmojis = [
+  '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
+  '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚',
+  '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩',
+  '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣',
+  '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬',
+  '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗',
+  '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '💀',
+  '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '🖐️', '✋',
+  '👋', '👏', '🙏', '🙌', '👐', '🤝', '✍️', '💅', '🤳', '💪',
+  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔',
+  '🔥', '✨', '🎉', '🎈', '🚀', '💡', '📌', '📅', '📝', '💬'
+]
+
+const insertarEmoji = (emoji) => {
+  contenidoNuevo.value += emoji
 }
 
 const destinatario = computed(() => {
@@ -996,11 +1041,26 @@ const confirmarCrearTarea = async () => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  /* Patrón muy sutil como WhatsApp */
+  position: relative;
   background-color: var(--chat-bg);
-  background-image:
-    radial-gradient(circle at 1px 1px, rgba(64,109,115,0.06) 1px, transparent 0);
-  background-size: 24px 24px;
+  z-index: 1;
+}
+
+.contenedor-mensajes::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: var(--chat-wallpaper-url, radial-gradient(circle at 1px 1px, rgba(64,109,115,0.06) 1px, transparent 0));
+  background-size: var(--chat-wallpaper-size, 24px 24px);
+  background-position: center;
+  background-repeat: var(--chat-wallpaper-repeat, repeat);
+  opacity: var(--chat-wallpaper-opacity, 1);
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
 .mensaje-agrupador {
@@ -1186,9 +1246,46 @@ const confirmarCrearTarea = async () => {
   flex-direction: column !important;
   gap: 4px !important;
   padding: 10px 14px !important;
-  background: rgba(179,235,242,0.12) !important;
+  background: var(--teal-pale) !important;
   border-radius: 12px !important;
-  border-left: 3px solid #406D73 !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Emoji Picker Styles */
+.emoji-picker-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 8px;
+  overflow: hidden !important;
+}
+
+.emoji-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.btn-emoji-item {
+  font-size: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  transition: background var(--t-fast);
+}
+
+.btn-emoji-item:hover {
+  background: var(--teal-pale);
 }
 
 .info-label {
