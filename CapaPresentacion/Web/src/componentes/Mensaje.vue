@@ -66,16 +66,13 @@
     <div v-if="mostrarMenu" class="menu-mensaje">
       <v-menu content-class="menu-mensaje-flotante" transition="scale-transition" location="bottom end" :offset="[0, 16]">
         <template v-slot:activator="{ props }">
-          <v-hover v-slot="{ isHovering, props: hoverProps }">
-            <v-btn
-                icon="mdi-dots-vertical"
-                size="x-small"
-                :variant="isHovering ? 'flat' : 'text'"
-                color="#406D73"
-                class="btn-opciones teal-hover-white"
-                v-bind="{ ...props, ...hoverProps }"
-            />
-          </v-hover>
+          <button
+              class="btn-accion-mensaje"
+              v-bind="props"
+              title="Opciones"
+          >
+            <v-icon size="18">mdi-dots-vertical</v-icon>
+          </button>
         </template>
         <v-list class="lista-opciones" density="compact">
           <!-- Opciones de resaltado (solo admins y moderadores de grupo) -->
@@ -414,19 +411,38 @@ const toggleCompletada = async () => {
   opacity: 0;
   transition: opacity .15s ease;
   align-self: center;
+  display: flex;
+  align-items: center;
 }
 
 .burbuja-wrap:hover .menu-mensaje {
   opacity: 1;
 }
 
-.teal-hover-white.v-btn--variant-flat {
-  background-color: var(--teal) !important;
-  color: #ffffff !important;
+.btn-accion-mensaje {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: transparent;
+  color: #406D73;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease;
+  box-sizing: border-box;
 }
-.teal-hover-white.v-btn--variant-flat .v-icon,
-.teal-hover-white.v-btn--variant-flat i {
-  color: #ffffff !important;
+
+.btn-accion-mensaje:hover {
+  background-color: var(--teal);
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.btn-accion-mensaje .v-icon,
+.btn-accion-mensaje i {
+  color: inherit !important;
 }
 
 :deep(.lista-opciones .v-list-item:hover) {
