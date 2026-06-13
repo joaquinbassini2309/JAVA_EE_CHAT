@@ -1,5 +1,5 @@
 <template>
-  <div class="componente-chat" style="display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; width: 100%; overflow: hidden; background: var(--bg);">
+  <div class="componente-chat" style="display: flex; flex-direction: column; height: 100%; width: 100%; overflow: hidden; background: var(--bg);">
     <template v-if="!mostrandoInfo">
 
       <!-- Header Compacto Estilo Telegram/Slack -->
@@ -75,7 +75,6 @@
           <div class="fijado-titulo">Mensaje fijado</div>
           <div class="fijado-texto">{{ conversacionActual.mensajeFijado.contenido || 'Archivo adjunto' }}</div>
         </div>
-        <v-spacer />
         <v-btn icon="mdi-close" variant="text" size="x-small" color="#406D73" class="fijado-btn-cerrar" @click.stop="desfijarMensajeActual" title="Desfijar mensaje" />
       </div>
 
@@ -312,7 +311,7 @@
               ></v-btn>
             </v-hover>
           </template>
-          <v-card class="emoji-picker-card" rounded="xl" width="280">
+          <v-card class="emoji-picker-card" rounded="xl" width="300">
             <div class="emoji-picker-grid">
               <button
                 v-for="emoji in listaEmojis"
@@ -1182,8 +1181,8 @@ const confirmarCrearTarea = async () => {
 
 /* ---- Raíz ---- */
 .componente-chat {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   height: 100%;
   width: 100%;
   background: var(--bg);
@@ -1718,8 +1717,9 @@ const confirmarCrearTarea = async () => {
 .barra-mensaje-fijado {
   display: flex;
   align-items: center;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.95);
+  padding: 10px 16px;
+  min-height: 58px;
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid rgba(64, 109, 115, 0.12);
   cursor: pointer;
@@ -1727,6 +1727,7 @@ const confirmarCrearTarea = async () => {
   flex-shrink: 0;
   animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
   transition: background-color 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
 .barra-mensaje-fijado:hover {
@@ -1755,7 +1756,7 @@ const confirmarCrearTarea = async () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 90%;
+  max-width: 100%;
   margin-top: 2px;
 }
 
