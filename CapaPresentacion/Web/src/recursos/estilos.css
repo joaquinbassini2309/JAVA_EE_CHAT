@@ -49,6 +49,8 @@ html, body, #app {
   --msg-recibido-bg:  #ffffff;
   --msg-enviado-bg:   #cfe9e6;
   --msg-texto-color:  #1a2e31;
+  --msg-timestamp-color: rgba(64, 109, 115, 0.55);
+  --msg-me-timestamp-color: rgba(22, 46, 49, 0.5);
   --input-bg:         #f7fbfc;
   --border-color:     rgba(64, 109, 115, 0.08);
 
@@ -181,6 +183,8 @@ html, body, #app {
   --msg-recibido-bg:  #1c2a2e;
   --msg-enviado-bg:   #2b474a;
   --msg-texto-color:  #e2edef;
+  --msg-timestamp-color: rgba(226, 237, 239, 0.45);
+  --msg-me-timestamp-color: rgba(226, 237, 239, 0.5);
   --input-bg:         #1c2a2e;
   --border-color:     rgba(108, 160, 166, 0.15);
 }

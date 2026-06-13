@@ -393,13 +393,13 @@ const toggleCompletada = async () => {
 
 .timestamp {
   font-size: 10px;
-  color: rgba(64,109,115,0.55);
+  color: var(--msg-timestamp-color);
   font-weight: 500;
   letter-spacing: 0.01em;
 }
 
 .burbuja-me .timestamp {
-  color: rgba(22,46,49,0.5);
+  color: var(--msg-me-timestamp-color);
 }
 
 .icono-leido {
@@ -421,6 +421,7 @@ const toggleCompletada = async () => {
 }
 
 .teal-hover-white.v-btn--variant-flat {
+  background-color: var(--teal) !important;
   color: #ffffff !important;
 }
 .teal-hover-white.v-btn--variant-flat .v-icon,

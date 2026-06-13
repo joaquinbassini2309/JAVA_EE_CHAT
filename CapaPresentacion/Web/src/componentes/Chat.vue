@@ -1300,6 +1300,7 @@ const confirmarCrearTarea = async () => {
 }
 
 .teal-hover-white.v-btn--variant-flat {
+  background-color: var(--teal) !important;
   color: #ffffff !important;
 }
 .teal-hover-white.v-btn--variant-flat .v-icon,

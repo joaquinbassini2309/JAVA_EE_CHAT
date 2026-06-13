@@ -1897,13 +1897,27 @@ const esConversacionFavorita = (conversacion) => {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding: 2px 0;
+  padding: 2px 0 6px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(64, 109, 115, 0.25) rgba(64, 109, 115, 0.05);
 }
 
 .carpetas-scroll-row::-webkit-scrollbar {
-  display: none;
+  height: 4px;
+}
+
+.carpetas-scroll-row::-webkit-scrollbar-track {
+  background: rgba(64, 109, 115, 0.05);
+  border-radius: 10px;
+}
+
+.carpetas-scroll-row::-webkit-scrollbar-thumb {
+  background: rgba(64, 109, 115, 0.25);
+  border-radius: 10px;
+}
+
+.carpetas-scroll-row::-webkit-scrollbar-thumb:hover {
+  background: rgba(64, 109, 115, 0.45);
 }
 
 .carpeta-pill {
