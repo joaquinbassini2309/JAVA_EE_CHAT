@@ -40,31 +40,21 @@
           </div>
         </div>
         <div class="header-actions" @click.stop>
-          <v-hover v-slot="{ isHovering, props }">
-            <v-btn
-              v-bind="props"
-              v-if="!esAviso || rolUsuario === 'ADMIN'"
-              icon="mdi-account-plus"
-              :variant="isHovering ? 'flat' : 'outlined'"
-              color="#406D73"
-              size="small"
-              @click="abrirModalAñadir"
-              title="Añadir miembro"
-              class="header-btn teal-hover-white"
-            />
-          </v-hover>
-          <v-hover v-slot="{ isHovering, props }">
-            <v-btn
-              v-bind="props"
-              icon="mdi-close"
-              :variant="isHovering ? 'flat' : 'outlined'"
-              color="error"
-              size="small"
-              @click="cerrarConversacion"
-              title="Cerrar conversación"
-              class="header-btn"
-            />
-          </v-hover>
+          <button
+            v-if="!esAviso || rolUsuario === 'ADMIN'"
+            @click="abrirModalAñadir"
+            title="Añadir miembro"
+            class="btn-cabecera-accion mr-1"
+          >
+            <v-icon size="17">mdi-account-plus</v-icon>
+          </button>
+          <button
+            @click="cerrarConversacion"
+            title="Cerrar conversación"
+            class="btn-cabecera-accion btn-close-chat"
+          >
+            <v-icon size="17">mdi-close</v-icon>
+          </button>
         </div>
       </div>
 
@@ -285,31 +275,25 @@
             @change="handleFileSelected"
             style="display:none"
         />
-        <v-hover v-slot="{ isHovering, props }">
-          <v-btn
-            v-bind="props"
-            icon="mdi-paperclip"
-            :variant="isHovering ? 'flat' : 'text'"
-            color="#406D73"
-            class="btn-adjunto teal-hover-white"
-            @click="seleccionarArchivo"
-            title="Adjuntar archivo o imagen"
-            :loading="subiendoArchivo"
-          ></v-btn>
-        </v-hover>
+        <!-- Botón Adjuntar -->
+        <button
+          class="btn-accion-chat"
+          @click="seleccionarArchivo"
+          title="Adjuntar archivo o imagen"
+          :disabled="subiendoArchivo"
+        >
+          <v-icon size="20">mdi-paperclip</v-icon>
+        </button>
         <!-- Botón Emoji -->
         <v-menu :close-on-content-click="false" location="top start" transition="slide-y-transition">
           <template v-slot:activator="{ props }">
-            <v-hover v-slot="{ isHovering, props: hoverProps }">
-              <v-btn
-                v-bind="{ ...props, ...hoverProps }"
-                icon="mdi-emoticon-outline"
-                :variant="isHovering ? 'flat' : 'text'"
-                color="#406D73"
-                class="btn-emoji mr-1 teal-hover-white"
-                title="Insertar emoji"
-              ></v-btn>
-            </v-hover>
+            <button
+              v-bind="props"
+              class="btn-accion-chat mr-1"
+              title="Insertar emoji"
+            >
+              <v-icon size="20">mdi-emoticon-outline</v-icon>
+            </button>
           </template>
           <v-card class="emoji-picker-card" rounded="xl" width="300">
             <div class="emoji-picker-grid">
@@ -325,17 +309,14 @@
           </v-card>
         </v-menu>
         <!-- Botón Mencionar -->
-        <v-hover v-if="esGrupo || esAviso" v-slot="{ isHovering, props }">
-          <v-btn
-            v-bind="props"
-            icon="mdi-at"
-            :variant="isHovering ? 'flat' : 'text'"
-            color="#406D73"
-            class="btn-adjunto teal-hover-white mr-1"
-            @click="insertarArroba"
-            title="Mencionar a alguien"
-          ></v-btn>
-        </v-hover>
+        <button
+          v-if="esGrupo || esAviso"
+          class="btn-accion-chat mr-1"
+          @click="insertarArroba"
+          title="Mencionar a alguien"
+        >
+          <v-icon size="20">mdi-at</v-icon>
+        </button>
 
         <textarea
             ref="textareaMensaje"
@@ -1294,20 +1275,70 @@ const confirmarCrearTarea = async () => {
   flex-shrink: 0;
 }
 
-.header-btn {
-  transition: transform .15s ease !important;
-}
-.header-btn:hover {
-  transform: scale(1.08) !important;
+/* Botones de Cabecera (Añadir, Cerrar) */
+.btn-cabecera-accion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #406D73;
+  background-color: var(--surface);
+  color: #406D73;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
+  box-sizing: border-box;
 }
 
-.teal-hover-white.v-btn--variant-flat {
-  background-color: var(--teal) !important;
-  color: #ffffff !important;
+.btn-cabecera-accion:hover {
+  background-color: #406D73;
+  color: #ffffff;
+  transform: scale(1.12);
 }
-.teal-hover-white.v-btn--variant-flat .v-icon,
-.teal-hover-white.v-btn--variant-flat i {
-  color: #ffffff !important;
+
+.btn-cabecera-accion .v-icon,
+.btn-cabecera-accion i {
+  color: inherit !important;
+}
+
+.btn-cabecera-accion.btn-close-chat {
+  border-color: #d32f2f;
+  color: #d32f2f;
+}
+
+.btn-cabecera-accion.btn-close-chat:hover {
+  background-color: #d32f2f;
+  color: #ffffff;
+}
+
+/* Botones de Entrada de Mensaje (Adjunto, Emojis, Mención) */
+.btn-accion-chat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: transparent;
+  color: #406D73;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.btn-accion-chat:hover {
+  background-color: var(--teal);
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+.btn-accion-chat .v-icon,
+.btn-accion-chat i {
+  color: inherit !important;
 }
 
 /* ===================================================
