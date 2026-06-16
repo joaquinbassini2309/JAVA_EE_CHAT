@@ -226,11 +226,11 @@ const tipoCampo = computed(() => {
 })
 
 const esImagenAdjunta = computed(() => {
-  return props.mensaje.urlAdjunto && (String(tipoCampo.value)?.toUpperCase() === 'IMAGEN')
+  return !props.mensaje.eliminado && props.mensaje.urlAdjunto && (String(tipoCampo.value)?.toUpperCase() === 'IMAGEN')
 })
 
 const esDocumentoAdjunto = computed(() => {
-  return props.mensaje.urlAdjunto && (String(tipoCampo.value)?.toUpperCase() === 'DOCUMENTO' || String(tipoCampo.value)?.toUpperCase() === 'ARCHIVO')
+  return !props.mensaje.eliminado && props.mensaje.urlAdjunto && (String(tipoCampo.value)?.toUpperCase() === 'DOCUMENTO' || String(tipoCampo.value)?.toUpperCase() === 'ARCHIVO')
 })
 
 // Si el mensaje solo representa el adjunto y no tiene texto adicional

@@ -991,6 +991,9 @@ const eliminarMensaje = async (mensaje) => {
     // Marcar el mensaje como eliminado
     mensaje.eliminado = true
     mensaje.contenido = 'Mensaje eliminado'
+    mensaje.urlAdjunto = null
+    mensaje.tipo = 'TEXTO'
+    mensaje.tipoMensaje = 'TEXTO'
   } catch (error) {
     console.error('Error al eliminar mensaje:', error)
   }

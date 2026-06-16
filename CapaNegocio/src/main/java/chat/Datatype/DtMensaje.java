@@ -13,6 +13,7 @@ public class DtMensaje {
     private TipoMensaje tipo;
     private String urlAdjunto;
     private Boolean leido;
+    private Boolean eliminado;
     private LocalDateTime fechaEnvio;
     private String emisorNombre; // Added for convenience in DTO
     private String emisorFoto;   // Added for avatars
@@ -33,6 +34,7 @@ public class DtMensaje {
         dto.setTipo(mensaje.getTipoMensaje());
         dto.setUrlAdjunto(mensaje.getUrlAdjunto());
         dto.setLeido(mensaje.getLeido());
+        dto.setEliminado(mensaje.getEliminado());
         dto.setFechaEnvio(mensaje.getFechaEnvio());
         dto.setEmisorNombre(mensaje.getEmisor() != null ? mensaje.getEmisor().getUsername() : null);
         dto.setEmisorFoto(mensaje.getEmisor() != null ? mensaje.getEmisor().getFotoUrl() : null);
@@ -55,6 +57,8 @@ public class DtMensaje {
     public void setUrlAdjunto(String urlAdjunto) { this.urlAdjunto = urlAdjunto; }
     public Boolean getLeido() { return leido; }
     public void setLeido(Boolean leido) { this.leido = leido; }
+    public Boolean getEliminado() { return eliminado; }
+    public void setEliminado(Boolean eliminado) { this.eliminado = eliminado; }
     public LocalDateTime getFechaEnvio() { return fechaEnvio; }
     public void setFechaEnvio(LocalDateTime fechaEnvio) { this.fechaEnvio = fechaEnvio; }
     public String getEmisorNombre() { return emisorNombre; }

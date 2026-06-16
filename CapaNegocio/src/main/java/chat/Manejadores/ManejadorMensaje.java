@@ -92,6 +92,8 @@ public class ManejadorMensaje {
         if (m != null && m.getEmisor().getId().equals(usuarioId)) {
             m.setEliminado(true);
             m.setContenido("Mensaje eliminado");
+            m.setUrlAdjunto(null);
+            m.setTipoMensaje(TipoMensaje.TEXTO);
             em.merge(m);
         } else {
             throw new IllegalArgumentException("Mensaje no encontrado o no autorizado");
