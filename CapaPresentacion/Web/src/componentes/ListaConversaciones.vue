@@ -1262,9 +1262,9 @@ const esConversacionFavorita = (conversacion) => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid #406D73;
+  border: 1px solid var(--teal);
   background-color: var(--surface);
-  color: #406D73;
+  color: var(--teal);
   cursor: pointer;
   outline: none;
   transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
@@ -1272,7 +1272,7 @@ const esConversacionFavorita = (conversacion) => {
 }
 
 .btn-cabecera-accion:hover {
-  background-color: #406D73;
+  background-color: var(--teal);
   color: #ffffff;
   transform: scale(1.12);
 }
@@ -1280,6 +1280,11 @@ const esConversacionFavorita = (conversacion) => {
 .btn-cabecera-accion .v-icon,
 .btn-cabecera-accion i {
   color: inherit !important;
+}
+
+.btn-cabecera-accion:hover .v-icon,
+.btn-cabecera-accion:hover i {
+  color: #ffffff !important;
 }
 
 .btn-cabecera-accion.btn-logout {
@@ -1290,6 +1295,11 @@ const esConversacionFavorita = (conversacion) => {
 .btn-cabecera-accion.btn-logout:hover {
   background-color: #d32f2f;
   color: #ffffff;
+}
+
+.btn-cabecera-accion.btn-logout:hover .v-icon,
+.btn-cabecera-accion.btn-logout:hover i {
+  color: #ffffff !important;
 }
 
 /* Buscador */
@@ -1314,17 +1324,34 @@ const esConversacionFavorita = (conversacion) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
-  border: none;
-  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background-color: transparent;
   color: var(--teal);
-  padding: 3px;
-  border-radius: 6px;
-  transition: background .15s;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease;
+  box-sizing: border-box;
   flex-shrink: 0;
 }
 
-.btn-filtro:hover { background: var(--teal-pale); }
+.btn-filtro:hover {
+  background-color: var(--teal);
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+.btn-filtro .v-icon,
+.btn-filtro i {
+  color: inherit !important;
+}
+
+.btn-filtro:hover .v-icon,
+.btn-filtro:hover i {
+  color: #ffffff !important;
+}
 
 .menu-filtro-card {
   background: var(--surface) !important;

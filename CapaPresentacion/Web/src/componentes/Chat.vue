@@ -1283,9 +1283,9 @@ const confirmarCrearTarea = async () => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid #406D73;
+  border: 1px solid var(--teal);
   background-color: var(--surface);
-  color: #406D73;
+  color: var(--teal);
   cursor: pointer;
   outline: none;
   transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
@@ -1293,7 +1293,7 @@ const confirmarCrearTarea = async () => {
 }
 
 .btn-cabecera-accion:hover {
-  background-color: #406D73;
+  background-color: var(--teal);
   color: #ffffff;
   transform: scale(1.12);
 }
@@ -1301,6 +1301,11 @@ const confirmarCrearTarea = async () => {
 .btn-cabecera-accion .v-icon,
 .btn-cabecera-accion i {
   color: inherit !important;
+}
+
+.btn-cabecera-accion:hover .v-icon,
+.btn-cabecera-accion:hover i {
+  color: #ffffff !important;
 }
 
 .btn-cabecera-accion.btn-close-chat {
@@ -1313,6 +1318,11 @@ const confirmarCrearTarea = async () => {
   color: #ffffff;
 }
 
+.btn-cabecera-accion.btn-close-chat:hover .v-icon,
+.btn-cabecera-accion.btn-close-chat:hover i {
+  color: #ffffff !important;
+}
+
 /* Botones de Entrada de Mensaje (Adjunto, Emojis, Mención) */
 .btn-accion-chat {
   display: flex;
@@ -1322,7 +1332,7 @@ const confirmarCrearTarea = async () => {
   height: 38px;
   border-radius: 50%;
   background-color: transparent;
-  color: #406D73;
+  color: var(--teal);
   cursor: pointer;
   outline: none;
   transition: background-color 0.2s, color 0.2s, transform 0.15s ease;
@@ -1339,6 +1349,11 @@ const confirmarCrearTarea = async () => {
 .btn-accion-chat .v-icon,
 .btn-accion-chat i {
   color: inherit !important;
+}
+
+.btn-accion-chat:hover .v-icon,
+.btn-accion-chat:hover i {
+  color: #ffffff !important;
 }
 
 /* ===================================================

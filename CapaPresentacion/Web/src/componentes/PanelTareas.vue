@@ -7,9 +7,15 @@
         <span class="titulo-texto">Mis Tareas</span>
       </div>
       <div class="acciones-row">
-        <v-btn icon="mdi-magnify" variant="text" size="small" color="#406D73" @click="mostrarBusqueda = !mostrarBusqueda" />
-        <v-btn icon="mdi-plus" variant="flat" size="small" color="#406D73" class="text-white" @click="abrirNuevaTarea" />
-        <v-btn icon="mdi-close" variant="text" size="small" color="#406D73" @click="cerrarPanel" />
+        <button class="btn-cabecera-accion" @click="mostrarBusqueda = !mostrarBusqueda" title="Buscar tarea">
+          <v-icon size="17">mdi-magnify</v-icon>
+        </button>
+        <button class="btn-cabecera-accion mr-1" @click="abrirNuevaTarea" title="Nueva tarea">
+          <v-icon size="17">mdi-plus</v-icon>
+        </button>
+        <button class="btn-cabecera-accion btn-close-panel" @click="cerrarPanel" title="Cerrar panel">
+          <v-icon size="17">mdi-close</v-icon>
+        </button>
       </div>
     </div>
 
@@ -327,7 +333,55 @@ const eliminarTarea = async (tarea) => {
 
 .acciones-row {
   display: flex;
-  gap: 4px;
+  gap: 8px;
+}
+
+/* Botones de Cabecera (Buscar, Añadir, Cerrar) */
+.btn-cabecera-accion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--teal);
+  background-color: var(--surface);
+  color: var(--teal);
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.btn-cabecera-accion:hover {
+  background-color: var(--teal);
+  color: #ffffff;
+  transform: scale(1.12);
+}
+
+.btn-cabecera-accion .v-icon,
+.btn-cabecera-accion i {
+  color: inherit !important;
+}
+
+.btn-cabecera-accion:hover .v-icon,
+.btn-cabecera-accion:hover i {
+  color: #ffffff !important;
+}
+
+.btn-cabecera-accion.btn-close-panel {
+  border-color: #d32f2f;
+  color: #d32f2f;
+}
+
+.btn-cabecera-accion.btn-close-panel:hover {
+  background-color: #d32f2f;
+  color: #ffffff;
+}
+
+.btn-cabecera-accion.btn-close-panel:hover .v-icon,
+.btn-cabecera-accion.btn-close-panel:hover i {
+  color: #ffffff !important;
 }
 
 .busqueda-container {

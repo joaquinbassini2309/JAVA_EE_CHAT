@@ -3,8 +3,8 @@
 
     <!-- Header Compacto Estilo Telegram/Slack -->
     <div class="info-header-compact">
-      <button class="btn-atras" @click="$emit('volver')" title="Volver">
-        <v-icon size="20" color="#406D73">mdi-arrow-left</v-icon>
+      <button class="btn-cabecera-accion btn-atras" @click="$emit('volver')" title="Volver">
+        <v-icon size="20">mdi-arrow-left</v-icon>
       </button>
 
       <div class="header-avatar-wrap">
@@ -45,18 +45,19 @@
       </div>
 
       <div class="header-actions">
-        <v-btn
+        <button
             v-if="puedeGestionar && !editandoNombre && !esAviso"
-            icon="mdi-pencil"
-            variant="text"
-            color="#406D73"
-            size="small"
             @click="editandoNombre = true"
-            class="header-btn"
-        />
+            class="btn-cabecera-accion mr-1"
+            title="Cambiar nombre"
+        >
+          <v-icon size="17">mdi-pencil</v-icon>
+        </button>
         <v-menu v-if="puedeGestionar" content-class="menu-perfil-flotante" transition="scale-transition">
           <template v-slot:activator="{ props }">
-            <v-btn icon="mdi-dots-vertical" color="#406D73" variant="text" size="small" class="header-btn" v-bind="props" />
+            <button class="btn-cabecera-accion" v-bind="props" title="Más opciones">
+              <v-icon size="17">mdi-dots-vertical</v-icon>
+            </button>
           </template>
           <v-list>
             <v-list-item @click="editandoNombre = true" prepend-icon="mdi-pencil">
@@ -442,23 +443,44 @@ const confirmarEliminarMiembro = async () => {
   min-height: 62px;
 }
 
-.btn-atras {
-  background: none;
-  border: none;
-  cursor: pointer;
+.btn-cabecera-accion {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  flex-shrink: 0;
-  transition: background .15s, transform .15s;
+  border: 1px solid var(--teal);
+  background-color: var(--surface);
+  color: var(--teal);
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
+  box-sizing: border-box;
 }
 
-.btn-atras:hover {
-  background: var(--teal-pale);
-  transform: translateX(-2px);
+.btn-cabecera-accion:hover {
+  background-color: var(--teal);
+  color: #ffffff;
+  transform: scale(1.12);
+}
+
+.btn-cabecera-accion .v-icon,
+.btn-cabecera-accion i {
+  color: inherit !important;
+}
+
+.btn-cabecera-accion:hover .v-icon,
+.btn-cabecera-accion:hover i {
+  color: #ffffff !important;
+}
+
+.btn-cabecera-accion.btn-atras {
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
+}
+
+.btn-cabecera-accion.btn-atras:hover {
+  transform: translateX(-2px) scale(1.12) !important;
 }
 
 .header-avatar-wrap {
@@ -521,12 +543,7 @@ const confirmarEliminarMiembro = async () => {
   flex-shrink: 0;
 }
 
-.header-btn {
-  transition: transform .15s ease, background .15s ease !important;
-}
-.header-btn:hover {
-  transform: scale(1.08) !important;
-}
+
 
 /* ===================================================
    CUERPO SCROLLEABLE
