@@ -153,6 +153,15 @@ html, body, #app {
   letter-spacing: 0 !important;
 }
 
+/* Corrección global de fondo blanco en items de menú y listas al pasar el cursor (hover) */
+.v-list-item:hover {
+  background-color: var(--teal-pale) !important;
+}
+
+.v-list-item:hover .v-list-item__overlay {
+  opacity: 0 !important;
+}
+
 /* ---------- Modo Oscuro Variables ---------- */
 .dark-mode {
   --teal:           #6ca0a6;
