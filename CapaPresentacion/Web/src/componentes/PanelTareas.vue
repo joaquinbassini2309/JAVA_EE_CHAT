@@ -83,7 +83,9 @@
         <div class="tarea-acciones">
           <v-menu offset-y>
             <template v-slot:activator="{ props }">
-              <v-btn icon="mdi-dots-vertical" variant="text" size="small" v-bind="props" />
+              <button class="btn-tarea-accion" v-bind="props" title="Acciones de tarea">
+                <v-icon size="18">mdi-dots-vertical</v-icon>
+              </button>
             </template>
             <v-list density="compact">
               <v-list-item v-if="tarea.estado !== 'COMPLETADA'" @click="cambiarEstado(tarea, 'COMPLETADA')">
@@ -597,5 +599,37 @@ const eliminarTarea = async (tarea) => {
   background: var(--surface) !important;
   border-top: 1px solid var(--border-color) !important;
   padding: 12px 16px !important;
+}
+
+.btn-tarea-accion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--teal);
+  background-color: var(--surface);
+  color: var(--teal);
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.btn-tarea-accion:hover {
+  background-color: var(--teal);
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.btn-tarea-accion .v-icon,
+.btn-tarea-accion i {
+  color: inherit !important;
+}
+
+.btn-tarea-accion:hover .v-icon,
+.btn-tarea-accion:hover i {
+  color: #ffffff !important;
 }
 </style>

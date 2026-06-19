@@ -17,7 +17,9 @@
           <div class="tarea-acciones">
             <v-menu>
               <template v-slot:activator="{ props }">
-                <v-btn icon="mdi-dots-vertical" size="x-small" variant="text" color="#406D73" v-bind="props" />
+                <button class="btn-tarea-accion-msg" v-bind="props" title="Acciones de tarea">
+                  <v-icon size="16">mdi-dots-vertical</v-icon>
+                </button>
               </template>
               <v-list>
                 <v-list-item @click="$emit('ver-info', mensaje)" prepend-icon="mdi-information">
@@ -443,6 +445,43 @@ const toggleCompletada = async () => {
 .btn-accion-mensaje .v-icon,
 .btn-accion-mensaje i {
   color: inherit !important;
+}
+
+.btn-accion-mensaje:hover .v-icon,
+.btn-accion-mensaje:hover i {
+  color: #ffffff !important;
+}
+
+.btn-tarea-accion-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--teal);
+  background-color: var(--surface);
+  color: var(--teal);
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.btn-tarea-accion-msg:hover {
+  background-color: var(--teal);
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.btn-tarea-accion-msg .v-icon,
+.btn-tarea-accion-msg i {
+  color: inherit !important;
+}
+
+.btn-tarea-accion-msg:hover .v-icon,
+.btn-tarea-accion-msg:hover i {
+  color: #ffffff !important;
 }
 
 :deep(.lista-opciones .v-list-item:hover) {

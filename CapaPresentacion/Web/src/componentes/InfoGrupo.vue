@@ -102,7 +102,9 @@
             <!-- Menú de acciones para el Admin -->
             <v-menu v-if="esAdmin && usuarioActual.id !== miembro.usuario.id" content-class="menu-perfil-flotante" transition="scale-transition">
               <template v-slot:activator="{ props }">
-                <v-btn icon="mdi-dots-vertical" variant="text" size="small" v-bind="props" />
+                <button class="btn-miembro-accion" v-bind="props" title="Acciones de miembro">
+                  <v-icon size="18">mdi-dots-vertical</v-icon>
+                </button>
               </template>
               <v-list>
                 <v-list-item @click="cambiarRol(miembro.usuario.id, 'ADMIN')" v-if="miembro.rol !== 'ADMIN'">
@@ -728,6 +730,38 @@ const confirmarEliminarMiembro = async () => {
   .seccion {
     padding: 12px;
   }
+}
+
+.btn-miembro-accion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--teal);
+  background-color: var(--surface);
+  color: var(--teal);
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.btn-miembro-accion:hover {
+  background-color: var(--teal);
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.btn-miembro-accion .v-icon,
+.btn-miembro-accion i {
+  color: inherit !important;
+}
+
+.btn-miembro-accion:hover .v-icon,
+.btn-miembro-accion:hover i {
+  color: #ffffff !important;
 }
 </style>
 

@@ -65,7 +65,9 @@
           <div class="fijado-titulo">Mensaje fijado</div>
           <div class="fijado-texto">{{ conversacionActual.mensajeFijado.contenido || 'Archivo adjunto' }}</div>
         </div>
-        <v-btn icon="mdi-close" variant="text" size="x-small" color="#406D73" class="fijado-btn-cerrar" @click.stop="desfijarMensajeActual" title="Desfijar mensaje" />
+        <button class="fijado-btn-cerrar" @click.stop="desfijarMensajeActual" title="Desfijar mensaje">
+          <v-icon size="14">mdi-close</v-icon>
+        </button>
       </div>
 
       <!-- Modal Añadir Miembro -->
@@ -1819,12 +1821,36 @@ const confirmarCrearTarea = async () => {
 }
 
 .fijado-btn-cerrar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--teal);
+  background-color: transparent;
+  color: var(--teal);
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
+  box-sizing: border-box;
   margin-left: 8px;
-  transition: transform 0.15s ease !important;
 }
 
 .fijado-btn-cerrar:hover {
-  transform: scale(1.15) !important;
+  background-color: var(--teal);
+  color: #ffffff;
+  transform: scale(1.15);
+}
+
+.fijado-btn-cerrar .v-icon,
+.fijado-btn-cerrar i {
+  color: inherit !important;
+}
+
+.fijado-btn-cerrar:hover .v-icon,
+.fijado-btn-cerrar:hover i {
+  color: #ffffff !important;
 }
 
 @keyframes slideDown {

@@ -187,17 +187,14 @@
               <!-- Menú de Agrupar Conversación -->
               <v-menu location="bottom end" transition="scale-transition">
                 <template v-slot:activator="{ props }">
-                  <v-btn
+                  <button
                     v-bind="props"
-                    icon="mdi-folder-move-outline"
-                    variant="text"
-                    density="compact"
-                    size="small"
-                    color="#406D73"
                     class="ml-1 btn-opcion-carpeta"
                     @click.stop
                     title="Asociar a grupo/carpeta"
-                  />
+                  >
+                    <v-icon size="17">mdi-folder-move-outline</v-icon>
+                  </button>
                 </template>
                 <v-list density="compact" class="py-1">
                   <v-list-item-title class="text-caption text-grey px-3 py-1 font-weight-bold">Asociar a grupo:</v-list-item-title>
@@ -1996,8 +1993,20 @@ const esConversacionFavorita = (conversacion) => {
 }
 
 .btn-opcion-carpeta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--teal);
+  background-color: var(--surface);
+  color: var(--teal);
+  cursor: pointer;
+  outline: none;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s, opacity 0.2s ease;
+  box-sizing: border-box;
   margin-left: 4px;
 }
 
@@ -2007,6 +2016,19 @@ const esConversacionFavorita = (conversacion) => {
 
 .btn-opcion-carpeta:hover {
   opacity: 1 !important;
+  background-color: var(--teal) !important;
+  color: #ffffff !important;
+  transform: scale(1.12);
+}
+
+.btn-opcion-carpeta .v-icon,
+.btn-opcion-carpeta i {
+  color: inherit !important;
+}
+
+.btn-opcion-carpeta:hover .v-icon,
+.btn-opcion-carpeta:hover i {
+  color: #ffffff !important;
 }
 </style>
 
