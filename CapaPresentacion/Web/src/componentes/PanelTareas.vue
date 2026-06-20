@@ -125,11 +125,11 @@
           <div class="d-flex gap-2" style="width: 100%;">
             <div class="campo-grupo select-wrapper">
               <label class="label-input">Grupo (Opcional)</label>
-              <v-select v-model="nuevaTarea.grupoId" :items="gruposDisponibles" item-title="nombre" item-value="id" placeholder="Ninguno" variant="outlined" density="compact" hide-details clearable bg-color="var(--surface)"></v-select>
+              <v-select v-model="nuevaTarea.grupoId" :items="gruposDisponibles" item-title="nombre" item-value="id" placeholder="Ninguno" variant="outlined" density="compact" hide-details clearable bg-color="var(--surface)" no-data-text="No eres admin de ningún grupo"></v-select>
             </div>
             <div class="campo-grupo select-wrapper ml-2">
               <label class="label-input">Asignar a (Opcional)</label>
-              <v-select v-model="nuevaTarea.asignadoAId" :items="usuariosAsignables" item-title="username" item-value="id" placeholder="Ninguno" variant="outlined" density="compact" hide-details clearable bg-color="var(--surface)" :disabled="!nuevaTarea.grupoId"></v-select>
+              <v-select v-model="nuevaTarea.asignadoAId" :items="usuariosAsignables" item-title="username" item-value="id" placeholder="Ninguno" variant="outlined" density="compact" hide-details clearable bg-color="var(--surface)" :disabled="!nuevaTarea.grupoId" no-data-text="No hay miembros para asignar"></v-select>
             </div>
           </div>
 
@@ -149,7 +149,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 
@@ -205,17 +205,8 @@ const cargarTareas = async () => {
   }
 }
 
-let intervalId = null
-
 onMounted(async () => {
   cargarTareas()
-  intervalId = setInterval(() => {
-    if (almacen.usuarioActual?.id) cargarTareas()
-  }, 30_000)
-})
-
-onUnmounted(() => {
-  if (intervalId) clearInterval(intervalId)
 })
 
 watch(() => almacen.usuarioActual, (nuevoUser) => {

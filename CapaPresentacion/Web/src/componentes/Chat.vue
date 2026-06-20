@@ -860,6 +860,19 @@ const conectarWS = () => {
         almacen.actualizarMensajeFijado(conversacionActual.value.id, respuesta.datos)
       } else if (respuesta.tipo === 'mensajeDesfijado') {
         almacen.actualizarMensajeFijado(conversacionActual.value.id, null)
+      } else if (respuesta.tipo === 'nuevaTarea') {
+        const t = respuesta.datos
+        // Verificamos que no exista ya en almacen para no duplicar
+        if (!almacen.tareas.find(x => x.id === t.id)) {
+          almacen.tareas.push(t)
+        }
+      } else if (respuesta.tipo === 'tareaActualizada') {
+        const index = almacen.tareas.findIndex(t => t.id === respuesta.datos.id)
+        if (index !== -1) {
+          almacen.tareas[index] = respuesta.datos
+        }
+      } else if (respuesta.tipo === 'tareaEliminada') {
+        almacen.tareas = almacen.tareas.filter(t => t.id !== respuesta.datos)
       }
     }
   }

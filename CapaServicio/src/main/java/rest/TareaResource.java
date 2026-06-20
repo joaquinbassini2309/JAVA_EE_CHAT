@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import websocket.ChatWebSocketEndpoint;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -81,6 +82,12 @@ public class TareaResource {
                     t.getGrupo() != null ? t.getGrupo().getId() : null,
                     t.getGrupo() != null ? t.getGrupo().getNombre() : null
             );
+            
+            // Notificar al asignado por WebSocket si hay un asignado distinto al creador
+            if (t.getAsignadoA() != null && !t.getAsignadoA().getId().equals(t.getCreador().getId())) {
+                ChatWebSocketEndpoint.notificarAUsuario(t.getAsignadoA().getId(), "nuevaTarea", dto);
+            }
+            
             return Response.status(Response.Status.CREATED).entity(dto).build();
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -108,6 +115,16 @@ public class TareaResource {
                     t.getGrupo() != null ? t.getGrupo().getId() : null,
                     t.getGrupo() != null ? t.getGrupo().getNombre() : null
             );
+            
+            // Si el estado de la tarea cambia, podemos notificar al creador de la tarea (si el que la cambia es el asignado)
+            if (t.getCreador() != null && !t.getCreador().getId().equals(req.usuarioId)) {
+                ChatWebSocketEndpoint.notificarAUsuario(t.getCreador().getId(), "tareaActualizada", dto);
+            }
+            // O al asignado (si el que la cambia es el creador u otro)
+            if (t.getAsignadoA() != null && !t.getAsignadoA().getId().equals(req.usuarioId)) {
+                ChatWebSocketEndpoint.notificarAUsuario(t.getAsignadoA().getId(), "tareaActualizada", dto);
+            }
+
             return Response.ok(dto).build();
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -120,8 +137,23 @@ public class TareaResource {
     @Path("/{tareaId}")
     public Response eliminarTarea(@PathParam("tareaId") Long tareaId, @QueryParam("usuarioId") Long usuarioId) {
         try {
+            // Obtenemos la tarea antes de eliminarla para saber a quién notificar
+            Tarea t = sistema.obtenerTareasDeUsuario(usuarioId).stream()
+                    .filter(tarea -> tarea.getId().equals(tareaId))
+                    .findFirst().orElse(null);
+                    
             sistema.eliminarTarea(tareaId, usuarioId);
-            return Response.noContent().build();
+            
+            if (t != null) {
+                if (t.getCreador() != null && !t.getCreador().getId().equals(usuarioId)) {
+                    ChatWebSocketEndpoint.notificarAUsuario(t.getCreador().getId(), "tareaEliminada", tareaId);
+                }
+                if (t.getAsignadoA() != null && !t.getAsignadoA().getId().equals(usuarioId)) {
+                    ChatWebSocketEndpoint.notificarAUsuario(t.getAsignadoA().getId(), "tareaEliminada", tareaId);
+                }
+            }
+            
+            return Response.ok(new MessageResponse("Tarea eliminada exitosamente")).build();
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(new ErrorResponse(e.getMessage()))
@@ -146,5 +178,10 @@ public class TareaResource {
     public static class ErrorResponse {
         public String error;
         public ErrorResponse(String error) { this.error = error; }
+    }
+
+    public static class MessageResponse {
+        public String message;
+        public MessageResponse(String message) { this.message = message; }
     }
 }

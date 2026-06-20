@@ -248,6 +248,27 @@ public class ChatWebSocketEndpoint {
     }
 
     /**
+     * Envía datos a todas las sesiones activas de un usuario específico
+     */
+    public static void notificarAUsuario(Long idUsuario, String tipo, Object datos) {
+        try {
+            String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta(tipo, datos));
+            for (Map.Entry<String, Set<Session>> entrada : sesionesActivas.entrySet()) {
+                String[] partes = entrada.getKey().split(":");
+                if (partes.length == 2 && Long.parseLong(partes[1]) == idUsuario) {
+                    for (Session sesion : entrada.getValue()) {
+                        if (sesion.isOpen()) {
+                            sesion.getAsyncRemote().sendText(datosJson);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error al notificar a usuario por WebSocket: " + e.getMessage());
+        }
+    }
+
+    /**
      * Envía un mensaje de error al cliente
      */
     private void enviarError(Session sesion, String mensaje) {
