@@ -37,7 +37,9 @@ router.beforeEach((to, from, next) => {
   const almacen = useAlmacen()
   const autenticado = almacen.estaAutenticado
 
-  if (to.path === '/chat' && !autenticado) {
+  if (to.path === '/') {
+    next(autenticado ? '/chat' : '/login')
+  } else if (to.path === '/chat' && !autenticado) {
     next('/login')
   } else if (to.path === '/login' && autenticado) {
     next('/chat')
