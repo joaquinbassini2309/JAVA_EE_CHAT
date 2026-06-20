@@ -332,10 +332,13 @@
         ></textarea>
         <v-btn
           variant="flat"
-          :color="contenidoNuevo.trim() ? '#5A8A94' : '#e0f2f1'"
+          :color="btnEnviarColor"
           height="38"
           class="btn-enviar-pill"
           :class="!contenidoNuevo.trim() ? 'btn-enviar-inactivo' : ''"
+          :ripple="false"
+          @mouseenter="hoverEnviar = true"
+          @mouseleave="hoverEnviar = false"
           @click="enviarMensaje"
         >
           <v-icon size="18" :color="contenidoNuevo.trim() ? 'white' : '#8aa8ae'" class="mr-1">mdi-send</v-icon>
@@ -382,6 +385,14 @@ const miembrosGrupo = computed(() => {
   return conversacionActual.value.participantes
     ? conversacionActual.value.participantes.map(p => p.usuario).filter(u => u && u.id !== usuarioActual.value?.id)
     : []
+})
+
+const hoverEnviar = ref(false)
+const btnEnviarColor = computed(() => {
+  if (contenidoNuevo.value.trim()) {
+    return hoverEnviar.value ? '#3d6b72' : '#5A8A94'
+  }
+  return '#e0f2f1' // Sin contenido, sin cambio en hover
 })
 
 const sugerenciasFiltradas = computed(() => {
@@ -1507,6 +1518,11 @@ const confirmarCrearTarea = async () => {
 .btn-enviar-pill:not(.btn-enviar-inactivo):active {
   transform: scale(0.98) !important;
 }
+
+:deep(.btn-enviar-pill .v-btn__overlay) {
+  display: none !important;
+}
+
 .btn-enviar-inactivo {
   cursor: default !important;
   box-shadow: none !important;

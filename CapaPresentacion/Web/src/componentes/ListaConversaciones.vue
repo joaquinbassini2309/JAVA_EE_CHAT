@@ -147,7 +147,7 @@
         </button>
         <button class="carpeta-pill btn-crear-carpeta" @click="abrirCrearGrupoConversacion">
           <v-icon size="12" class="mr-1">mdi-plus</v-icon>
-          Crear grupo
+          Agrupar Chats
         </button>
       </div>
     </div>
@@ -185,7 +185,7 @@
               <span class="conv-time" v-if="conversacion.fechaUltimoMensaje" style="margin-left: 6px;">{{ formatearHora(conversacion.fechaUltimoMensaje) }}</span>
               
               <!-- Menú de Agrupar Conversación -->
-              <v-menu location="bottom end" transition="scale-transition">
+              <v-menu location="bottom end" transition="scale-transition" :close-on-content-click="true" content-class="menu-agrupar-premium">
                 <template v-slot:activator="{ props }">
                   <button
                     v-bind="props"
@@ -196,28 +196,31 @@
                     <v-icon size="17">mdi-folder-move-outline</v-icon>
                   </button>
                 </template>
-                <v-list density="compact" class="py-1">
-                  <v-list-item-title class="text-caption text-grey px-3 py-1 font-weight-bold">Asociar a grupo:</v-list-item-title>
-                  <v-list-item
-                    v-for="grupo in gruposDeConversacion"
-                    :key="grupo"
-                    @click="asignarConversacionAGrupo(conversacion.id, grupo)"
-                    :active="obtenerGrupoDeConversacion(conversacion.id) === grupo"
-                  >
-                    <v-list-item-title>Mover a "{{ grupo }}"</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item @click="abrirCrearGrupoConConversacion(conversacion.id)">
-                    <v-list-item-title class="text-accent font-weight-bold">+ Nuevo Grupo</v-list-item-title>
-                  </v-list-item>
-                  <v-divider v-if="obtenerGrupoDeConversacion(conversacion.id)" />
-                  <v-list-item
-                    v-if="obtenerGrupoDeConversacion(conversacion.id)"
-                    @click="removerConversacionDeGrupo(conversacion.id)"
-                    class="text-error"
-                  >
-                    <v-list-item-title>Quitar del grupo</v-list-item-title>
-                  </v-list-item>
-                </v-list>
+                <v-card class="tarjeta-menu-agrupar" elevation="8">
+                  <div class="menu-agrupar-header">
+                    <v-icon size="18" color="primary" class="mr-2">mdi-folder-star</v-icon>
+                    <span>Organizar Chat</span>
+                  </div>
+                  <div class="menu-agrupar-content">
+                    <div v-for="grupo in gruposDeConversacion" :key="grupo" class="menu-agrupar-item" :class="{'item-activo': obtenerGrupoDeConversacion(conversacion.id) === grupo}" @click="asignarConversacionAGrupo(conversacion.id, grupo)">
+                      <v-icon size="16" class="mr-2">{{ obtenerGrupoDeConversacion(conversacion.id) === grupo ? 'mdi-folder-check' : 'mdi-folder-outline' }}</v-icon>
+                      <span class="text-truncate" style="max-width: 150px;">{{ grupo }}</span>
+                    </div>
+                    
+                    <div class="menu-agrupar-item item-nuevo mt-1" @click="abrirCrearGrupoConConversacion(conversacion.id)">
+                      <v-icon size="16" class="mr-2">mdi-plus-circle-outline</v-icon>
+                      <span>Nueva carpeta</span>
+                    </div>
+
+                    <template v-if="obtenerGrupoDeConversacion(conversacion.id)">
+                      <v-divider class="my-1 border-opacity-50"></v-divider>
+                      <div class="menu-agrupar-item item-quitar" @click="removerConversacionDeGrupo(conversacion.id)">
+                        <v-icon size="16" class="mr-2">mdi-folder-remove-outline</v-icon>
+                        <span>Quitar de carpeta</span>
+                      </div>
+                    </template>
+                  </div>
+                </v-card>
               </v-menu>
             </div>
             <div class="conv-footer-row" style="display: flex; justify-content: space-between; align-items: center;">
@@ -1589,6 +1592,83 @@ const esConversacionFavorita = (conversacion) => {
   background: var(--surface) !important;
   border-radius: 20px !important;
   overflow: hidden !important;
+}
+
+.dialog-crear-grupo .v-card {
+  background: var(--surface) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.menu-agrupar-premium {
+  border-radius: 12px !important;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+}
+
+.tarjeta-menu-agrupar {
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  min-width: 220px;
+}
+
+.menu-agrupar-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(var(--v-theme-primary), 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.menu-agrupar-content {
+  padding: 6px;
+}
+
+.menu-agrupar-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.menu-agrupar-item:hover {
+  background: rgba(128, 128, 128, 0.15);
+  transform: translateX(2px);
+}
+
+.item-activo {
+  background: rgba(var(--v-theme-primary), 0.15) !important;
+  color: var(--primary) !important;
+}
+
+.item-nuevo {
+  color: #4CAF50;
+}
+
+.item-nuevo:hover {
+  background: rgba(76, 175, 80, 0.1);
+  color: #81C784;
+}
+
+.item-quitar {
+  color: #F44336;
+}
+
+.item-quitar:hover {
+  background: rgba(244, 67, 54, 0.1);
+  color: #E57373;
 }
 
 .modal-titulo-conv {
