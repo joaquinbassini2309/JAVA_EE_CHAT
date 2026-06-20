@@ -87,7 +87,6 @@ public class DtConversacion {
             if (otro != null) {
                 nombreVisible = otro.getUsername();
                 fotoVisible = otro.getFotoUrl();
-                bannerVisible = otro.getImagenBanner();
             }
         }
 

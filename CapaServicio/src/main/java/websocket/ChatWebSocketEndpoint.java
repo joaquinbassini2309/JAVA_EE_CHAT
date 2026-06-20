@@ -46,8 +46,8 @@ public class ChatWebSocketEndpoint {
             .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
             .configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-    // Almacena sesiones activas: clave = "conversacionId:usuarioId"
-    private static final Map<String, Set<Session>> sesionesActivas = new ConcurrentHashMap<>();
+    // Almacena sesiones activas: clave interna = usuarioId, clave externa = conversacionId
+    private static final Map<Long, Map<Long, Set<Session>>> sesionesActivas = new ConcurrentHashMap<>();
 
     @OnOpen
     public void alAbrirConexion(Session sesion,
@@ -71,9 +71,10 @@ public class ChatWebSocketEndpoint {
                 return;
             }
 
-            String claveSesion = idConversacion + ":" + idUsuario;
-            sesionesActivas.computeIfAbsent(claveSesion, k -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
-                    .add(sesion);
+            sesionesActivas
+                .computeIfAbsent(idConversacion, k -> new ConcurrentHashMap<>())
+                .computeIfAbsent(idUsuario, k -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
+                .add(sesion);
 
             // Actualizar estado del usuario a ONLINE
             sistema.actualizarEstadoUsuario(idUsuario, EstadoUsuario.ONLINE);
@@ -129,21 +130,25 @@ public class ChatWebSocketEndpoint {
             @PathParam("conversacionId") Long idConversacion,
             @PathParam("usuarioId") Long idUsuario) {
         try {
-            String claveSesion = idConversacion + ":" + idUsuario;
-            Set<Session> sesiones = sesionesActivas.get(claveSesion);
+            Map<Long, Set<Session>> usuariosMap = sesionesActivas.get(idConversacion);
+            if (usuariosMap != null) {
+                Set<Session> sesiones = usuariosMap.get(idUsuario);
+                if (sesiones != null) {
+                    sesiones.remove(sesion);
+                    if (sesiones.isEmpty()) {
+                        usuariosMap.remove(idUsuario);
+                        if (usuariosMap.isEmpty()) {
+                            sesionesActivas.remove(idConversacion);
+                        }
 
-            if (sesiones != null) {
-                sesiones.remove(sesion);
-                if (sesiones.isEmpty()) {
-                    sesionesActivas.remove(claveSesion);
+                        // Si no hay más sesiones del usuario, actualizar estado a OFFLINE
+                        if (!tieneOtrasSesionesActivas(idUsuario)) {
+                            sistema.actualizarEstadoUsuario(idUsuario, EstadoUsuario.OFFLINE);
+                        }
 
-                    // Si no hay más sesiones del usuario, actualizar estado a OFFLINE
-                    if (!tieneOtrasSesionesActivas(idUsuario)) {
-                        sistema.actualizarEstadoUsuario(idUsuario, EstadoUsuario.OFFLINE);
+                        // Notificar desconexión
+                        notificarConexionDesconexion(idConversacion, idUsuario, false);
                     }
-
-                    // Notificar desconexión
-                    notificarConexionDesconexion(idConversacion, idUsuario, false);
                 }
             }
         } catch (Exception e) {
@@ -235,10 +240,10 @@ public class ChatWebSocketEndpoint {
      * Envía datos a todos los usuarios de una conversación
      */
     private static void difundir(Long idConversacion, String datosJson) {
-        for (Map.Entry<String, Set<Session>> entrada : sesionesActivas.entrySet()) {
-            String[] partes = entrada.getKey().split(":");
-            if (Long.parseLong(partes[0]) == idConversacion) {
-                for (Session sesion : entrada.getValue()) {
+        Map<Long, Set<Session>> usuariosMap = sesionesActivas.get(idConversacion);
+        if (usuariosMap != null) {
+            for (Set<Session> sesiones : usuariosMap.values()) {
+                for (Session sesion : sesiones) {
                     if (sesion.isOpen()) {
                         sesion.getAsyncRemote().sendText(datosJson);
                     }
@@ -253,10 +258,10 @@ public class ChatWebSocketEndpoint {
     public static void notificarAUsuario(Long idUsuario, String tipo, Object datos) {
         try {
             String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta(tipo, datos));
-            for (Map.Entry<String, Set<Session>> entrada : sesionesActivas.entrySet()) {
-                String[] partes = entrada.getKey().split(":");
-                if (partes.length == 2 && Long.parseLong(partes[1]) == idUsuario) {
-                    for (Session sesion : entrada.getValue()) {
+            for (Map<Long, Set<Session>> usuariosMap : sesionesActivas.values()) {
+                Set<Session> sesiones = usuariosMap.get(idUsuario);
+                if (sesiones != null) {
+                    for (Session sesion : sesiones) {
                         if (sesion.isOpen()) {
                             sesion.getAsyncRemote().sendText(datosJson);
                         }
@@ -286,11 +291,10 @@ public class ChatWebSocketEndpoint {
      * Verifica si un usuario tiene otras sesiones activas en otras conversaciones
      */
     private boolean tieneOtrasSesionesActivas(Long idUsuario) {
-        return sesionesActivas.entrySet().stream()
-                .anyMatch(entrada -> {
-                    String[] partes = entrada.getKey().split(":");
-                    return partes.length == 2 && Long.parseLong(partes[1]) == idUsuario
-                            && !entrada.getValue().isEmpty();
+        return sesionesActivas.values().stream()
+                .anyMatch(usuariosMap -> {
+                    Set<Session> sesiones = usuariosMap.get(idUsuario);
+                    return sesiones != null && !sesiones.isEmpty();
                 });
     }
 
