@@ -344,13 +344,16 @@
               <v-checkbox
                   v-if="esGrupo"
                   :model-value="seleccionados.includes(usuario.id)"
-                  @update:model-value="toggleSeleccion(usuario.id)"
                   color="accent"
                   hide-details
                   density="compact"
-                  @click.stop
               />
             </div>
+          </div>
+          <div v-if="seleccionados.length > 0" class="d-flex flex-wrap gap-1 pt-1">
+            <v-chip v-for="id in seleccionados" :key="id" size="x-small" color="accent" variant="tonal" closable @click:close="toggleSeleccion(id)">
+              {{ usuarios.find(u => u.id === id)?.username }}
+            </v-chip>
           </div>
         </v-card-text>
 
@@ -419,7 +422,6 @@
                   color="accent"
                   hide-details
                   density="compact"
-                  @click.stop
               />
             </div>
           </div>
