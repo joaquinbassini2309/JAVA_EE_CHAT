@@ -58,6 +58,23 @@ public class Sistema implements ISistema {
 
     @Override
     public Usuario registrarUsuario(String username, String email, String password) {
+        // Validaciones de formato y longitud
+        if (username == null || username.trim().length() < 4) {
+            throw new IllegalArgumentException("El nombre de usuario debe tener al menos 4 caracteres");
+        }
+
+        if (email == null || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            throw new IllegalArgumentException("El formato del correo electrónico no es válido");
+        }
+
+        if (password == null || password.length() < 6) {
+            throw new IllegalArgumentException("La contraseña debe tener al menos 6 caracteres");
+        }
+        
+        if (!password.matches("^(?=.*[a-z])(?=.*[A-Z]).+$")) {
+            throw new IllegalArgumentException("La contraseña debe contener letras y al menos una mayúscula");
+        }
+
         // Validar que el correo no esté en uso
         if (usuarioHandler().buscarUsuarioPorEmail(email).isPresent()) {
             throw new IllegalArgumentException("El correo electrónico ya se encuentra registrado");
