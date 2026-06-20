@@ -1500,9 +1500,17 @@ const confirmarCrearTarea = async () => {
   padding: 0 16px !important;
   transition: transform .15s ease, box-shadow .15s ease, background-color .15s !important;
 }
+.btn-enviar-pill .v-btn__overlay {
+  opacity: 0 !important;
+}
 .btn-enviar-pill:not(.btn-enviar-inactivo):hover {
+  background-color: var(--teal) !important;
   transform: scale(1.04) !important;
   box-shadow: 0 4px 12px rgba(64,109,115,0.35) !important;
+}
+.btn-enviar-pill:not(.btn-enviar-inactivo):hover .v-icon,
+.btn-enviar-pill:not(.btn-enviar-inactivo):hover span {
+  color: #ffffff !important;
 }
 .btn-enviar-pill:not(.btn-enviar-inactivo):active {
   transform: scale(0.98) !important;
@@ -1511,8 +1519,13 @@ const confirmarCrearTarea = async () => {
   cursor: default !important;
   box-shadow: none !important;
 }
-.btn-enviar-inactivo:hover > .v-btn__overlay {
-  opacity: 0 !important;
+.btn-enviar-inactivo:hover {
+  background-color: #e0f2f1 !important;
+  color: #8aa8ae !important;
+}
+.btn-enviar-inactivo:hover .v-icon,
+.btn-enviar-inactivo:hover span {
+  color: #8aa8ae !important;
 }
 
 /* Mensaje Sistema (Pill de Cifrado) */
