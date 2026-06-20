@@ -129,7 +129,7 @@
             </div>
             <div class="campo-grupo select-wrapper ml-2">
               <label class="label-input">Asignar a (Opcional)</label>
-              <v-select v-model="nuevaTarea.asignadoAId" :items="usuariosSistema" item-title="username" item-value="id" placeholder="Ninguno" variant="outlined" density="compact" hide-details clearable bg-color="var(--surface)"></v-select>
+              <v-select v-model="nuevaTarea.asignadoAId" :items="usuariosAsignables" item-title="username" item-value="id" placeholder="Ninguno" variant="outlined" density="compact" hide-details clearable bg-color="var(--surface)" :disabled="!nuevaTarea.grupoId"></v-select>
             </div>
           </div>
 
@@ -149,7 +149,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 
@@ -168,10 +168,25 @@ const nuevaTarea = ref({
   asignadoAId: null
 })
 
-const usuariosSistema = ref([])
-
 const gruposDisponibles = computed(() => {
-  return almacen.conversaciones.filter(c => c.tipo === 'GRUPO')
+  return almacen.conversaciones.filter(c => {
+    if (c.tipo !== 'GRUPO') return false
+    const yo = c.participantes?.find(p => p.usuario?.id === almacen.usuarioActual?.id)
+    return yo?.rol === 'ADMIN'
+  })
+})
+
+const usuariosAsignables = computed(() => {
+  if (!nuevaTarea.value.grupoId) return []
+  const grupo = almacen.conversaciones.find(c => c.id === nuevaTarea.value.grupoId)
+  if (!grupo?.participantes) return []
+  return grupo.participantes
+    .map(p => p.usuario)
+    .filter(u => u?.id !== almacen.usuarioActual?.id)
+})
+
+watch(() => nuevaTarea.value.grupoId, () => {
+  nuevaTarea.value.asignadoAId = null
 })
 
 const formatearFecha = (fechaStr) => {
@@ -190,13 +205,17 @@ const cargarTareas = async () => {
   }
 }
 
+let intervalId = null
+
 onMounted(async () => {
   cargarTareas()
-  try {
-    usuariosSistema.value = await servicioApi.obtenerUsuarios()
-  } catch (e) {
-    console.error("Error al cargar usuarios:", e)
-  }
+  intervalId = setInterval(() => {
+    if (almacen.usuarioActual?.id) cargarTareas()
+  }, 30_000)
+})
+
+onUnmounted(() => {
+  if (intervalId) clearInterval(intervalId)
 })
 
 watch(() => almacen.usuarioActual, (nuevoUser) => {

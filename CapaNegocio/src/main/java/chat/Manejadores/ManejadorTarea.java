@@ -28,9 +28,9 @@ public class ManejadorTarea {
                 .setParameter("uid", usuarioId)
                 .getResultList();
 
-        // Query 2: tareas propias sin asignar (el creador las creó para sí mismo)
+        // Query 2: tareas creadas por el usuario (sin importar a quién estén asignadas)
         List<Tarea> propias = em.createQuery(
-                "SELECT t FROM Tarea t WHERE t.creador.id = :uid AND t.asignadoA IS NULL", Tarea.class)
+                "SELECT t FROM Tarea t WHERE t.creador.id = :uid", Tarea.class)
                 .setParameter("uid", usuarioId)
                 .getResultList();
 
