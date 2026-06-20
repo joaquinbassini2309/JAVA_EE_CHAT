@@ -246,8 +246,8 @@ public class Sistema implements ISistema {
         Conversacion grupo = buscarConversacionPorId(grupoId)
                 .orElseThrow(() -> new IllegalArgumentException("Grupo no encontrado"));
         
-        if (grupo.getTipo() != TipoConversacion.GRUPO) {
-            throw new IllegalArgumentException("Solo se pueden agregar miembros a grupos");
+        if (grupo.getTipo() != TipoConversacion.GRUPO && grupo.getTipo() != TipoConversacion.AVISO) {
+            throw new IllegalArgumentException("Solo se pueden agregar miembros a grupos o canales de aviso");
         }
 
         // Validar que quien agrega es ADMIN o MODERADOR
