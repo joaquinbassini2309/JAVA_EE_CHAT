@@ -462,7 +462,7 @@ public class Sistema implements ISistema {
             }
         }
 
-        mensajeHandler.eliminarMensaje(mensajeId, usuarioId);
+        mensajeHandler.eliminarMensaje(mensajeId);
         observable.notificar(new EventoChat(EventoTipo.MENSAJE_ELIMINADO, mensaje));
     }
 

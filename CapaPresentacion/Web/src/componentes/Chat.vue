@@ -867,6 +867,15 @@ const conectarWS = () => {
         almacen.actualizarMensaje(respuesta.datos)
       } else if (respuesta.tipo === 'mensaje_eliminado') {
         almacen.actualizarMensaje(respuesta.datos)
+      } else if (respuesta.tipo === 'mensajes_leidos') {
+        const datos = respuesta.datos
+        if (datos.usuarioId !== usuarioActual.value?.id) {
+          almacen.mensajes.forEach(m => {
+            if (m.emisorId === usuarioActual.value?.id) {
+              m.leido = true
+            }
+          })
+        }
       } else if (respuesta.tipo === 'mensajeFijado') {
         almacen.actualizarMensajeFijado(conversacionActual.value.id, respuesta.datos)
       } else if (respuesta.tipo === 'mensajeDesfijado') {

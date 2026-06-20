@@ -87,16 +87,16 @@ public class ManejadorMensaje {
         return q.getSingleResult();
     }
 
-    public void eliminarMensaje(Long mensajeId, Long usuarioId) {
+    public void eliminarMensaje(Long mensajeId) {
         Mensaje m = em.find(Mensaje.class, mensajeId);
-        if (m != null && m.getEmisor().getId().equals(usuarioId)) {
+        if (m != null) {
             m.setEliminado(true);
             m.setContenido("Mensaje eliminado");
             m.setUrlAdjunto(null);
             m.setTipoMensaje(TipoMensaje.TEXTO);
             em.merge(m);
         } else {
-            throw new IllegalArgumentException("Mensaje no encontrado o no autorizado");
+            throw new IllegalArgumentException("Mensaje no encontrado");
         }
     }
 

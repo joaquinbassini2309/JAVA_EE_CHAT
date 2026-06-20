@@ -170,7 +170,7 @@ public class ChatWebSocketEndpoint {
     /**
      * Difunde un mensaje resaltado a todos los usuarios conectados en una conversación
      */
-    public void difundirMensajeResaltado(Long idConversacion, DtMensaje mensaje) {
+    public static void difundirMensajeResaltado(Long idConversacion, DtMensaje mensaje) {
         try {
             String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta("mensaje_resaltado", mensaje));
             difundir(idConversacion, datosJson);
@@ -182,12 +182,28 @@ public class ChatWebSocketEndpoint {
     /**
      * Difunde la eliminación de un mensaje a todos los usuarios conectados en una conversación
      */
-    public void difundirMensajeEliminado(Long idConversacion, DtMensaje mensaje) {
+    public static void difundirMensajeEliminado(Long idConversacion, DtMensaje mensaje) {
         try {
             String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta("mensaje_eliminado", mensaje));
             difundir(idConversacion, datosJson);
         } catch (Exception e) {
             System.err.println("Error al difundir mensaje eliminado por WebSocket: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Notifica a todos los participantes conectados que los mensajes de una conversación
+     * fueron leídos por un usuario.
+     */
+    public static void difundirMensajesLeidos(Long idConversacion, Long idUsuario) {
+        try {
+            java.util.Map<String, Object> datos = new java.util.HashMap<>();
+            datos.put("conversacionId", idConversacion);
+            datos.put("usuarioId", idUsuario);
+            String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta("mensajes_leidos", datos));
+            difundir(idConversacion, datosJson);
+        } catch (Exception e) {
+            System.err.println("Error al difundir mensajes leídos por WebSocket: " + e.getMessage());
         }
     }
 

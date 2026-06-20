@@ -33,8 +33,8 @@ public class MensajeResource {
     @Inject
     private AuthService authService;
 
-    @Inject
-    private websocket.ChatWebSocketEndpoint chatWebSocketEndpoint;
+    // @Inject
+    // private websocket.ChatWebSocketEndpoint chatWebSocketEndpoint;
 
     @Context
     private SecurityContext securityContext;
@@ -184,6 +184,11 @@ public class MensajeResource {
 
         try {
             sistema.marcarMensajeComoLeido(mensajeId, usuarioId);
+            Optional<Mensaje> msgOpt = sistema.mensajeHandler().buscarPorId(mensajeId);
+            if (msgOpt.isPresent()) {
+                Long conversacionId = msgOpt.get().getConversacion().getId();
+                websocket.ChatWebSocketEndpoint.difundirMensajesLeidos(conversacionId, usuarioId);
+            }
             return Response.ok().build();
 
         } catch (Exception e) {
@@ -218,6 +223,7 @@ public class MensajeResource {
 
         try {
             sistema.marcarConversacionComoLeida(conversacionId, usuarioId);
+            websocket.ChatWebSocketEndpoint.difundirMensajesLeidos(conversacionId, usuarioId);
             return Response.ok().build();
 
         } catch (Exception e) {
@@ -257,7 +263,7 @@ public class MensajeResource {
             Optional<chat.clases.Mensaje> msgOptAfter = sistema.mensajeHandler().buscarPorId(mensajeId);
             if (msgOptAfter.isPresent()) {
                 DtMensaje dt = DtMensaje.from(msgOptAfter.get());
-                chatWebSocketEndpoint.difundirMensajeEliminado(conversacionId, dt);
+                websocket.ChatWebSocketEndpoint.difundirMensajeEliminado(conversacionId, dt);
             }
 
             return Response.ok().build();
@@ -336,7 +342,7 @@ public class MensajeResource {
             Optional<Mensaje> mensajeOpt = sistema.mensajeHandler().buscarPorId(mensajeId);
             if (mensajeOpt.isPresent()) {
                 DtMensaje dt = DtMensaje.from(mensajeOpt.get());
-                chatWebSocketEndpoint.difundirMensajeResaltado(mensajeOpt.get().getConversacion().getId(), dt);
+                websocket.ChatWebSocketEndpoint.difundirMensajeResaltado(mensajeOpt.get().getConversacion().getId(), dt);
                 return Response.ok(dt).build();
             }
             return Response.ok().build();
