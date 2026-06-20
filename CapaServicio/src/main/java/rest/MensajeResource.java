@@ -98,7 +98,7 @@ public class MensajeResource {
      * Obtiene un mensaje por ID
      */
     @GET
-    @Path("/{id}")
+    @Path("/{id: \\d+}")
     public Response getMensaje(@PathParam("id") Long id) {
         if (id == null || id <= 0) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -169,7 +169,7 @@ public class MensajeResource {
      * Marca un mensaje como leído
      */
     @POST
-    @Path("/{id}/leido")
+    @Path("/{id: \\d+}/leido")
     public Response marcarMensajeLeido(@PathParam("id") Long mensajeId) {
         Long usuarioId = authService.getAuthenticatedUserId(securityContext);
         if (usuarioId == null) {
@@ -231,7 +231,7 @@ public class MensajeResource {
      * Elimina un mensaje. Solo el emisor puede hacerlo.
      */
     @DELETE
-    @Path("/{id}")
+    @Path("/{id: \\d+}")
     public Response eliminarMensaje(@PathParam("id") Long mensajeId) {
         Long usuarioId = authService.getAuthenticatedUserId(securityContext);
         if (usuarioId == null) {
@@ -245,7 +245,21 @@ public class MensajeResource {
         }
 
         try {
+            Optional<chat.clases.Mensaje> msgOptBefore = sistema.mensajeHandler().buscarPorId(mensajeId);
+            if (msgOptBefore.isEmpty()) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity(new ErrorResponse(404, "Message not found")).build();
+            }
+            Long conversacionId = msgOptBefore.get().getConversacion().getId();
+
             sistema.eliminarMensaje(mensajeId, usuarioId);
+
+            Optional<chat.clases.Mensaje> msgOptAfter = sistema.mensajeHandler().buscarPorId(mensajeId);
+            if (msgOptAfter.isPresent()) {
+                DtMensaje dt = DtMensaje.from(msgOptAfter.get());
+                chatWebSocketEndpoint.difundirMensajeEliminado(conversacionId, dt);
+            }
+
             return Response.ok().build();
         } catch (IllegalArgumentException e) {
             // This exception is thrown by Sistema for "Not found" or "Not allowed"
@@ -262,7 +276,7 @@ public class MensajeResource {
      * Obtiene información detallada de un mensaje.
      */
     @GET
-    @Path("/{id}/info")
+    @Path("/{id: \\d+}/info")
     public Response getInfoMensaje(@PathParam("id") Long mensajeId) {
         Long usuarioId = authService.getAuthenticatedUserId(securityContext);
         if (usuarioId == null) {
@@ -301,7 +315,7 @@ public class MensajeResource {
      * Query param: color (puede ser null o vacío para quitar el resaltado)
      */
     @POST
-    @Path("/{id}/resaltar")
+    @Path("/{id: \\d+}/resaltar")
     public Response resaltarMensaje(
             @PathParam("id") Long mensajeId,
             @QueryParam("color") String color) {

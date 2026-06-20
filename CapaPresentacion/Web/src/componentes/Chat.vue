@@ -854,6 +854,8 @@ const conectarWS = () => {
         }
       } else if (respuesta.tipo === 'mensaje_resaltado') {
         almacen.actualizarMensaje(respuesta.datos)
+      } else if (respuesta.tipo === 'mensaje_eliminado') {
+        almacen.actualizarMensaje(respuesta.datos)
       } else if (respuesta.tipo === 'mensajeFijado') {
         almacen.actualizarMensajeFijado(conversacionActual.value.id, respuesta.datos)
       } else if (respuesta.tipo === 'mensajeDesfijado') {

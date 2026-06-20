@@ -109,7 +109,7 @@ public class ConversacionResource {
     }
 
     @GET
-    @Path("/{id}")
+    @Path("/{id: \\d+}")
     public Response getConversacion(@PathParam("id") Long id,
             @Context SecurityContext securityContext) {
         Long userId = authService.getAuthenticatedUserId(securityContext);
@@ -145,7 +145,7 @@ public class ConversacionResource {
     }
 
     @PUT
-    @Path("/{id}")
+    @Path("/{id: \\d+}")
     public Response updateConversacion(@PathParam("id") Long id, UpdateConversacionDTO dto, @Context SecurityContext securityContext) {
         Long userId = authService.getAuthenticatedUserId(securityContext);
         if (userId == null) return Response.status(Response.Status.UNAUTHORIZED).build();
@@ -161,7 +161,7 @@ public class ConversacionResource {
     }
 
     @GET
-    @Path("/{id}/mensajes")
+    @Path("/{id: \\d+}/mensajes")
     public Response getMensajesConversacion(@PathParam("id") Long id,
             @QueryParam("limit") @DefaultValue("6") int limit, 
             @QueryParam("offset") @DefaultValue("0") int offset,
@@ -185,7 +185,7 @@ public class ConversacionResource {
     }
 
     @POST
-    @Path("/{id}/participantes")
+    @Path("/{id: \\d+}/participantes")
     public Response addParticipant(@PathParam("id") Long id, AddParticipantDTO dto, @Context SecurityContext securityContext) {
         Long currentUserId = authService.getAuthenticatedUserId(securityContext);
         if (currentUserId == null) return Response.status(Response.Status.UNAUTHORIZED).build();
@@ -203,7 +203,7 @@ public class ConversacionResource {
     }
 
     @DELETE
-    @Path("/{id}/participantes/{participanteId}")
+    @Path("/{id: \\d+}/participantes/{participanteId: \\d+}")
     public Response removeParticipant(@PathParam("id") Long conversacionId, @PathParam("participanteId") Long participanteId, @Context SecurityContext securityContext) {
         Long userId = authService.getAuthenticatedUserId(securityContext);
         if (userId == null) return Response.status(Response.Status.UNAUTHORIZED).build();
@@ -219,7 +219,7 @@ public class ConversacionResource {
     }
 
     @PUT
-    @Path("/{id}/participantes/{participanteId}/rol")
+    @Path("/{id: \\d+}/participantes/{participanteId: \\d+}/rol")
     public Response updateParticipantRole(@PathParam("id") Long conversacionId, @PathParam("participanteId") Long participanteId, UpdateRoleDTO dto, @Context SecurityContext securityContext) {
         Long userId = authService.getAuthenticatedUserId(securityContext);
         if (userId == null) return Response.status(Response.Status.UNAUTHORIZED).build();
@@ -284,7 +284,7 @@ public class ConversacionResource {
     }
 
     @GET
-    @Path("/{id}/rol")
+    @Path("/{id: \\d+}/rol")
     public Response getUserRoleInConversacion(@PathParam("id") Long id, @Context SecurityContext securityContext) {
         Long userId = authService.getAuthenticatedUserId(securityContext);
 
@@ -304,7 +304,7 @@ public class ConversacionResource {
     }
 
     @POST
-    @Path("/{id}/fijar/{mensajeId}")
+    @Path("/{id: \\d+}/fijar/{mensajeId: \\d+}")
     public Response fijarMensaje(@PathParam("id") Long conversacionId,
                                  @PathParam("mensajeId") Long mensajeId,
                                  @Context SecurityContext securityContext) {
@@ -334,7 +334,7 @@ public class ConversacionResource {
     }
 
     @POST
-    @Path("/{id}/desfijar")
+    @Path("/{id: \\d+}/desfijar")
     public Response desfijarMensaje(@PathParam("id") Long conversacionId,
                                     @Context SecurityContext securityContext) {
         Long userId = authService.getAuthenticatedUserId(securityContext);

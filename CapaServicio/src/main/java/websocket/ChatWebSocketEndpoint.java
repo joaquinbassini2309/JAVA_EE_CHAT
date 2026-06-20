@@ -175,6 +175,18 @@ public class ChatWebSocketEndpoint {
     }
 
     /**
+     * Difunde la eliminación de un mensaje a todos los usuarios conectados en una conversación
+     */
+    public void difundirMensajeEliminado(Long idConversacion, DtMensaje mensaje) {
+        try {
+            String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta("mensaje_eliminado", mensaje));
+            difundir(idConversacion, datosJson);
+        } catch (Exception e) {
+            System.err.println("Error al difundir mensaje eliminado por WebSocket: " + e.getMessage());
+        }
+    }
+
+    /**
      * Notifica a todos los participantes conectados que un mensaje fue fijado
      */
     public static void notificarMensajeFijado(Long idConversacion, DtMensaje mensajeFijado) {
