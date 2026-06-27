@@ -163,9 +163,9 @@ export const useAlmacen = defineStore('principal', () => {
   function actualizarEstadoUsuario(idUsuario, nuevoEstado) {
     conversaciones.value.forEach(conv => {
       if (conv.participantes) {
-        const participante = conv.participantes.find(p => p.id === idUsuario)
+        const participante = conv.participantes.find(p => p.usuario && p.usuario.id === idUsuario)
         if (participante) {
-          participante.estado = nuevoEstado
+          participante.usuario.estado = nuevoEstado
         }
       }
     })
@@ -273,7 +273,7 @@ export const useAlmacen = defineStore('principal', () => {
   }
 
   // ========== NUEVO: ESTADO DE TAREAS Y PANELES ==========
-  const panelTareasAbierto = ref(true)
+  const panelTareasAbierto = ref(window.innerWidth >= 960)
   const tareas = ref([])
 
   function togglePanelTareas() {
