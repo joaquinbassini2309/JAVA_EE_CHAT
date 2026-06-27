@@ -126,6 +126,10 @@
         >
           Todos
         </button>
+        <button class="carpeta-pill btn-crear-carpeta" @click="abrirCrearGrupoConversacion">
+          <v-icon size="12" class="mr-1">mdi-plus</v-icon>
+          Agrupar Chats
+        </button>
         <button
           v-for="grupo in gruposDeConversacion"
           :key="grupo"
@@ -144,10 +148,6 @@
             class="ml-1 btn-eliminar-carpeta"
             @click.stop="confirmarEliminarGrupoConversacion(grupo)"
           />
-        </button>
-        <button class="carpeta-pill btn-crear-carpeta" @click="abrirCrearGrupoConversacion">
-          <v-icon size="12" class="mr-1">mdi-plus</v-icon>
-          Agrupar Chats
         </button>
       </div>
     </div>

@@ -40,7 +40,7 @@
         <span v-else class="info-name text-truncate">{{ conversacion.nombre }}</span>
         
         <div class="info-subtitle">
-          {{ esAviso ? '📣 Canal de Avisos' : '' }}{{ conversacion.participantes?.length || 0 }} miembros
+          {{ esAviso ? '📣 Canal de Avisos - ' : '' }}{{ conversacion.participantes?.length || 0 }} miembros
         </div>
       </div>
 
