@@ -30,6 +30,19 @@ public class ManejadorMensaje {
         m.setContenido(contenido);
         m.setTipoMensaje(tipoMensaje == null ? TipoMensaje.TEXTO : tipoMensaje);
         m.setUrlAdjunto(urlAdjunto);
+
+        TypedQuery<Long> partQuery = em.createQuery(
+                "SELECT COUNT(p) FROM Participante p WHERE p.conversacion.id = :cid AND p.usuario.id != :emisorId",
+                Long.class);
+        partQuery.setParameter("cid", conversacionId);
+        partQuery.setParameter("emisorId", emisorId);
+        long otherParticipants = partQuery.getSingleResult();
+        
+        m.setLecturasEsperadas((int) otherParticipants);
+        if (otherParticipants == 0) {
+            m.setLeido(true);
+        }
+
         em.persist(m);
         return m;
     }
@@ -55,12 +68,19 @@ public class ManejadorMensaje {
     }
 
     private void actualizarEstadoLeidoMensaje(Mensaje m) {
-        TypedQuery<Long> partQuery = em.createQuery(
-                "SELECT COUNT(p) FROM Participante p WHERE p.conversacion.id = :cid AND p.usuario.id != :emisorId",
-                Long.class);
-        partQuery.setParameter("cid", m.getConversacion().getId());
-        partQuery.setParameter("emisorId", m.getEmisor().getId());
-        long otherParticipants = partQuery.getSingleResult();
+        long targetReads = 0;
+        
+        if (m.getLecturasEsperadas() != null) {
+            targetReads = m.getLecturasEsperadas();
+        } else {
+            // Fallback para mensajes antiguos sin la columna
+            TypedQuery<Long> partQuery = em.createQuery(
+                    "SELECT COUNT(p) FROM Participante p WHERE p.conversacion.id = :cid AND p.usuario.id != :emisorId",
+                    Long.class);
+            partQuery.setParameter("cid", m.getConversacion().getId());
+            partQuery.setParameter("emisorId", m.getEmisor().getId());
+            targetReads = partQuery.getSingleResult();
+        }
 
         TypedQuery<Long> readQuery = em.createQuery(
                 "SELECT COUNT(ml) FROM MensajeLectura ml WHERE ml.mensaje.id = :mid",
@@ -68,7 +88,12 @@ public class ManejadorMensaje {
         readQuery.setParameter("mid", m.getId());
         long readers = readQuery.getSingleResult();
 
-        if (readers >= otherParticipants) {
+        if (readers >= targetReads && targetReads > 0) {
+            if (!m.getLeido()) {
+                m.setLeido(true);
+                em.merge(m);
+            }
+        } else if (targetReads == 0 && !m.getLeido()) {
             m.setLeido(true);
             em.merge(m);
         }

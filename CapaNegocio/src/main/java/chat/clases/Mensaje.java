@@ -44,6 +44,9 @@ public class Mensaje {
     @Column(name = "color_resaltado", length = 30)
     private String colorResaltado;
 
+    @Column(name = "lecturas_esperadas")
+    private Integer lecturasEsperadas;
+
     @PrePersist
     private void prePersist() {
         if (fechaEnvio == null) fechaEnvio = LocalDateTime.now();
@@ -79,4 +82,7 @@ public class Mensaje {
 
     public String getColorResaltado() { return colorResaltado; }
     public void setColorResaltado(String colorResaltado) { this.colorResaltado = colorResaltado; }
+
+    public Integer getLecturasEsperadas() { return lecturasEsperadas; }
+    public void setLecturasEsperadas(Integer lecturasEsperadas) { this.lecturasEsperadas = lecturasEsperadas; }
 }
