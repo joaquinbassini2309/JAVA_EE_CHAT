@@ -428,7 +428,7 @@ public class Sistema implements ISistema {
     @Override
     public void marcarMensajeComoLeido(Long mensajeId, Long usuarioId) {
         // TODO: Validar que el mensaje pertenece a una conversación donde el usuario participa
-        mensajeHandler().marcarMensajeLeido(mensajeId);
+        mensajeHandler().marcarMensajeLeido(mensajeId, usuarioId);
     }
 
     @Override
