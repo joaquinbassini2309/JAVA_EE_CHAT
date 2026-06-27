@@ -184,24 +184,25 @@
               </span>
               <span class="conv-time" v-if="conversacion.fechaUltimoMensaje" style="margin-left: 6px;">{{ formatearHora(conversacion.fechaUltimoMensaje) }}</span>
               
-              <!-- Menú de Agrupar Conversación -->
+              <!-- Menú de Opciones de Conversación -->
               <v-menu location="bottom end" transition="scale-transition" :close-on-content-click="true" content-class="menu-agrupar-premium">
                 <template v-slot:activator="{ props }">
                   <button
                     v-bind="props"
                     class="ml-1 btn-opcion-carpeta"
                     @click.stop
-                    title="Asociar a grupo/carpeta"
+                    title="Opciones de chat"
                   >
-                    <v-icon size="17">mdi-folder-move-outline</v-icon>
+                    <v-icon size="17">mdi-dots-horizontal</v-icon>
                   </button>
                 </template>
                 <v-card class="tarjeta-menu-agrupar" elevation="8">
                   <div class="menu-agrupar-header">
-                    <v-icon size="18" color="primary" class="mr-2">mdi-folder-star</v-icon>
-                    <span>Organizar Chat</span>
+                    <v-icon size="18" color="primary" class="mr-2">mdi-cog-outline</v-icon>
+                    <span>Opciones de Chat</span>
                   </div>
                   <div class="menu-agrupar-content">
+                    <div class="px-3 py-1 font-weight-bold text-caption text-grey" style="font-size: 11px;">Carpetas</div>
                     <div v-for="grupo in gruposDeConversacion" :key="grupo" class="menu-agrupar-item" :class="{'item-activo': obtenerGrupoDeConversacion(conversacion.id) === grupo}" @click="asignarConversacionAGrupo(conversacion.id, grupo)">
                       <v-icon size="16" class="mr-2">{{ obtenerGrupoDeConversacion(conversacion.id) === grupo ? 'mdi-folder-check' : 'mdi-folder-outline' }}</v-icon>
                       <span class="text-truncate" style="max-width: 150px;">{{ grupo }}</span>
@@ -213,12 +214,18 @@
                     </div>
 
                     <template v-if="obtenerGrupoDeConversacion(conversacion.id)">
-                      <v-divider class="my-1 border-opacity-50"></v-divider>
                       <div class="menu-agrupar-item item-quitar" @click="removerConversacionDeGrupo(conversacion.id)">
                         <v-icon size="16" class="mr-2">mdi-folder-remove-outline</v-icon>
                         <span>Quitar de carpeta</span>
                       </div>
                     </template>
+
+                    <!-- Opción de Eliminar Chat -->
+                    <v-divider class="my-1 border-opacity-50"></v-divider>
+                    <div class="menu-agrupar-item item-quitar" style="color: #ff5252;" @click="confirmarEliminarConversacion(conversacion)">
+                      <v-icon size="16" class="mr-2" color="error">mdi-delete-outline</v-icon>
+                      <span>Eliminar chat</span>
+                    </div>
                   </div>
                 </v-card>
               </v-menu>
@@ -606,31 +613,71 @@
 
     <!-- Modal Confirmar Eliminar Carpeta / Grupo de Conversaciones -->
     <v-dialog v-model="mostrarModalEliminarGrupo" max-width="400">
-      <v-card rounded="xl" style="background: #1c1a1d; padding: 24px; font-family: 'Inter', sans-serif;">
-        <v-card-text style="padding: 0; text-align: left; color: #e4e4e4;">
-          <strong style="display: block; font-size: 16px; margin-bottom: 12px; font-weight: 700; color: #ffffff;">java-ee-chat.duckdns.org dice</strong>
-          <div style="font-size: 14.5px; line-height: 1.5; margin-bottom: 28px;">
-            ¿Estás seguro de que deseas eliminar el grupo "{{ grupoAEliminar }}"? Las conversaciones no se borrarán.
+      <v-card rounded="2xl" class="modal-nueva-conv">
+        <v-card-title class="modal-titulo-conv">
+          <v-icon size="18" color="white" class="mr-2">mdi-folder-remove</v-icon>
+          <span>Eliminar Carpeta</span>
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="cerrarModalEliminarGrupo" />
+        </v-card-title>
+
+        <v-card-text class="modal-contenido-conv" style="background: var(--surface) !important; color: var(--text-primary) !important; padding: 24px 16px !important; font-size: 14px; line-height: 1.6;">
+          <div>
+            ¿Estás seguro de que deseas eliminar la carpeta <strong>"{{ grupoAEliminar }}"</strong>? Las conversaciones no se borrarán.
           </div>
         </v-card-text>
-        <v-card-actions class="d-flex justify-end px-0 pb-0" style="gap: 12px;">
-          <v-btn
-              variant="flat"
-              rounded="pill"
-              class="font-weight-bold px-6"
-              style="background-color: #f6cce6; text-transform: none; color: #6a1a55; border: 2px solid #000; box-shadow: 0 0 0 1px #f6cce6;"
-              height="42"
+
+        <v-card-actions class="d-flex justify-end pa-4" style="gap: 12px; background: var(--surface) !important; border-top: 1px solid var(--border-color);">
+          <button
+              class="btn-confirmar-aceptar-carpeta"
               @click="procederEliminarGrupo"
           >
             Aceptar
-          </v-btn>
+          </button>
           <v-btn
-              variant="flat"
+              variant="outlined"
               rounded="pill"
               class="font-weight-bold px-6"
-              style="background-color: #6d3a5f; text-transform: none; color: #ffffff;"
-              height="42"
+              style="text-transform: none; color: var(--text-secondary); border-color: var(--border-color);"
+              height="38"
               @click="cerrarModalEliminarGrupo"
+          >
+            Cancelar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Modal Confirmar Eliminar Chat / Conversación -->
+    <v-dialog v-model="mostrarModalEliminarChat" max-width="400">
+      <v-card rounded="2xl" class="modal-nueva-conv">
+        <v-card-title class="modal-titulo-conv" style="background: linear-gradient(135deg, #d32f2f 0%, #ef5350 100%) !important;">
+          <v-icon size="18" color="white" class="mr-2">mdi-delete-alert</v-icon>
+          <span>Confirmar Eliminación</span>
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="cerrarModalEliminarChat" />
+        </v-card-title>
+        
+        <v-card-text class="modal-contenido-conv" style="background: var(--surface) !important; color: var(--text-primary) !important; padding: 24px 16px !important; font-size: 14px; line-height: 1.6;">
+          <div>
+            {{ mensajeConfirmarEliminarChat }}
+          </div>
+        </v-card-text>
+        
+        <v-card-actions class="d-flex justify-end pa-4" style="gap: 12px; background: var(--surface) !important; border-top: 1px solid var(--border-color);">
+          <button
+              class="btn-confirmar-eliminar"
+              @click="procederEliminarConversacion"
+          >
+            Eliminar
+          </button>
+          <v-btn
+              variant="outlined"
+              rounded="pill"
+              class="font-weight-bold px-6"
+              style="text-transform: none; color: var(--text-secondary); border-color: var(--border-color);"
+              height="38"
+              @click="cerrarModalEliminarChat"
           >
             Cancelar
           </v-btn>
@@ -722,6 +769,10 @@ const conversacionIdParaNuevoGrupo = ref(null)
 
 const mostrarModalEliminarGrupo = ref(false)
 const grupoAEliminar = ref(null)
+
+const mostrarModalEliminarChat = ref(false)
+const conversacionAEliminar = ref(null)
+const mensajeConfirmarEliminarChat = ref('')
 
 const obtenerLlaveGrupos = () => {
   const userId = almacen.usuarioActual?.id || 'invitado'
@@ -816,6 +867,42 @@ const crearGrupoConversacion = () => {
   mostrarModalCrearGrupo.value = false
   nombreNuevoGrupo.value = ''
   conversacionIdParaNuevoGrupo.value = null
+}
+
+const confirmarEliminarConversacion = (conversacion) => {
+  const nombreVisible = obtenerNombreVisibleConversacion(conversacion, usuarioActual.value?.id)
+  conversacionAEliminar.value = conversacion
+  mensajeConfirmarEliminarChat.value = conversacion.tipo === 'PRIVADA'
+    ? `¿Estás seguro de que deseas eliminar el chat con "${nombreVisible}"? Esta acción no se puede deshacer.`
+    : `¿Estás seguro de que deseas eliminar el grupo "${nombreVisible}"? Esta acción eliminará el grupo para todos los miembros y no se puede deshacer.`
+  mostrarModalEliminarChat.value = true
+}
+
+const cerrarModalEliminarChat = () => {
+  mostrarModalEliminarChat.value = false
+  conversacionAEliminar.value = null
+  mensajeConfirmarEliminarChat.value = ''
+}
+
+const procederEliminarConversacion = async () => {
+  const conversacion = conversacionAEliminar.value
+  if (!conversacion) return
+
+  try {
+    await servicioApi.eliminarConversacion(conversacion.id)
+
+    if (almacen.conversacionActual && almacen.conversacionActual.id === conversacion.id) {
+      almacen.establecerConversacionActual(null)
+    }
+
+    const conversaciones = await servicioApi.obtenerConversaciones()
+    almacen.establecerConversaciones(conversaciones)
+  } catch (error) {
+    console.error('Error al eliminar conversación:', error)
+    alert(error.response?.data?.detalle || 'Error al eliminar la conversación. Solo el administrador puede eliminar el grupo.')
+  } finally {
+    cerrarModalEliminarChat()
+  }
 }
 
 const confirmarEliminarGrupoConversacion = (grupo) => {
@@ -2135,14 +2222,10 @@ const esConversacionFavorita = (conversacion) => {
   color: var(--teal);
   cursor: pointer;
   outline: none;
-  opacity: 0;
+  opacity: 0.8;
   transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s, opacity 0.2s ease;
   box-sizing: border-box;
   margin-left: 4px;
-}
-
-.item-conversacion:hover .btn-opcion-carpeta {
-  opacity: 0.8;
 }
 
 .btn-opcion-carpeta:hover {
@@ -2159,6 +2242,50 @@ const esConversacionFavorita = (conversacion) => {
 
 .btn-opcion-carpeta:hover .v-icon,
 .btn-opcion-carpeta:hover i {
+  color: #ffffff !important;
+}
+
+.btn-confirmar-eliminar {
+  background-color: #ff5252 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 9999px !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  height: 38px !important;
+  padding: 0 24px !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease, transform 0.1s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  outline: none !important;
+}
+
+.btn-confirmar-eliminar:hover {
+  background-color: #e53935 !important;
+  color: #ffffff !important;
+}
+
+.btn-confirmar-aceptar-carpeta {
+  background-color: var(--teal) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 9999px !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  height: 38px !important;
+  padding: 0 24px !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease, transform 0.1s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  outline: none !important;
+}
+
+.btn-confirmar-aceptar-carpeta:hover {
+  background-color: #33575c !important;
   color: #ffffff !important;
 }
 </style>

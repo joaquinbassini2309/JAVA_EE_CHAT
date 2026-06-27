@@ -38,6 +38,9 @@ public class Mensaje {
     @Column(name = "eliminado")
     private Boolean eliminado = false;
 
+    @OneToMany(mappedBy = "mensaje", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.Set<MensajeLectura> lecturas = new java.util.HashSet<>();
+
     @Column(name = "fecha_envio")
     private LocalDateTime fechaEnvio;
 

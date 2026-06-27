@@ -107,12 +107,12 @@ onMounted(async () => {
     wsPresencia.value = servicioApi.conectarPresenciaWebSocket(almacen.usuarioActual.id, almacen.token)
     wsPresencia.value.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data)
-        if (data && data.idUsuario && data.estado) {
-          almacen.actualizarEstadoUsuario(data.idUsuario, data.estado)
+        const msg = JSON.parse(event.data)
+        if (msg.tipo === 'PRESENCIA') {
+          almacen.actualizarEstadoUsuario(msg.usuarioId, msg.estado)
         }
-      } catch (e) {
-        console.error('Error procesando mensaje de presencia:', e)
+      } catch (err) {
+        console.error('Error procesando mensaje de presencia WS:', err)
       }
     }
   }

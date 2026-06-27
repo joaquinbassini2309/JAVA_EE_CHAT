@@ -164,11 +164,18 @@ export const useAlmacen = defineStore('principal', () => {
     conversaciones.value.forEach(conv => {
       if (conv.participantes) {
         const participante = conv.participantes.find(p => p.usuario && p.usuario.id === idUsuario)
-        if (participante) {
+        if (participante && participante.usuario) {
           participante.usuario.estado = nuevoEstado
         }
       }
     })
+    // Forzar actualización reactiva de la conversación actual si está abierta
+    if (conversacionActual.value && conversacionActual.value.participantes) {
+      const p = conversacionActual.value.participantes.find(p => p.usuario && p.usuario.id === idUsuario)
+      if (p && p.usuario) {
+        p.usuario.estado = nuevoEstado
+      }
+    }
   }
 
   function actualizarInfoConversacion(conversacionId, nombre, fotoUrl, imagenBanner) {

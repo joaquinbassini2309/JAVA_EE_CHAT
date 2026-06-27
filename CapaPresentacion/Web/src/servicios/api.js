@@ -138,6 +138,11 @@ class ServicioAPI {
     return data
   }
 
+  async eliminarConversacion(idConversacion) {
+    const { data } = await this.cliente.delete(`/conversaciones/${idConversacion}`)
+    return data
+  }
+
   async añadirParticipante(idConversacion, idUsuario) {
     const { data } = await this.cliente.post(`/conversaciones/${idConversacion}/participantes`, {
       usuarioId: idUsuario

@@ -694,4 +694,28 @@ public class Sistema implements ISistema {
 
         conversacion.setMensajeFijado(null);
     }
+
+    @Override
+    public void eliminarConversacion(Long conversacionId, Long usuarioId) {
+        Conversacion c = buscarConversacionPorId(conversacionId)
+                .orElseThrow(() -> new IllegalArgumentException("Conversación no encontrada"));
+
+        Participante p = participanteHandler().buscarParticipante(conversacionId, usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("No tienes acceso a esta conversación"));
+
+        // Si es de tipo GRUPO o AVISO, solo el ADMIN puede eliminarla
+        if ((c.getTipo() == chat.Enum.TipoConversacion.GRUPO || c.getTipo() == chat.Enum.TipoConversacion.AVISO) 
+                && p.getRol() != chat.Enum.RolParticipante.ADMIN) {
+            throw new IllegalArgumentException("Solo el administrador del grupo puede eliminar el chat");
+        }
+
+        c.setMensajeFijado(null);
+        conversacionHandler().buscarConversacionPorId(conversacionId).ifPresent(conv -> {
+            conv.setMensajeFijado(null);
+        });
+
+        conversacionHandler().eliminarConversacion(conversacionId);
+
+        observable.notificar(new EventoChat(chat.Enum.EventoTipo.CONVERSACION_ELIMINADA, c));
+    }
 }
