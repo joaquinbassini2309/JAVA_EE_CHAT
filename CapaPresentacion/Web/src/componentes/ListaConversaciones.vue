@@ -899,7 +899,7 @@ const procederEliminarConversacion = async () => {
     almacen.establecerConversaciones(conversaciones)
   } catch (error) {
     console.error('Error al eliminar conversación:', error)
-    alert(error.response?.data?.detalle || 'Error al eliminar la conversación. Solo el administrador puede eliminar el grupo.')
+    alert(error.response?.data?.mensaje || error.response?.data?.detalle || 'Error al eliminar la conversación.')
   } finally {
     cerrarModalEliminarChat()
   }

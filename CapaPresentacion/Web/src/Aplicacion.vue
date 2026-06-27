@@ -27,9 +27,36 @@
 import { ref, onMounted, watch } from 'vue'
 import { useTheme } from 'vuetify'
 import { useAlmacen } from '@/almacenes/almacen'
+import { servicioApi } from '@/servicios/api'
 
 const almacen = useAlmacen()
 const theme = useTheme()
+
+// WebSocket global de presencia
+const wsPresencia = ref(null)
+
+watch(() => almacen.estaAutenticado, (autenticado) => {
+  if (autenticado) {
+    if (!wsPresencia.value && almacen.usuarioActual && almacen.token) {
+      wsPresencia.value = servicioApi.conectarPresenciaWebSocket(almacen.usuarioActual.id, almacen.token)
+      wsPresencia.value.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data)
+          if (msg.tipo === 'PRESENCIA') {
+            almacen.actualizarEstadoUsuario(msg.usuarioId, msg.estado)
+          }
+        } catch (err) {
+          console.error('Error procesando mensaje de presencia WS:', err)
+        }
+      }
+    }
+  } else {
+    if (wsPresencia.value) {
+      wsPresencia.value.close()
+      wsPresencia.value = null
+    }
+  }
+}, { immediate: true })
 
 // Estado para actualización de la PWA
 const actualizarDisponible = ref(false)

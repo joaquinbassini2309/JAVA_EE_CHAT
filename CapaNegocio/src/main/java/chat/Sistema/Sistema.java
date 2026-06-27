@@ -703,6 +703,9 @@ public class Sistema implements ISistema {
         Participante p = participanteHandler().buscarParticipante(conversacionId, usuarioId)
                 .orElseThrow(() -> new IllegalArgumentException("No tienes acceso a esta conversación"));
 
+        System.out.println("DEBUG ELIMINAR CHAT: conversacionId=" + conversacionId + ", usuarioId=" + usuarioId + ", tipoConversacion=" + c.getTipo());
+        System.out.println("DEBUG ELIMINAR CHAT: participanteId=" + p.getId() + ", rol=" + p.getRol() + ", rolName=" + (p.getRol() != null ? p.getRol().name() : "null"));
+
         // Si es de tipo GRUPO o AVISO, solo el ADMIN puede eliminarla
         if ((c.getTipo() == chat.Enum.TipoConversacion.GRUPO || c.getTipo() == chat.Enum.TipoConversacion.AVISO) 
                 && p.getRol() != chat.Enum.RolParticipante.ADMIN) {

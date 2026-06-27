@@ -94,29 +94,7 @@ watch(panelTareasAbierto, (newVal) => {
   }
 })
 
-const wsPresencia = ref(null)
-
 onMounted(async () => {
-  if (!almacen.estaAutenticado) {
-    router.push('/login')
-    return
-  }
-
-  // Conectar al WebSocket de presencia
-  if (almacen.usuarioActual && almacen.token) {
-    wsPresencia.value = servicioApi.conectarPresenciaWebSocket(almacen.usuarioActual.id, almacen.token)
-    wsPresencia.value.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data)
-        if (msg.tipo === 'PRESENCIA') {
-          almacen.actualizarEstadoUsuario(msg.usuarioId, msg.estado)
-        }
-      } catch (err) {
-        console.error('Error procesando mensaje de presencia WS:', err)
-      }
-    }
-  }
-
   try {
     almacen.establecerCargando(true)
     const conversaciones = await servicioApi.obtenerConversaciones()
@@ -137,9 +115,6 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('resize', detectarTipoVista)
   window.removeEventListener('popstate', handlePopState)
-  if (wsPresencia.value) {
-    wsPresencia.value.close()
-  }
 })
 </script>
 

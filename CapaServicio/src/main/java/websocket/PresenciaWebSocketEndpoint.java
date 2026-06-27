@@ -85,7 +85,8 @@ public class PresenciaWebSocketEndpoint {
     private void difundirEstadoGlobal(Long idUsuario, boolean conectado) {
         try {
             Map<String, Object> notificacion = new HashMap<>();
-            notificacion.put("idUsuario", idUsuario);
+            notificacion.put("tipo", "PRESENCIA");
+            notificacion.put("usuarioId", idUsuario);
             notificacion.put("estado", conectado ? "ONLINE" : "OFFLINE");
             
             String msg = mapeador.writeValueAsString(notificacion);
