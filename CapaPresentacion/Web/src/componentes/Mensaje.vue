@@ -49,7 +49,7 @@
       </p>
 
       <!-- Adjuntos: imagen inline -->
-      <img v-if="esImagenAdjunta" :src="mensaje.urlAdjunto" alt="adjunto" class="adjunto-imagen" />
+      <img v-if="esImagenAdjunta" :src="mensaje.urlAdjunto" alt="adjunto" class="adjunto-imagen" @click="abrirVisor" />
 
       <!-- Adjuntos: documento u otro tipo, mostrar enlace de descarga -->
       <div v-if="esDocumentoAdjunto" class="adjunto-documento">
@@ -113,6 +113,21 @@
     </div>
   </div>
   </div>
+
+  <!-- Visor de Imágenes a Pantalla Completa -->
+  <v-dialog v-model="mostrarVisor" fullscreen content-class="visor-dialog" transition="fade-transition">
+    <div class="visor-container" @click.self="cerrarVisor" @wheel="handleWheel">
+      <div class="visor-toolbar">
+        <v-btn icon="mdi-magnify-minus-outline" variant="text" color="white" @click="zoomOut"></v-btn>
+        <v-btn icon="mdi-magnify-plus-outline" variant="text" color="white" @click="zoomIn"></v-btn>
+        <v-spacer></v-spacer>
+        <v-btn icon="mdi-close" variant="text" color="white" @click="cerrarVisor"></v-btn>
+      </div>
+      <div class="visor-img-wrapper" @click="toggleZoomClick">
+        <img :src="mensaje.urlAdjunto" class="img-zoomable" :style="{ transform: `scale(${nivelZoom})` }" alt="adjunto-ampliado" />
+      </div>
+    </div>
+  </v-dialog>
 </template>
 
 <script setup>
@@ -273,6 +288,38 @@ const toggleCompletada = async () => {
     } finally {
         cargando.value = false
     }
+}
+
+// Visor de Imágenes
+const mostrarVisor = ref(false)
+const nivelZoom = ref(1)
+
+const abrirVisor = () => {
+  mostrarVisor.value = true
+  nivelZoom.value = 1
+}
+
+const cerrarVisor = () => {
+  mostrarVisor.value = false
+}
+
+const zoomIn = () => { nivelZoom.value = Math.min(nivelZoom.value + 0.5, 5) }
+const zoomOut = () => { nivelZoom.value = Math.max(nivelZoom.value - 0.5, 1) }
+
+const toggleZoomClick = () => {
+  // Zoom con click en PC
+  if (window.innerWidth >= 960) {
+    if (nivelZoom.value === 1) nivelZoom.value = 2;
+    else nivelZoom.value = 1;
+  }
+}
+
+const handleWheel = (e) => {
+  // Solo en visor
+  if (mostrarVisor.value) {
+    if (e.deltaY < 0) zoomIn()
+    else zoomOut()
+  }
 }
 </script>
 
@@ -490,14 +537,15 @@ const toggleCompletada = async () => {
 
 /* ---- Adjuntos ---- */
 .adjunto-imagen {
+  width: 100%;
   max-width: 260px;
-  max-height: 260px;
   border-radius: 12px;
   display: block;
   margin-top: 7px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   cursor: pointer;
   transition: transform .2s ease;
+  object-fit: contain;
 }
 
 .adjunto-imagen:hover {
@@ -723,6 +771,47 @@ const toggleCompletada = async () => {
   padding: 1px 4px;
   border-radius: 4px;
   display: inline-block;
+}
+
+/* Visor de imágenes */
+:deep(.visor-dialog) {
+  margin: 0 !important;
+  background: rgba(0, 0, 0, 0.95) !important;
+}
+.visor-container {
+  width: 100vw;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.95);
+  position: relative;
+}
+.visor-toolbar {
+  display: flex;
+  padding: 12px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 10;
+}
+.visor-img-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  touch-action: pan-x pan-y pinch-zoom; /* Permite pinch-zoom en móvil */
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+}
+.img-zoomable {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.2s ease-out;
+  will-change: transform;
 }
 </style>
 
