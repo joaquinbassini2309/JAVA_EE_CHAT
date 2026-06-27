@@ -79,14 +79,14 @@
             </v-card-title>
             <v-list density="compact" class="py-1 menu-filtro-list">
               <template v-if="tabActivo === 'chats'">
-                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Contactos" value="PRIVADA" color="primary" hide-details /></v-list-item>
-                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Grupos" value="GRUPO" color="primary" hide-details /></v-list-item>
-                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Canales de aviso" value="AVISO" color="primary" hide-details /></v-list-item>
-                <v-list-item><v-checkbox-btn v-model="filtrosSeleccionados" label="Lista de tareas" value="TAREAS" color="primary" hide-details /></v-list-item>
+                <v-checkbox v-model="filtrosSeleccionados" label="Contactos" value="PRIVADA" color="primary" hide-details density="compact" class="px-4 py-1" :ripple="false" />
+                <v-checkbox v-model="filtrosSeleccionados" label="Grupos" value="GRUPO" color="primary" hide-details density="compact" class="px-4 py-1" :ripple="false" />
+                <v-checkbox v-model="filtrosSeleccionados" label="Canales de aviso" value="AVISO" color="primary" hide-details density="compact" class="px-4 py-1" :ripple="false" />
+                <v-checkbox v-model="filtrosSeleccionados" label="Lista de tareas" value="TAREAS" color="primary" hide-details density="compact" class="px-4 py-1" :ripple="false" />
               </template>
               <template v-else-if="tabActivo === 'tareas'">
-                <v-list-item><v-checkbox-btn v-model="filtrosTareas" label="Tareas pendientes" value="PENDIENTES" color="primary" hide-details /></v-list-item>
-                <v-list-item><v-checkbox-btn v-model="filtrosTareas" label="Tareas completadas" value="COMPLETADAS" color="primary" hide-details /></v-list-item>
+                <v-checkbox v-model="filtrosTareas" label="Tareas pendientes" value="PENDIENTES" color="primary" hide-details density="compact" class="px-4 py-1" :ripple="false" />
+                <v-checkbox v-model="filtrosTareas" label="Tareas completadas" value="COMPLETADAS" color="primary" hide-details density="compact" class="px-4 py-1" :ripple="false" />
               </template>
               <template v-else>
                 <v-list-item><v-list-item-title class="text-caption text-grey py-2 px-2">Solo filtro por texto</v-list-item-title></v-list-item>
