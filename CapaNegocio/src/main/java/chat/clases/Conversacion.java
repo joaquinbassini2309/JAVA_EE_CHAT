@@ -36,6 +36,9 @@ public class Conversacion {
     @OneToMany(mappedBy = "conversacion", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Mensaje> mensajes = new HashSet<>();
 
+    @OneToMany(mappedBy = "grupo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Tarea> tareas = new HashSet<>();
+
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_mensaje_fijado")
     private Mensaje mensajeFijado;

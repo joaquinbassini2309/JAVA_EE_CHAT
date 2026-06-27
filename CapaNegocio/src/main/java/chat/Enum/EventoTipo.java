@@ -9,6 +9,7 @@ public enum EventoTipo {
     // Eventos de Conversación
     CONVERSACION_CREADA,
     CONVERSACION_ACTUALIZADA,
+    CONVERSACION_ELIMINADA,
 
     // Eventos de Participante
     PARTICIPANTE_AGREGADO,

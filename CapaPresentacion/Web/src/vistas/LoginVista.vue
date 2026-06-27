@@ -140,7 +140,7 @@ const inicializarGoogle = () => {
     })
     window.google.accounts.id.renderButton(
       document.getElementById('googleBtn'),
-      { theme: almacen.temaOscuro ? 'filled_blue' : 'outline', size: 'large', width: '100%' }
+      { theme: almacen.temaOscuro ? 'filled_blue' : 'outline', size: 'large' }
     )
   }
 }

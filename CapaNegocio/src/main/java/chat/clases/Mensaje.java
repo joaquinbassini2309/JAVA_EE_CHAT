@@ -38,11 +38,17 @@ public class Mensaje {
     @Column(name = "eliminado")
     private Boolean eliminado = false;
 
+    @OneToMany(mappedBy = "mensaje", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.Set<MensajeLectura> lecturas = new java.util.HashSet<>();
+
     @Column(name = "fecha_envio")
     private LocalDateTime fechaEnvio;
 
     @Column(name = "color_resaltado", length = 30)
     private String colorResaltado;
+
+    @Column(name = "lecturas_esperadas")
+    private Integer lecturasEsperadas;
 
     @PrePersist
     private void prePersist() {
@@ -79,4 +85,7 @@ public class Mensaje {
 
     public String getColorResaltado() { return colorResaltado; }
     public void setColorResaltado(String colorResaltado) { this.colorResaltado = colorResaltado; }
+
+    public Integer getLecturasEsperadas() { return lecturasEsperadas; }
+    public void setLecturasEsperadas(Integer lecturasEsperadas) { this.lecturasEsperadas = lecturasEsperadas; }
 }

@@ -279,7 +279,15 @@ const tareasMostradas = computed(() => {
 })
 
 const cerrarPanel = () => {
-  almacen.togglePanelTareas()
+  if (window.innerWidth < 960) {
+    if (window.history.state && window.history.state.appNav === 'tareas') {
+      window.history.back()
+    } else {
+      almacen.panelTareasAbierto = false
+    }
+  } else {
+    almacen.togglePanelTareas()
+  }
 }
 
 const abrirNuevaTarea = () => {

@@ -138,7 +138,7 @@ public class UsuarioResource {
                     username = username + (System.currentTimeMillis() % 1000);
                 }
 
-                String randomPassword = java.util.UUID.randomUUID().toString();
+                String randomPassword = "GooglePass-" + java.util.UUID.randomUUID().toString();
                 usuario = sistema.registrarUsuario(username, email, randomPassword);
                 
                 if (picture != null && !picture.isBlank()) {

@@ -358,6 +358,27 @@ public class ConversacionResource {
         }
     }
 
+    @DELETE
+    @Path("/{id: \\d+}")
+    public Response eliminarConversacion(@PathParam("id") Long id, @Context SecurityContext securityContext) {
+        Long userId = authService.getAuthenticatedUserId(securityContext);
+        if (userId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
+        }
+
+        try {
+            sistema.eliminarConversacion(id, userId);
+            return Response.ok("{\"message\": \"Conversación eliminada exitosamente\"}").build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(new ErrorResponse(403, e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(500, "Error al eliminar conversación", e.getMessage())).build();
+        }
+    }
+
     // --- DTOs ---
     public static class CreateConversacionDTO {
         private String nombre;

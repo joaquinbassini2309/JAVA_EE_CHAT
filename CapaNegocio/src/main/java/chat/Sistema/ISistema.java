@@ -184,4 +184,7 @@ public interface ISistema {
     // Fijar y desfijar mensaje
     void fijarMensaje(Long conversacionId, Long mensajeId, Long usuarioId);
     void desfijarMensaje(Long conversacionId, Long usuarioId);
+
+    // Eliminar conversación
+    void eliminarConversacion(Long conversacionId, Long usuarioId);
 }

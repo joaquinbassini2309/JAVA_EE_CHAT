@@ -57,6 +57,12 @@ public class ManejadorUsuario {
         if (u != null) {
             u.setEstado(estado);
             em.merge(u);
+            em.flush();
+            try {
+                em.getEntityManagerFactory().getCache().evict(Usuario.class, usuarioId);
+            } catch (Exception e) {
+                System.err.println("Error al evadir cache L2: " + e.getMessage());
+            }
         }
     }
 
@@ -82,6 +88,12 @@ public class ManejadorUsuario {
                 u.setFavoritos(dto.getFavoritos());
             }
             em.merge(u);
+            em.flush();
+            try {
+                em.getEntityManagerFactory().getCache().evict(Usuario.class, usuarioId);
+            } catch (Exception e) {
+                System.err.println("Error al evadir cache L2: " + e.getMessage());
+            }
         }
     }
 }

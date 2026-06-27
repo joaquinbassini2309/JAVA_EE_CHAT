@@ -138,6 +138,11 @@ class ServicioAPI {
     return data
   }
 
+  async eliminarConversacion(idConversacion) {
+    const { data } = await this.cliente.delete(`/conversaciones/${idConversacion}`)
+    return data
+  }
+
   async añadirParticipante(idConversacion, idUsuario) {
     const { data } = await this.cliente.post(`/conversaciones/${idConversacion}/participantes`, {
       usuarioId: idUsuario
@@ -292,6 +297,30 @@ class ServicioAPI {
 
     ws.onclose = (ev) => {
       console.log('WebSocket cerrado', ev.code, ev.reason)
+    }
+
+    return ws
+  }
+
+  conectarPresenciaWebSocket(idUsuario, token) {
+    const rawToken = (token && token.value) ? token.value : token;
+    const encoded = rawToken ? encodeURIComponent(rawToken) : '';
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const url = `${protocol}//${window.location.host}${contextPath}/ws/presencia/${idUsuario}` + (encoded ? `?token=${encoded}` : '')
+    console.log('Intentando conectar WebSocket de Presencia a:', url)
+
+    const ws = new WebSocket(url)
+
+    ws.onopen = () => {
+      console.log('WebSocket de Presencia conectado')
+    }
+
+    ws.onerror = (error) => {
+      console.error('Error WebSocket de Presencia:', error)
+    }
+
+    ws.onclose = (ev) => {
+      console.log('WebSocket de Presencia cerrado', ev.code, ev.reason)
     }
 
     return ws

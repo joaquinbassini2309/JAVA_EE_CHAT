@@ -163,12 +163,19 @@ export const useAlmacen = defineStore('principal', () => {
   function actualizarEstadoUsuario(idUsuario, nuevoEstado) {
     conversaciones.value.forEach(conv => {
       if (conv.participantes) {
-        const participante = conv.participantes.find(p => p.id === idUsuario)
-        if (participante) {
-          participante.estado = nuevoEstado
+        const participante = conv.participantes.find(p => p.usuario && p.usuario.id === idUsuario)
+        if (participante && participante.usuario) {
+          participante.usuario.estado = nuevoEstado
         }
       }
     })
+    // Forzar actualización reactiva de la conversación actual si está abierta
+    if (conversacionActual.value && conversacionActual.value.participantes) {
+      const p = conversacionActual.value.participantes.find(p => p.usuario && p.usuario.id === idUsuario)
+      if (p && p.usuario) {
+        p.usuario.estado = nuevoEstado
+      }
+    }
   }
 
   function actualizarInfoConversacion(conversacionId, nombre, fotoUrl, imagenBanner) {
@@ -273,7 +280,7 @@ export const useAlmacen = defineStore('principal', () => {
   }
 
   // ========== NUEVO: ESTADO DE TAREAS Y PANELES ==========
-  const panelTareasAbierto = ref(true)
+  const panelTareasAbierto = ref(window.innerWidth >= 960)
   const tareas = ref([])
 
   function togglePanelTareas() {

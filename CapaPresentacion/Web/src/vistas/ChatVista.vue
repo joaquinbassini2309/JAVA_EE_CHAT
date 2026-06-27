@@ -1,16 +1,20 @@
 <template>
   <v-app class="chat-app-root">
-    <v-main style="height: 100vh; overflow: hidden; display: flex; flex-direction: column;">
+    <v-main style="height: 100dvh; overflow: hidden; display: flex; flex-direction: column;">
       <v-container fluid class="pa-2 pa-md-4" style="height: 100%; display: flex; flex-direction: column; min-height: 0;">
         <v-sheet elevation="0" rounded="xl" border style="height: 100%; display: flex; flex-direction: column; overflow: hidden; min-height: 0;">
           
           <!-- Vista móvil -->
-          <div v-if="esModoMovil && !conversacionActual" style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
-            <ListaConversaciones />
+          <div v-if="esModoMovil && panelTareasAbierto" style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
+            <PanelTareas />
           </div>
 
-          <div v-if="esModoMovil && conversacionActual" style="flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-rows: 1fr;">
+          <div v-else-if="esModoMovil && conversacionActual" style="flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-rows: 1fr;">
             <Chat />
+          </div>
+
+          <div v-else-if="esModoMovil" style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
+            <ListaConversaciones />
           </div>
 
           <!-- Vista desktop -->
@@ -68,12 +72,29 @@ const detectarTipoVista = () => {
   esModoMovil.value = window.innerWidth < 960
 }
 
-onMounted(async () => {
-  if (!almacen.estaAutenticado) {
-    router.push('/login')
-    return
+const handlePopState = (event) => {
+  if (esModoMovil.value) {
+    if (panelTareasAbierto.value) {
+      almacen.togglePanelTareas()
+    } else if (conversacionActual.value) {
+      almacen.establecerConversacionActual(null)
+    }
   }
+}
 
+watch(conversacionActual, (newVal) => {
+  if (esModoMovil.value && newVal) {
+    window.history.pushState({ appNav: 'chat' }, '')
+  }
+})
+
+watch(panelTareasAbierto, (newVal) => {
+  if (esModoMovil.value && newVal) {
+    window.history.pushState({ appNav: 'tareas' }, '')
+  }
+})
+
+onMounted(async () => {
   try {
     almacen.establecerCargando(true)
     const conversaciones = await servicioApi.obtenerConversaciones()
@@ -87,11 +108,13 @@ onMounted(async () => {
   // Detectar tipo de vista
   detectarTipoVista()
   window.addEventListener('resize', detectarTipoVista)
+  window.addEventListener('popstate', handlePopState)
 })
 
 // Limpiar event listeners cuando se desmonta el componente
 onUnmounted(() => {
   window.removeEventListener('resize', detectarTipoVista)
+  window.removeEventListener('popstate', handlePopState)
 })
 </script>
 

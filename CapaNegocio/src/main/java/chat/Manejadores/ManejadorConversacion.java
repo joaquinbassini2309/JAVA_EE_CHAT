@@ -72,4 +72,13 @@ public class ManejadorConversacion {
         q.setParameter("tipo", TipoConversacion.AVISO);
         return q.getResultList();
     }
+
+    public void eliminarConversacion(Long id) {
+        Conversacion c = em.find(Conversacion.class, id);
+        if (c != null) {
+            c.setMensajeFijado(null);
+            em.flush();
+            em.remove(c);
+        }
+    }
 }
