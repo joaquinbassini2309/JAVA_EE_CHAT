@@ -142,7 +142,7 @@
             size="x-small"
             color="white"
             class="ml-1 btn-eliminar-carpeta"
-            @click.stop="eliminarGrupoConversacion(grupo)"
+            @click.stop="confirmarEliminarGrupoConversacion(grupo)"
           />
         </button>
         <button class="carpeta-pill btn-crear-carpeta" @click="abrirCrearGrupoConversacion">
@@ -604,6 +604,40 @@
       </v-card>
     </v-dialog>
 
+    <!-- Modal Confirmar Eliminar Carpeta / Grupo de Conversaciones -->
+    <v-dialog v-model="mostrarModalEliminarGrupo" max-width="400">
+      <v-card rounded="xl" style="background: #1c1a1d; padding: 24px; font-family: 'Inter', sans-serif;">
+        <v-card-text style="padding: 0; text-align: left; color: #e4e4e4;">
+          <strong style="display: block; font-size: 16px; margin-bottom: 12px; font-weight: 700; color: #ffffff;">java-ee-chat.duckdns.org dice</strong>
+          <div style="font-size: 14.5px; line-height: 1.5; margin-bottom: 28px;">
+            ¿Estás seguro de que deseas eliminar el grupo "{{ grupoAEliminar }}"? Las conversaciones no se borrarán.
+          </div>
+        </v-card-text>
+        <v-card-actions class="d-flex justify-end px-0 pb-0" style="gap: 12px;">
+          <v-btn
+              variant="flat"
+              rounded="pill"
+              class="font-weight-bold px-6"
+              style="background-color: #f6cce6; text-transform: none; color: #6a1a55; border: 2px solid #000; box-shadow: 0 0 0 1px #f6cce6;"
+              height="42"
+              @click="procederEliminarGrupo"
+          >
+            Aceptar
+          </v-btn>
+          <v-btn
+              variant="flat"
+              rounded="pill"
+              class="font-weight-bold px-6"
+              style="background-color: #6d3a5f; text-transform: none; color: #ffffff;"
+              height="42"
+              @click="cerrarModalEliminarGrupo"
+          >
+            Cancelar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </div>
 </template>
 
@@ -685,6 +719,9 @@ const grupoFiltroActivo = ref(null)
 const mostrarModalCrearGrupo = ref(false)
 const nombreNuevoGrupo = ref('')
 const conversacionIdParaNuevoGrupo = ref(null)
+
+const mostrarModalEliminarGrupo = ref(false)
+const grupoAEliminar = ref(null)
 
 const obtenerLlaveGrupos = () => {
   const userId = almacen.usuarioActual?.id || 'invitado'
@@ -781,8 +818,19 @@ const crearGrupoConversacion = () => {
   conversacionIdParaNuevoGrupo.value = null
 }
 
-const eliminarGrupoConversacion = (grupo) => {
-  if (confirm(`¿Estás seguro de que deseas eliminar el grupo "${grupo}"? Las conversaciones no se borrarán.`)) {
+const confirmarEliminarGrupoConversacion = (grupo) => {
+  grupoAEliminar.value = grupo
+  mostrarModalEliminarGrupo.value = true
+}
+
+const cerrarModalEliminarGrupo = () => {
+  mostrarModalEliminarGrupo.value = false
+  grupoAEliminar.value = null
+}
+
+const procederEliminarGrupo = () => {
+  const grupo = grupoAEliminar.value
+  if (grupo) {
     gruposDeConversacion.value = gruposDeConversacion.value.filter(g => g !== grupo)
     
     Object.keys(mapaConversacionesGrupos.value).forEach(id => {
@@ -797,6 +845,7 @@ const eliminarGrupoConversacion = (grupo) => {
       grupoFiltroActivo.value = null
     }
   }
+  cerrarModalEliminarGrupo()
 }
 
 watch(() => almacen.usuarioActual, () => {

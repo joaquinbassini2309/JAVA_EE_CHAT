@@ -1088,7 +1088,11 @@ const irAlMensaje = async (mensajeId) => {
 }
 
 const cerrarConversacion = () => {
-  almacen.establecerConversacionActual(null)
+  if (window.innerWidth < 960) {
+    window.history.back()
+  } else {
+    almacen.establecerConversacionActual(null)
+  }
 }
 
 watch(conversacionActual, (nueva, vieja) => {
