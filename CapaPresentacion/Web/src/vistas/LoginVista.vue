@@ -135,12 +135,12 @@ const manejarRespuestaGoogle = async (response) => {
 const inicializarGoogle = () => {
   if (window.google) {
     window.google.accounts.id.initialize({
-      client_id: '623580687397-vd3dbk2u500dsda1tiact908fc4lq9s7.apps.googleusercontent.com',
+      client_id: '194864765404-658569mqh83fmf7tkr8skp86tmf1224c.apps.googleusercontent.com',
       callback: manejarRespuestaGoogle
     })
     window.google.accounts.id.renderButton(
       document.getElementById('googleBtn'),
-      { theme: almacen.temaOscuro ? 'filled_blue' : 'outline', size: 'large', width: '100%' }
+      { theme: almacen.temaOscuro ? 'filled_blue' : 'outline', size: 'large' }
     )
   }
 }
