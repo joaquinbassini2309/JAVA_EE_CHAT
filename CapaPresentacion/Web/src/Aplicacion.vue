@@ -32,25 +32,68 @@ import { servicioApi } from '@/servicios/api'
 const almacen = useAlmacen()
 const theme = useTheme()
 
-// WebSocket global de presencia
+// WebSocket global de presencia y su intervalo
 const wsPresencia = ref(null)
+let intervaloPing = null
+let timeoutReconexion = null
+
+const conectarPresencia = () => {
+  if (!almacen.estaAutenticado || !almacen.usuarioActual || !almacen.token) return
+
+  // Limpiar estados anteriores
+  if (wsPresencia.value) {
+    try { wsPresencia.value.close() } catch (e) {}
+  }
+  clearInterval(intervaloPing)
+  clearTimeout(timeoutReconexion)
+
+  const ws = servicioApi.conectarPresenciaWebSocket(almacen.usuarioActual.id, almacen.token)
+  wsPresencia.value = ws
+
+  ws.onopen = () => {
+    console.log('WebSocket de Presencia conectado globalmente')
+    // Iniciar ping cada 20 segundos para evitar timeout de inactividad de Wildfly/Nginx
+    intervaloPing = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send('ping')
+      }
+    }, 20000)
+  }
+
+  ws.onmessage = (event) => {
+    try {
+      if (event.data === 'pong') return
+      const msg = JSON.parse(event.data)
+      if (msg.tipo === 'PRESENCIA') {
+        almacen.actualizarEstadoUsuario(msg.usuarioId, msg.estado)
+      }
+    } catch (err) {
+      console.error('Error procesando mensaje de presencia WS:', err)
+    }
+  }
+
+  ws.onclose = (ev) => {
+    console.log('WebSocket de Presencia cerrado:', ev.code, ev.reason)
+    clearInterval(intervaloPing)
+    // Reconectar si sigue autenticado tras 3 segundos
+    if (almacen.estaAutenticado) {
+      timeoutReconexion = setTimeout(() => {
+        conectarPresencia()
+      }, 3000)
+    }
+  }
+
+  ws.onerror = (err) => {
+    console.error('Error en WebSocket de Presencia:', err)
+  }
+}
 
 watch(() => almacen.estaAutenticado, (autenticado) => {
   if (autenticado) {
-    if (!wsPresencia.value && almacen.usuarioActual && almacen.token) {
-      wsPresencia.value = servicioApi.conectarPresenciaWebSocket(almacen.usuarioActual.id, almacen.token)
-      wsPresencia.value.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data)
-          if (msg.tipo === 'PRESENCIA') {
-            almacen.actualizarEstadoUsuario(msg.usuarioId, msg.estado)
-          }
-        } catch (err) {
-          console.error('Error procesando mensaje de presencia WS:', err)
-        }
-      }
-    }
+    conectarPresencia()
   } else {
+    clearInterval(intervaloPing)
+    clearTimeout(timeoutReconexion)
     if (wsPresencia.value) {
       wsPresencia.value.close()
       wsPresencia.value = null

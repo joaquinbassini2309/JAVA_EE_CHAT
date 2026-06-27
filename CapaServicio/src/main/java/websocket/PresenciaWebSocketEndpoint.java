@@ -82,6 +82,19 @@ public class PresenciaWebSocketEndpoint {
         System.err.println("Error en WebSocket de presencia: " + excepcion.getMessage());
     }
 
+    @jakarta.websocket.OnMessage
+    public void alRecibirMensaje(String mensaje, Session sesion) {
+        if ("ping".equals(mensaje)) {
+            try {
+                if (sesion.isOpen()) {
+                    sesion.getAsyncRemote().sendText("pong");
+                }
+            } catch (Exception e) {
+                // Silenciar
+            }
+        }
+    }
+
     private void difundirEstadoGlobal(Long idUsuario, boolean conectado) {
         try {
             Map<String, Object> notificacion = new HashMap<>();
