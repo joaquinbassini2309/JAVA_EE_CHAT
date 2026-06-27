@@ -71,13 +71,12 @@ public class ChatWebSocketEndpoint {
                 return;
             }
 
+
+            // Sessions registration (Presence managed globally)
             sesionesActivas
                 .computeIfAbsent(idConversacion, k -> new ConcurrentHashMap<>())
                 .computeIfAbsent(idUsuario, k -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
                 .add(sesion);
-
-            // Actualizar estado del usuario a ONLINE
-            sistema.actualizarEstadoUsuario(idUsuario, EstadoUsuario.ONLINE);
 
             // Notificar a otros usuarios en la conversación
             notificarConexionDesconexion(idConversacion, idUsuario, true);
@@ -139,11 +138,6 @@ public class ChatWebSocketEndpoint {
                         usuariosMap.remove(idUsuario);
                         if (usuariosMap.isEmpty()) {
                             sesionesActivas.remove(idConversacion);
-                        }
-
-                        // Si no hay más sesiones del usuario, actualizar estado a OFFLINE
-                        if (!tieneOtrasSesionesActivas(idUsuario)) {
-                            sistema.actualizarEstadoUsuario(idUsuario, EstadoUsuario.OFFLINE);
                         }
 
                         // Notificar desconexión

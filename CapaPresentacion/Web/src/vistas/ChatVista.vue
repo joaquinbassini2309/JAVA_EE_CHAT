@@ -94,10 +94,17 @@ watch(panelTareasAbierto, (newVal) => {
   }
 })
 
+const wsPresencia = ref(null)
+
 onMounted(async () => {
   if (!almacen.estaAutenticado) {
     router.push('/login')
     return
+  }
+
+  // Conectar al WebSocket de presencia
+  if (almacen.usuarioActual && almacen.token) {
+    wsPresencia.value = servicioApi.conectarPresenciaWebSocket(almacen.usuarioActual.id, almacen.token)
   }
 
   try {
@@ -120,6 +127,9 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('resize', detectarTipoVista)
   window.removeEventListener('popstate', handlePopState)
+  if (wsPresencia.value) {
+    wsPresencia.value.close()
+  }
 })
 </script>
 
