@@ -2,6 +2,7 @@ package chat.Manejadores;
 
 import chat.Enum.TipoConversacion;
 import chat.clases.Conversacion;
+import chat.clases.Participante;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -43,16 +44,27 @@ public class ManejadorConversacion {
 
     public Optional<Conversacion> buscarChatPrivadoEntre(Long usuario1Id, Long usuario2Id) {
         TypedQuery<Conversacion> q = em.createQuery(
-                "SELECT c FROM Conversacion c " +
-                "WHERE c.tipo = :tipo " +
-                "AND EXISTS (SELECT p1 FROM Participante p1 WHERE p1.conversacion = c AND p1.usuario.id = :u1) " +
-                "AND EXISTS (SELECT p2 FROM Participante p2 WHERE p2.conversacion = c AND p2.usuario.id = :u2) " +
-                "AND (SELECT COUNT(p) FROM Participante p WHERE p.conversacion = c) = 2",
+                "SELECT DISTINCT p.conversacion FROM Participante p " +
+                "WHERE p.usuario.id = :u1 " +
+                "AND p.conversacion.tipo = :tipo",
                 Conversacion.class);
-        q.setParameter("tipo", TipoConversacion.PRIVADA);
         q.setParameter("u1", usuario1Id);
-        q.setParameter("u2", usuario2Id);
-        return q.getResultList().stream().findFirst();
+        q.setParameter("tipo", TipoConversacion.PRIVADA);
+        List<Conversacion> privadas = q.getResultList();
+
+        for (Conversacion c : privadas) {
+            boolean tieneU2 = false;
+            for (Participante p : c.getParticipantes()) {
+                if (p.getUsuario().getId().equals(usuario2Id)) {
+                    tieneU2 = true;
+                    break;
+                }
+            }
+            if (tieneU2 && c.getParticipantes().size() == 2) {
+                return Optional.of(c);
+            }
+        }
+        return Optional.empty();
     }
 
     public void actualizarInfo(Long conversacionId, String nuevoNombre, String fotoUrl, String imagenBanner) {

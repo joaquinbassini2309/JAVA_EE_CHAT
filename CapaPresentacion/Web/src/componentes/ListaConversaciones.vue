@@ -610,25 +610,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <!-- Modal Confirmar Eliminación de Carpeta / Grupo de Conversaciones -->
-    <v-dialog v-model="mostrarModalConfirmarEliminarGrupo" max-width="380">
-      <v-card rounded="2xl" class="modal-nueva-conv">
-        <v-card-title class="modal-titulo-conv" style="background: linear-gradient(135deg, #d32f2f 0%, #e57373 100%) !important;">
-          <v-icon size="18" color="white" class="mr-2">mdi-alert-circle-outline</v-icon>
-          Eliminar Grupo de Chats
-          <v-spacer />
-          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="mostrarModalConfirmarEliminarGrupo = false" />
-        </v-card-title>
-        <v-card-text class="modal-contenido-conv" style="padding: 20px 16px !important; color: var(--text-primary);">
-          ¿Estás seguro de que deseas eliminar el grupo <strong>{{ grupoAEliminar }}</strong>? Las conversaciones no se borrarán.
-        </v-card-text>
-        <v-card-actions class="modal-acciones-conv">
-          <v-spacer></v-spacer>
-          <v-btn variant="text" @click="mostrarModalConfirmarEliminarGrupo = false">Cancelar</v-btn>
-          <v-btn color="error" variant="flat" @click="confirmarEliminarGrupoConversacion">Eliminar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
 
     <!-- Modal Confirmar Eliminar Carpeta / Grupo de Conversaciones -->
     <v-dialog v-model="mostrarModalEliminarGrupo" max-width="400">
@@ -785,9 +766,6 @@ const grupoFiltroActivo = ref(null)
 const mostrarModalCrearGrupo = ref(false)
 const nombreNuevoGrupo = ref('')
 const conversacionIdParaNuevoGrupo = ref(null)
-const mostrarModalConfirmarEliminarGrupo = ref(false)
-const grupoAEliminar = ref('')
-
 const mostrarModalEliminarGrupo = ref(false)
 const grupoAEliminar = ref(null)
 
@@ -890,15 +868,20 @@ const crearGrupoConversacion = () => {
   conversacionIdParaNuevoGrupo.value = null
 }
 
-const eliminarGrupoConversacion = (grupo) => {
+const confirmarEliminarGrupoConversacion = (grupo) => {
   grupoAEliminar.value = grupo
-  mostrarModalConfirmarEliminarGrupo.value = true
+  mostrarModalEliminarGrupo.value = true
 }
 
-const confirmarEliminarGrupoConversacion = () => {
+const cerrarModalEliminarGrupo = () => {
+  mostrarModalEliminarGrupo.value = false
+  grupoAEliminar.value = null
+}
+
+const procederEliminarGrupo = () => {
   const grupo = grupoAEliminar.value
   if (!grupo) return
-  
+
   gruposDeConversacion.value = gruposDeConversacion.value.filter(g => g !== grupo)
   
   Object.keys(mapaConversacionesGrupos.value).forEach(id => {
@@ -913,8 +896,43 @@ const confirmarEliminarGrupoConversacion = () => {
     grupoFiltroActivo.value = null
   }
   
-  mostrarModalConfirmarEliminarGrupo.value = false
-  grupoAEliminar.value = ''
+  cerrarModalEliminarGrupo()
+}
+
+const confirmarEliminarConversacion = (conversacion) => {
+  const nombreVisible = obtenerNombreVisibleConversacion(conversacion, usuarioActual.value?.id)
+  conversacionAEliminar.value = conversacion
+  mensajeConfirmarEliminarChat.value = conversacion.tipo === 'PRIVADA'
+    ? `¿Estás seguro de que deseas eliminar el chat con "${nombreVisible}"? Esta acción no se puede deshacer.`
+    : `¿Estás seguro de que deseas eliminar el grupo "${nombreVisible}"? Esta acción eliminará el grupo para todos los miembros y no se puede deshacer.`
+  mostrarModalEliminarChat.value = true
+}
+
+const cerrarModalEliminarChat = () => {
+  mostrarModalEliminarChat.value = false
+  conversacionAEliminar.value = null
+  mensajeConfirmarEliminarChat.value = ''
+}
+
+const procederEliminarConversacion = async () => {
+  const conversacion = conversacionAEliminar.value
+  if (!conversacion) return
+
+  try {
+    await servicioApi.eliminarConversacion(conversacion.id)
+
+    if (almacen.conversacionActual && almacen.conversacionActual.id === conversacion.id) {
+      almacen.establecerConversacionActual(null)
+    }
+
+    const conversaciones = await servicioApi.obtenerConversaciones()
+    almacen.establecerConversaciones(conversaciones)
+  } catch (error) {
+    console.error('Error al eliminar conversación:', error)
+    alert(error.response?.data?.mensaje || error.response?.data?.detalle || 'Error al eliminar la conversación.')
+  } finally {
+    cerrarModalEliminarChat()
+  }
 }
 
 watch(() => almacen.usuarioActual, () => {
@@ -1124,6 +1142,28 @@ const cerrarModal = () => {
 }
 
 const crearChatPrivado = async (idUsuario) => {
+  // Buscar si ya existe una conversación privada con ese usuario en nuestro almacén local
+  const existente = almacen.conversaciones.find(c => {
+    if (c.tipo !== 'PRIVADA') return false
+    
+    let otroId = null
+    if (c.participantes) {
+      const otro = c.participantes.find(p => p.usuario && p.usuario.id !== almacen.usuarioActual?.id)
+      if (otro && otro.usuario) otroId = otro.usuario.id
+    }
+    if (otroId === null && c.participanteIds) {
+      otroId = c.participanteIds.find(id => id !== almacen.usuarioActual?.id)
+    }
+    
+    return otroId === idUsuario
+  })
+
+  if (existente) {
+    almacen.establecerConversacionActual(existente)
+    cerrarModal()
+    return
+  }
+
   try {
     const nuevaConv = await servicioApi.crearConversacionPrivada(idUsuario)
     const existe = almacen.conversaciones.find(c => c.id === nuevaConv.id)
