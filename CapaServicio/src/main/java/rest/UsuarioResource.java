@@ -106,7 +106,7 @@ public class UsuarioResource {
             JsonNode root = mapper.readTree(response.body());
 
             String aud = root.path("aud").asText();
-            String clientId = "194864765404-658569mqh83fmf7tkr8skp86tmf1224c.apps.googleusercontent.com";
+            String clientId = "623580687397-vd3dbk2u500dsda1tiact908fc4lq9s7.apps.googleusercontent.com";
             if (!clientId.equals(aud)) {
                 return Response.status(Response.Status.UNAUTHORIZED)
                         .entity(new ErrorResponse(401, "Token audience mismatch")).build();
