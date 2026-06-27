@@ -575,7 +575,9 @@
           <v-icon size="18" color="white" class="mr-2">mdi-folder-plus</v-icon>
           Nuevo Grupo de Chats
           <v-spacer />
-          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="mostrarModalCrearGrupo = false" />
+          <v-btn icon variant="text" size="small" @click="mostrarModalCrearGrupo = false">
+            <v-icon color="white">mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-card-text class="modal-contenido-conv">
           <div class="modal-seccion-mejorada">
@@ -618,7 +620,9 @@
           <v-icon size="18" color="white" class="mr-2">mdi-folder-remove</v-icon>
           <span>Eliminar Carpeta</span>
           <v-spacer />
-          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="cerrarModalEliminarGrupo" />
+          <v-btn icon variant="text" size="small" @click="cerrarModalEliminarGrupo">
+            <v-icon color="white">mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
 
         <v-card-text class="modal-contenido-conv" style="background: var(--surface) !important; color: var(--text-primary) !important; padding: 24px 16px !important; font-size: 14px; line-height: 1.6;">
@@ -655,7 +659,9 @@
           <v-icon size="18" color="white" class="mr-2">mdi-delete-alert</v-icon>
           <span>Confirmar Eliminación</span>
           <v-spacer />
-          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="cerrarModalEliminarChat" />
+          <v-btn icon variant="text" size="small" @click="cerrarModalEliminarChat">
+            <v-icon color="white">mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         
         <v-card-text class="modal-contenido-conv" style="background: var(--surface) !important; color: var(--text-primary) !important; padding: 24px 16px !important; font-size: 14px; line-height: 1.6;">

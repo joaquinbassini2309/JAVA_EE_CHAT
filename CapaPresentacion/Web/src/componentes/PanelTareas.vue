@@ -110,15 +110,17 @@
           <v-icon size="18" color="white" class="mr-2">mdi-alert-circle-outline</v-icon>
           Eliminar Tarea
           <v-spacer />
-          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="mostrarModalEliminar = false" />
+          <v-btn icon variant="text" size="small" @click="mostrarModalEliminar = false">
+            <v-icon color="white">mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-card-text class="modal-contenido-tarea" style="padding: 20px 16px !important; color: var(--text-primary);">
           ¿Estás seguro de que deseas eliminar la tarea <strong>{{ tareaAEliminar?.titulo }}</strong>? Esta acción no se puede deshacer.
         </v-card-text>
         <v-card-actions class="modal-acciones-tarea">
           <v-spacer></v-spacer>
-          <v-btn variant="text" @click="mostrarModalEliminar = false">Cancelar</v-btn>
-          <v-btn color="error" variant="flat" @click="confirmarEliminarTarea">Eliminar</v-btn>
+          <v-btn variant="text" class="btn-cancelar-modal" @click="mostrarModalEliminar = false">Cancelar</v-btn>
+          <v-btn variant="flat" class="btn-eliminar-modal" @click="confirmarEliminarTarea">Eliminar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -130,7 +132,9 @@
           <v-icon size="18" color="white" class="mr-2">mdi-clipboard-plus-outline</v-icon>
           Nueva Tarea
           <v-spacer />
-          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="modalNuevaTarea = false" />
+          <v-btn icon variant="text" size="small" @click="modalNuevaTarea = false">
+            <v-icon color="white">mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-card-text class="modal-contenido-tarea">
           <div class="campo-grupo">
@@ -160,8 +164,8 @@
         </v-card-text>
         <v-card-actions class="modal-acciones-tarea">
           <v-spacer></v-spacer>
-          <v-btn variant="text" @click="modalNuevaTarea = false">Cancelar</v-btn>
-          <v-btn color="primary" variant="flat" :loading="guardando" @click="guardarNuevaTarea">Crear Tarea</v-btn>
+          <v-btn variant="text" class="btn-cancelar-modal" @click="modalNuevaTarea = false">Cancelar</v-btn>
+          <v-btn variant="flat" class="btn-confirmar-modal" :loading="guardando" @click="guardarNuevaTarea">Crear Tarea</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -699,6 +703,48 @@ const confirmarEliminarTarea = async () => {
 
 .btn-tarea-accion:hover .v-icon,
 .btn-tarea-accion:hover i {
+  color: #ffffff !important;
+}
+
+/* Estilos para los botones de las modales */
+.btn-cancelar-modal {
+  text-transform: none !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+  border-radius: 9999px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.btn-cancelar-modal:hover {
+  background-color: rgba(108, 160, 166, 0.08) !important;
+  color: var(--teal) !important;
+}
+
+.btn-confirmar-modal {
+  background-color: var(--teal) !important;
+  color: #ffffff !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+  border-radius: 9999px !important;
+  transition: background-color 0.2s ease, transform 0.1s ease !important;
+}
+
+.btn-confirmar-modal:hover {
+  background-color: var(--teal-hover) !important;
+  color: #ffffff !important;
+}
+
+.btn-eliminar-modal {
+  background-color: #ff5252 !important;
+  color: #ffffff !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+  border-radius: 9999px !important;
+  transition: background-color 0.2s ease, transform 0.1s ease !important;
+}
+
+.btn-eliminar-modal:hover {
+  background-color: #e53935 !important;
   color: #ffffff !important;
 }
 </style>
