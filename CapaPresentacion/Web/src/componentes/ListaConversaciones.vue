@@ -603,6 +603,25 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <!-- Modal Confirmar Eliminación de Carpeta / Grupo de Conversaciones -->
+    <v-dialog v-model="mostrarModalConfirmarEliminarGrupo" max-width="380">
+      <v-card rounded="2xl" class="modal-nueva-conv">
+        <v-card-title class="modal-titulo-conv" style="background: linear-gradient(135deg, #d32f2f 0%, #e57373 100%) !important;">
+          <v-icon size="18" color="white" class="mr-2">mdi-alert-circle-outline</v-icon>
+          Eliminar Grupo de Chats
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="mostrarModalConfirmarEliminarGrupo = false" />
+        </v-card-title>
+        <v-card-text class="modal-contenido-conv" style="padding: 20px 16px !important; color: var(--text-primary);">
+          ¿Estás seguro de que deseas eliminar el grupo <strong>{{ grupoAEliminar }}</strong>? Las conversaciones no se borrarán.
+        </v-card-text>
+        <v-card-actions class="modal-acciones-conv">
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="mostrarModalConfirmarEliminarGrupo = false">Cancelar</v-btn>
+          <v-btn color="error" variant="flat" @click="confirmarEliminarGrupoConversacion">Eliminar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
   </div>
 </template>
@@ -685,6 +704,8 @@ const grupoFiltroActivo = ref(null)
 const mostrarModalCrearGrupo = ref(false)
 const nombreNuevoGrupo = ref('')
 const conversacionIdParaNuevoGrupo = ref(null)
+const mostrarModalConfirmarEliminarGrupo = ref(false)
+const grupoAEliminar = ref('')
 
 const obtenerLlaveGrupos = () => {
   const userId = almacen.usuarioActual?.id || 'invitado'
@@ -782,21 +803,30 @@ const crearGrupoConversacion = () => {
 }
 
 const eliminarGrupoConversacion = (grupo) => {
-  if (confirm(`¿Estás seguro de que deseas eliminar el grupo "${grupo}"? Las conversaciones no se borrarán.`)) {
-    gruposDeConversacion.value = gruposDeConversacion.value.filter(g => g !== grupo)
-    
-    Object.keys(mapaConversacionesGrupos.value).forEach(id => {
-      if (mapaConversacionesGrupos.value[id] === grupo) {
-        delete mapaConversacionesGrupos.value[id]
-      }
-    })
-    
-    guardarGruposLocalStorage()
-    
-    if (grupoFiltroActivo.value === grupo) {
-      grupoFiltroActivo.value = null
+  grupoAEliminar.value = grupo
+  mostrarModalConfirmarEliminarGrupo.value = true
+}
+
+const confirmarEliminarGrupoConversacion = () => {
+  const grupo = grupoAEliminar.value
+  if (!grupo) return
+  
+  gruposDeConversacion.value = gruposDeConversacion.value.filter(g => g !== grupo)
+  
+  Object.keys(mapaConversacionesGrupos.value).forEach(id => {
+    if (mapaConversacionesGrupos.value[id] === grupo) {
+      delete mapaConversacionesGrupos.value[id]
     }
+  })
+  
+  guardarGruposLocalStorage()
+  
+  if (grupoFiltroActivo.value === grupo) {
+    grupoFiltroActivo.value = null
   }
+  
+  mostrarModalConfirmarEliminarGrupo.value = false
+  grupoAEliminar.value = ''
 }
 
 watch(() => almacen.usuarioActual, () => {

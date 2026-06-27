@@ -103,6 +103,26 @@
       </div>
     </div>
 
+    <!-- Modal Confirmar Eliminación de Tarea -->
+    <v-dialog v-model="mostrarModalEliminar" max-width="400">
+      <v-card rounded="xl" class="modal-nueva-tarea">
+        <v-card-title class="modal-titulo-tarea" style="background: linear-gradient(135deg, #d32f2f 0%, #e57373 100%) !important;">
+          <v-icon size="18" color="white" class="mr-2">mdi-alert-circle-outline</v-icon>
+          Eliminar Tarea
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" size="small" color="white" @click="mostrarModalEliminar = false" />
+        </v-card-title>
+        <v-card-text class="modal-contenido-tarea" style="padding: 20px 16px !important; color: var(--text-primary);">
+          ¿Estás seguro de que deseas eliminar la tarea <strong>{{ tareaAEliminar?.titulo }}</strong>? Esta acción no se puede deshacer.
+        </v-card-text>
+        <v-card-actions class="modal-acciones-tarea">
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="mostrarModalEliminar = false">Cancelar</v-btn>
+          <v-btn color="error" variant="flat" @click="confirmarEliminarTarea">Eliminar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Modal Nueva Tarea Premium -->
     <v-dialog v-model="modalNuevaTarea" max-width="450">
       <v-card rounded="xl" class="modal-nueva-tarea">
@@ -159,6 +179,8 @@ const mostrarBusqueda = ref(false)
 const tabActual = ref('PENDIENTE') // PENDIENTE, COMPLETADA, ATRASADA
 const modalNuevaTarea = ref(false)
 const guardando = ref(false)
+const mostrarModalEliminar = ref(false)
+const tareaAEliminar = ref(null)
 
 const nuevaTarea = ref({
   titulo: '',
@@ -303,13 +325,21 @@ const cambiarEstado = async (tarea, nuevoEstado) => {
   }
 }
 
-const eliminarTarea = async (tarea) => {
-  if (!confirm('¿Seguro que deseas eliminar esta tarea?')) return
+const eliminarTarea = (tarea) => {
+  tareaAEliminar.value = tarea
+  mostrarModalEliminar.value = true
+}
+
+const confirmarEliminarTarea = async () => {
+  if (!tareaAEliminar.value) return
   try {
-    await servicioApi.eliminarTarea(tarea.id, almacen.usuarioActual.id)
-    almacen.tareas = almacen.tareas.filter(t => t.id !== tarea.id)
+    await servicioApi.eliminarTarea(tareaAEliminar.value.id, almacen.usuarioActual.id)
+    almacen.tareas = almacen.tareas.filter(t => t.id !== tareaAEliminar.value.id)
   } catch (error) {
     console.error("Error eliminando tarea", error)
+  } finally {
+    mostrarModalEliminar.value = false
+    tareaAEliminar.value = null
   }
 }
 </script>
@@ -360,9 +390,23 @@ const eliminarTarea = async (tarea) => {
   background-color: var(--surface);
   color: var(--teal);
   cursor: pointer;
-  outline: none;
+  outline: none !important;
   transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
   box-sizing: border-box;
+}
+
+.btn-cabecera-accion:focus,
+.btn-cabecera-accion:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--teal-glow) !important;
+  border-color: var(--teal) !important;
+}
+
+.btn-cabecera-accion.btn-close-panel:focus,
+.btn-cabecera-accion.btn-close-panel:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.2) !important;
+  border-color: #d32f2f !important;
 }
 
 .btn-cabecera-accion:hover {
@@ -622,9 +666,16 @@ const eliminarTarea = async (tarea) => {
   background-color: var(--surface);
   color: var(--teal);
   cursor: pointer;
-  outline: none;
+  outline: none !important;
   transition: background-color 0.2s, color 0.2s, transform 0.15s ease, border-color 0.2s;
   box-sizing: border-box;
+}
+
+.btn-tarea-accion:focus,
+.btn-tarea-accion:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--teal-glow) !important;
+  border-color: var(--teal) !important;
 }
 
 .btn-tarea-accion:hover {
