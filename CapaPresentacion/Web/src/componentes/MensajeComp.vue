@@ -135,6 +135,7 @@ import { computed, ref } from 'vue'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 import { formatearFecha, formatearHora } from '@/utilidades/formateoFechas'
+import DOMPurify from 'dompurify'
 
 const props = defineProps({
   mensaje: {
@@ -178,10 +179,10 @@ const contenidoFormateado = computed(() => {
   
   const regexMencion = new RegExp(`@(${partes.join('|')})`, 'g')
   texto = texto.replace(regexMencion, (match) => {
-    return `<span style="color: #00bcd4 !important; font-weight: 600; background-color: rgba(0, 188, 212, 0.08); padding: 1px 4px; border-radius: 4px; display: inline-block;">${match}</span>`
+    return `<span class="mencion-resaltada">${match}</span>`
   })
   
-  return texto
+  return DOMPurify.sanitize(texto)
 })
 
 const propio = computed(() => props.mensaje.emisorId === usuarioActual.value?.id)
@@ -338,6 +339,15 @@ const handleWheel = (e) => {
   align-items: center;
   justify-content: center;
   letter-spacing: 0.01em;
+}
+
+:deep(.mencion-resaltada) {
+  color: #00bcd4 !important;
+  font-weight: 600;
+  background-color: rgba(0, 188, 212, 0.08);
+  padding: 1px 4px;
+  border-radius: 4px;
+  display: inline-block;
 }
 
 .mensaje-root {

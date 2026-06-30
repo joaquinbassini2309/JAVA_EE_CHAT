@@ -1,14 +1,15 @@
 package seguridad;
 
 import chat.Sistema.ISistema;
-import com.auth0.jwt.exceptions.JWTVerificationException;
+import chat.clases.Usuario;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.SecurityContext;
 
-import java.lang.reflect.Method;
-import java.util.Optional;
-
+/**
+ * Servicio de autenticación.
+ * Resuelve el userId del SecurityContext directamente desde el principal numérico del JWT.
+ */
 @ApplicationScoped
 public class AuthService {
 
@@ -18,46 +19,27 @@ public class AuthService {
     @Inject
     private JWTUtil jwtUtil;
 
+    @Inject
+    private chat.Manejadores.ManejadorTokenBlacklist blacklistHandler;
+
     /**
-     * Obtiene el id del usuario autenticado o null si no está autenticado.
-     * - Intenta parsear el nombre del principal como Long.
-     * - Si falla, consulta ISistema.buscarUsuarioPorUsername(username) y usa reflexión para obtener getId().
+     * Obtiene el id del usuario autenticado a partir del SecurityContext.
+     * El principal del JWT siempre es el userId numérico (ver JWTFilter).
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public Long getAuthenticatedUserId(SecurityContext sc) {
         if (sc == null || sc.getUserPrincipal() == null) return null;
         String principalName = sc.getUserPrincipal().getName();
         if (principalName == null || principalName.isBlank()) return null;
 
-        // Intentar parsear como id numérico
+        // El principal es siempre el userId numérico — sin reflexión.
         try {
             return Long.parseLong(principalName);
-        } catch (NumberFormatException ignored) {
-            // no es numérico -> intentar resolver por username
+        } catch (NumberFormatException e) {
+            return null;
         }
-
-        try {
-            Optional userOpt = sistema.buscarUsuarioPorUsername(principalName); // raw Optional para evitar incompatibilidades de tipo
-            if (userOpt != null && userOpt.isPresent()) {
-                Object user = userOpt.get();
-                if (user == null) return null;
-                try {
-                    Method m = user.getClass().getMethod("getId");
-                    Object idVal = m.invoke(user);
-                    if (idVal instanceof Number) {
-                        return ((Number) idVal).longValue();
-                    }
-                } catch (NoSuchMethodException nsme) {
-                    // si no existe getId(), no se puede resolver
-                }
-            }
-        } catch (Exception e) {
-            // Silenciar excepciones para no romper el flujo; el recurso REST manejará el caso null
-        }
-        return null;
     }
 
-    /** Devuelve el nombre del principal (username) si está presente */
+    /** Devuelve el nombre del principal si está presente. */
     public String getAuthenticatedUsername(SecurityContext sc) {
         if (sc == null || sc.getUserPrincipal() == null) return null;
         String principalName = sc.getUserPrincipal().getName();
@@ -65,9 +47,7 @@ public class AuthService {
     }
 
     /**
-     * Extrae el token JWT del header Authorization (formato Bearer token)
-     * @param encabezadoAutorizacion Valor del header Authorization
-     * @return Token sin prefijo "Bearer " o null si no existe
+     * Extrae el token JWT del header Authorization (formato Bearer token).
      */
     public String extraerTokenDelEncabezado(String encabezadoAutorizacion) {
         if (encabezadoAutorizacion == null || encabezadoAutorizacion.isBlank()) return null;
@@ -76,9 +56,7 @@ public class AuthService {
     }
 
     /**
-     * Valida un token JWT y extrae el ID del usuario
-     * @param token Token JWT
-     * @return ID del usuario o null si el token es inválido
+     * Valida un token JWT y extrae el ID del usuario.
      */
     public Long validarTokenYExtraerIdUsuario(String token) {
         if (token == null || token.isBlank()) return null;
@@ -90,9 +68,7 @@ public class AuthService {
     }
 
     /**
-     * Valida un token JWT y extrae el nombre de usuario
-     * @param token Token JWT
-     * @return Nombre de usuario o null si el token es inválido
+     * Valida un token JWT y extrae el nombre de usuario.
      */
     public String validarTokenYExtraerNombreUsuario(String token) {
         if (token == null || token.isBlank()) return null;
@@ -104,12 +80,10 @@ public class AuthService {
     }
 
     /**
-     * Verifica si un token JWT es válido
-     * @param token Token JWT
-     * @return true si el token es válido y no ha expirado
+     * Verifica si un token JWT es válido y no está en la blacklist.
      */
     public boolean esTokenValido(String token) {
         if (token == null || token.isBlank()) return false;
-        return jwtUtil.esValido(token);
+        return jwtUtil.esValido(token) && !blacklistHandler.estaInvalidado(token);
     }
 }

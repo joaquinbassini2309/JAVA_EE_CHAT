@@ -183,15 +183,20 @@ public class ManejadorMensaje {
     }
 
     public Long contarMencionesSinLeer(Long conversacionId, Long usuarioId, String username) {
+        // Escapar wildcards LIKE para evitar inyección de patrones SQL.
+        String usernameSafe = username
+            .replace("\\", "\\\\")
+            .replace("%", "\\%")
+            .replace("_", "\\_");
         TypedQuery<Long> q = em.createQuery(
                 "SELECT COUNT(m) FROM Mensaje m WHERE m.conversacion.id = :cid " +
                 "AND m.emisor.id != :uid " +
                 "AND NOT EXISTS (SELECT 1 FROM MensajeLectura ml WHERE ml.mensaje.id = m.id AND ml.usuario.id = :uid) " +
-                "AND (m.contenido LIKE :mention OR m.contenido LIKE :todos)",
+                "AND (m.contenido LIKE :mention ESCAPE '\\\\' OR m.contenido LIKE :todos)",
                 Long.class);
         q.setParameter("cid", conversacionId);
         q.setParameter("uid", usuarioId);
-        q.setParameter("mention", "%@" + username + "%");
+        q.setParameter("mention", "%@" + usernameSafe + "%");
         q.setParameter("todos", "%@todos%");
         return q.getSingleResult();
     }

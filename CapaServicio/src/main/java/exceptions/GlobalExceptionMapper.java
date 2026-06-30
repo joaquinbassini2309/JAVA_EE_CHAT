@@ -69,11 +69,11 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
                     tipoError
             );
         } else {
-            // Error genérico
+            // Error genérico — nunca exponer clase ni mensaje de la excepción al cliente.
             errorResponse = new ErrorResponse(
                     status,
                     "Error interno del servidor",
-                    exception.getClass().getSimpleName() + ": " + exception.getMessage(),
+                    null,
                     tipoError
             );
         }

@@ -11,20 +11,19 @@ public class ChatWebSocketConfigurator extends ServerEndpointConfig.Configurator
 
     @Override
     public void modifyHandshake(ServerEndpointConfig configuacion,
-                                HandshakeRequest solicitudApretonde,
-                                HandshakeResponse respuestaApretonde) {
+                                 HandshakeRequest solicitudApretonde,
+                                 HandshakeResponse respuestaApretonde) {
         try {
-            // Extraer token del header Authorization
-            java.util.List<String> encabezadosAuth = solicitudApretonde.getHeaders()
-                    .get("Authorization");
+            // Extraer token del header Sec-WebSocket-Protocol
+            java.util.List<String> protocolos = solicitudApretonde.getHeaders()
+                    .get("Sec-WebSocket-Protocol");
 
-            if (encabezadosAuth != null && !encabezadosAuth.isEmpty()) {
-                String encabezado = encabezadosAuth.get(0);
-                if (encabezado.startsWith("Bearer ")) {
-                    String token = encabezado.substring("Bearer ".length());
-                    // Pasar el token a la sesión para validarlo después
-                    configuacion.getUserProperties().put("token", token);
-                }
+            if (protocolos != null && !protocolos.isEmpty()) {
+                String token = protocolos.get(0).trim();
+                // Pasar el token a la sesión para validarlo después
+                configuacion.getUserProperties().put("token", token);
+                // Establecer el protocolo de respuesta para evitar desconexiones por parte del navegador
+                respuestaApretonde.getHeaders().put("Sec-WebSocket-Protocol", java.util.List.of(token));
             }
         } catch (Exception e) {
             System.err.println("Error al extraer token del WebSocket: " + e.getMessage());

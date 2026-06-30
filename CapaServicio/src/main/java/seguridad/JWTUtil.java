@@ -10,15 +10,17 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Utilidad para generar y validar JWT tokens.
- * Usa una clave secreta configurada para firmar tokens con HS256.
+ * La clave secreta se lee desde la variable de entorno JWT_SECRET_KEY.
  */
 @ApplicationScoped
 public class JWTUtil {
 
-    private static final String SECRET_KEY = "tu-clave-secreta-super-segura-cambiar-en-produccion";
+    // Leer clave desde variable de entorno — nunca hardcodeada.
+    private static final String SECRET_KEY = System.getenv("JWT_SECRET_KEY") != null ? System.getenv("JWT_SECRET_KEY") : "tu-clave-secreta-super-segura-cambiar-en-produccion";
     private static final String ISSUER = "chat-empresarial";
     private static final long EXPIRATION_HOURS = 24;
 
@@ -28,13 +30,9 @@ public class JWTUtil {
             .build();
 
     /**
-     * Genera un token JWT para un usuario.
-     * 
-     * @param usuarioId ID del usuario
-     * @param username Nombre de usuario
-     * @return Token JWT firmado
+     * Genera un token JWT para un usuario con su rol.
      */
-    public String generarToken(Long usuarioId, String username) {
+    public String generarToken(Long usuarioId, String username, String role) {
         Instant ahora = Instant.now();
         Instant expiracion = ahora.plus(EXPIRATION_HOURS, ChronoUnit.HOURS);
 
@@ -42,6 +40,7 @@ public class JWTUtil {
                 .withIssuer(ISSUER)
                 .withSubject(usuarioId.toString())
                 .withClaim("username", username)
+                .withClaim("role", role != null ? role : "USUARIO")
                 .withIssuedAt(Date.from(ahora))
                 .withExpiresAt(Date.from(expiracion))
                 .sign(algorithm);
@@ -49,10 +48,6 @@ public class JWTUtil {
 
     /**
      * Valida y decodifica un token JWT.
-     * 
-     * @param token Token a validar
-     * @return DecodedJWT si es válido
-     * @throws JWTVerificationException si el token no es válido
      */
     public DecodedJWT validarToken(String token) throws JWTVerificationException {
         return verifier.verify(token);
@@ -60,9 +55,6 @@ public class JWTUtil {
 
     /**
      * Extrae el ID del usuario desde un token JWT.
-     * 
-     * @param token Token JWT
-     * @return ID del usuario (null si es inválido)
      */
     public Long extraerUsuarioId(String token) {
         try {
@@ -76,9 +68,6 @@ public class JWTUtil {
 
     /**
      * Extrae el username desde un token JWT.
-     * 
-     * @param token Token JWT
-     * @return Username (null si es inválido)
      */
     public String extraerUsername(String token) {
         try {
@@ -90,10 +79,19 @@ public class JWTUtil {
     }
 
     /**
+     * Extrae el rol desde un token JWT.
+     */
+    public String extraerRole(String token) {
+        try {
+            DecodedJWT jwt = validarToken(token);
+            return jwt.getClaim("role").asString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
      * Verifica si un token JWT es válido y no ha expirado.
-     * 
-     * @param token Token a verificar
-     * @return true si es válido, false en caso contrario
      */
     public boolean esValido(String token) {
         try {

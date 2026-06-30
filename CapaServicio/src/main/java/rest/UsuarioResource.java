@@ -16,13 +16,9 @@ import jakarta.ws.rs.core.SecurityContext;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Path("/usuarios")
@@ -30,6 +26,11 @@ import java.util.stream.Collectors;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class UsuarioResource {
+
+    // Usernames reservados — no se pueden registrar.
+    private static final Set<String> USERNAMES_RESERVADOS = Set.of(
+        "sudo - admin", "admin", "root", "system", "superadmin"
+    );
 
     @Inject
     private ISistema sistema;
@@ -43,11 +44,23 @@ public class UsuarioResource {
     @Context
     private SecurityContext securityContext;
 
+    @Inject
+    private chat.Manejadores.ManejadorTokenBlacklist blacklistHandler;
+
+    /**
+     * Listar usuarios — requiere autenticación. No expone email en la respuesta pública.
+     */
     @GET
     public Response getAllUsers() {
+        Long usuarioId = authService.getAuthenticatedUserId(securityContext);
+        if (usuarioId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
+        }
+
         List<Usuario> usuarios = sistema.listarUsuarios();
-        List<DtUsuario.UsuarioResponseDTO> dtos = usuarios.stream()
-                .map(DtUsuario.UsuarioResponseDTO::fromEntity)
+        List<DtUsuario.UsuarioPublicoDTO> dtos = usuarios.stream()
+                .map(DtUsuario.UsuarioPublicoDTO::fromEntity)
                 .collect(Collectors.toList());
         return Response.ok(dtos).build();
     }
@@ -85,36 +98,34 @@ public class UsuarioResource {
                     .entity(new ErrorResponse(400, "Google credential token is required")).build();
         }
 
-        try {
-            String token = googleDto.getCredential();
-            String verificationUrl = "https://oauth2.googleapis.com/tokeninfo?id_token=" + token;
+        // Google Client ID desde variable de entorno — nunca hardcodeado.
+        String googleClientId = System.getenv("GOOGLE_CLIENT_ID");
+        if (googleClientId == null || googleClientId.isBlank()) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(500, "Server configuration error")).build();
+        }
 
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(verificationUrl))
-                    .GET()
+        try {
+            com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier verifier =
+                new com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier.Builder(
+                    new com.google.api.client.http.javanet.NetHttpTransport(),
+                    new com.google.api.client.json.gson.GsonFactory())
+                    .setAudience(java.util.Collections.singletonList(googleClientId))
                     .build();
 
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken =
+                verifier.verify(googleDto.getCredential());
 
-            if (response.statusCode() != 200) {
+            if (idToken == null) {
                 return Response.status(Response.Status.UNAUTHORIZED)
                         .entity(new ErrorResponse(401, "Invalid Google token")).build();
             }
 
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(response.body());
+            com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = idToken.getPayload();
 
-            String aud = root.path("aud").asText();
-            String clientId = "623580687397-vd3dbk2u500dsda1tiact908fc4lq9s7.apps.googleusercontent.com";
-            if (!clientId.equals(aud)) {
-                return Response.status(Response.Status.UNAUTHORIZED)
-                        .entity(new ErrorResponse(401, "Token audience mismatch")).build();
-            }
-
-            String email = root.path("email").asText();
-            String name = root.path("name").asText();
-            String picture = root.path("picture").asText();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+            String picture = (String) payload.get("picture");
 
             if (email == null || email.isBlank()) {
                 return Response.status(Response.Status.BAD_REQUEST)
@@ -130,17 +141,16 @@ public class UsuarioResource {
                     return Response.status(Response.Status.UNAUTHORIZED)
                             .entity(new ErrorResponse(401, "El usuario está inactivo")).build();
                 }
-                
                 sistema.actualizarEstadoUsuario(usuario.getId(), chat.Enum.EstadoUsuario.ONLINE);
             } else {
-                String username = name.replaceAll("\\s+", "").toLowerCase();
+                String username = name != null ? name.replaceAll("\\s+", "").toLowerCase() : "user";
                 if (sistema.buscarUsuarioPorUsername(username).isPresent()) {
                     username = username + (System.currentTimeMillis() % 1000);
                 }
 
-                String randomPassword = "GooglePass-" + java.util.UUID.randomUUID().toString();
+                String randomPassword = "GooglePass-" + java.util.UUID.randomUUID();
                 usuario = sistema.registrarUsuario(username, email, randomPassword);
-                
+
                 if (picture != null && !picture.isBlank()) {
                     chat.Datatype.DtUsuario.ActualizarUsuarioDTO perfilDto = new chat.Datatype.DtUsuario.ActualizarUsuarioDTO(
                         usuario.getUsername(),
@@ -163,8 +173,9 @@ public class UsuarioResource {
             return Response.ok(authResponse).build();
 
         } catch (Exception e) {
+            // No exponer detalle de la excepción al cliente.
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorResponse(500, "Error authenticating with Google", e.getMessage())).build();
+                    .entity(new ErrorResponse(500, "Error authenticating with Google")).build();
         }
     }
 
@@ -195,6 +206,12 @@ public class UsuarioResource {
                     .entity(new ErrorResponse(400, "Password is required")).build();
         }
 
+        // Bloquear usernames reservados.
+        if (USERNAMES_RESERVADOS.contains(username.toLowerCase().trim())) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(400, "Username not allowed")).build();
+        }
+
         try {
             Usuario usuario = sistema.registrarUsuario(username, email, password);
             DtUsuario.UsuarioResponseDTO usuarioDto = DtUsuario.UsuarioResponseDTO.fromEntity(usuario);
@@ -204,10 +221,10 @@ public class UsuarioResource {
             return Response.created(location).entity(usuarioDto).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorResponse(400, "Validation error", e.getMessage())).build();
+                    .entity(new ErrorResponse(400, e.getMessage())).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorResponse(500, "Error registering user", e.getMessage())).build();
+                    .entity(new ErrorResponse(500, "Error registering user")).build();
         }
     }
 
@@ -220,16 +237,13 @@ public class UsuarioResource {
                     .entity(new ErrorResponse(401, "Authentication required")).build();
         }
 
-        // Primero, verificar que el usuario existe.
         return sistema.buscarUsuarioPorId(usuarioId).map(usuario -> {
-            // Si hay datos para actualizar, se actualizan.
             if (actualizarDto != null) {
                 sistema.actualizarPerfilUsuario(usuarioId, actualizarDto);
             }
 
-            // Se obtiene el usuario (potencialmente actualizado) y se devuelve.
             Usuario usuarioActualizado = sistema.buscarUsuarioPorId(usuarioId)
-                    .orElseThrow(() -> new IllegalStateException("User disappeared during update")); // No debería ocurrir
+                    .orElseThrow(() -> new IllegalStateException("User disappeared during update"));
 
             DtUsuario.UsuarioResponseDTO usuarioDto = DtUsuario.UsuarioResponseDTO.fromEntity(usuarioActualizado);
             return Response.ok(usuarioDto).build();
@@ -238,7 +252,31 @@ public class UsuarioResource {
                 .entity(new ErrorResponse(404, "User not found")).build());
     }
 
+    @POST
+    @Path("/logout")
+    public Response logout(@HeaderParam(jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION) String authHeader) {
+        Long usuarioId = authService.getAuthenticatedUserId(securityContext);
+        if (usuarioId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
+        }
+
+        try {
+            String token = authService.extraerTokenDelEncabezado(authHeader);
+            if (token != null) {
+                java.time.LocalDateTime expiracion = java.time.LocalDateTime.now().plusHours(24);
+                blacklistHandler.agregarToken(token, expiracion);
+                sistema.actualizarEstadoUsuario(usuarioId, chat.Enum.EstadoUsuario.OFFLINE);
+            }
+            return Response.ok("{\"message\": \"Logout exitoso\"}").build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(500, "Error en logout")).build();
+        }
+    }
+
     private String generateToken(Usuario usuario) {
-        return jwtUtil.generarToken(usuario.getId(), usuario.getUsername());
+        // Rol por defecto USUARIO. Extender con lógica de roles si se implementa.
+        return jwtUtil.generarToken(usuario.getId(), usuario.getUsername(), "USUARIO");
     }
 }

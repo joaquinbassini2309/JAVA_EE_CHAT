@@ -18,6 +18,9 @@ public class StartupInitializer {
     @Inject
     private ManejadorUsuario usuarioHandler;
 
+    @Inject
+    private chat.Manejadores.ManejadorTokenBlacklist blacklistHandler;
+
     @PostConstruct
     public void alIniciar() {
         System.out.println(">>> StartupInitializer: Restableciendo presencia a OFFLINE...");
@@ -30,6 +33,13 @@ public class StartupInitializer {
             System.out.println(">>> StartupInitializer: Presencia restablecida con éxito.");
         } catch (Exception e) {
             System.err.println(">>> StartupInitializer ERROR: " + e.getMessage());
+        }
+
+        try {
+            System.out.println(">>> StartupInitializer: Limpiando tokens JWT expirados de la blacklist...");
+            blacklistHandler.limpiarExpirados();
+        } catch (Exception e) {
+            System.err.println(">>> StartupInitializer ERROR al limpiar blacklist: " + e.getMessage());
         }
     }
 }

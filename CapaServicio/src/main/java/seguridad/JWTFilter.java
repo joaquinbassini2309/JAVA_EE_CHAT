@@ -12,11 +12,12 @@ import jakarta.ws.rs.ext.Provider;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.Set;
 
 /**
  * Filtro JWT para validar tokens en peticiones HTTP.
- * Extrae el token del header Authorization (Bearer <token>)
- * y lo valida usando JWTUtil.
+ * Rutas públicas permitidas sin token: /login, /register, /login-google.
+ * Todo lo demás requiere Bearer token válido.
  */
 @Provider
 @Priority(Priorities.AUTHENTICATION)
@@ -25,21 +26,42 @@ public class JWTFilter implements ContainerRequestFilter {
     @Inject
     private JWTUtil jwtUtil;
 
+    @Inject
+    private chat.Manejadores.ManejadorTokenBlacklist blacklistHandler;
+
     private static final String BEARER_PREFIX = "Bearer ";
+
+    // Rutas públicas que no requieren autenticación.
+    private static final Set<String> RUTAS_PUBLICAS = Set.of(
+        "usuarios/login",
+        "usuarios/register",
+        "usuarios/login-google"
+    );
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
+        String path = requestContext.getUriInfo().getPath();
+
+        // Permitir rutas públicas sin token.
+        if (esRutaPublica(path)) {
+            return;
+        }
+
         String authHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
-        // Si no hay header Authorization, continuar sin autenticación
+        // Sin token en ruta protegida → 401.
         if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            requestContext.abortWith(
+                    Response.status(Response.Status.UNAUTHORIZED)
+                            .entity(new ErrorMessage("Authentication required"))
+                            .build());
             return;
         }
 
         String token = authHeader.substring(BEARER_PREFIX.length()).trim();
 
-        // Validar token
-        if (!jwtUtil.esValido(token)) {
+        // Token inválido, expirado o en la blacklist → 401.
+        if (!jwtUtil.esValido(token) || blacklistHandler.estaInvalidado(token)) {
             requestContext.abortWith(
                     Response.status(Response.Status.UNAUTHORIZED)
                             .entity(new ErrorMessage("Invalid or expired token"))
@@ -47,9 +69,9 @@ public class JWTFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Extraer información del usuario desde el token
         Long usuarioId = jwtUtil.extraerUsuarioId(token);
         String username = jwtUtil.extraerUsername(token);
+        String role = jwtUtil.extraerRole(token);
 
         if (usuarioId == null || username == null) {
             requestContext.abortWith(
@@ -59,17 +81,18 @@ public class JWTFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Establecer el SecurityContext con la información del usuario
+        // Establecer SecurityContext con id, username y role del JWT.
+        final String finalRole = role != null ? role : "USUARIO";
         requestContext.setSecurityContext(new SecurityContext() {
             @Override
             public Principal getUserPrincipal() {
-                return () -> usuarioId.toString(); // El principal es el ID del usuario
+                // El principal expone el userId numérico.
+                return () -> usuarioId.toString();
             }
 
             @Override
-            public boolean isUserInRole(String role) {
-                // TODO: Implementar roles si es necesario
-                return false;
+            public boolean isUserInRole(String r) {
+                return finalRole.equalsIgnoreCase(r);
             }
 
             @Override
@@ -84,9 +107,14 @@ public class JWTFilter implements ContainerRequestFilter {
         });
     }
 
-    /**
-     * Clase interna para respuestas de error.
-     */
+    private boolean esRutaPublica(String path) {
+        for (String ruta : RUTAS_PUBLICAS) {
+            if (path.endsWith(ruta)) return true;
+        }
+        return false;
+    }
+
+    /** Clase interna para respuestas de error de autenticación. */
     public static class ErrorMessage {
         public String message;
 

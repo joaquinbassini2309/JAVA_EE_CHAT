@@ -54,31 +54,35 @@ public class ChatWebSocketEndpoint {
             @PathParam("conversacionId") Long idConversacion,
             @PathParam("usuarioId") Long idUsuario) {
         try {
-            // Validar token JWT (desde header o query param)
+            // Obtener token JWT únicamente desde el header (ChatWebSocketConfigurator).
+            // NO aceptar token como query param — quedaría expuesto en logs de proxy/servidor.
             String token = (String) sesion.getUserProperties().get("token");
-            if (token == null && sesion.getRequestParameterMap().containsKey("token")) {
-                token = sesion.getRequestParameterMap().get("token").get(0);
-            }
 
             if (token == null || !servicioAutenticacion.esTokenValido(token)) {
                 sesion.close();
                 return;
             }
 
-            // Verificar que el usuario existe y está en la conversación
+            // Validar que el subject del JWT coincide con el idUsuario del path param.
+            Long idDelToken = servicioAutenticacion.validarTokenYExtraerIdUsuario(token);
+            if (idDelToken == null || !idDelToken.equals(idUsuario)) {
+                sesion.close(new jakarta.websocket.CloseReason(
+                    jakarta.websocket.CloseReason.CloseCodes.VIOLATED_POLICY,
+                    "Identidad inválida"));
+                return;
+            }
+
+            // Verificar que el usuario está en la conversación.
             if (!sistema.usuarioEstaEnConversacion(idUsuario, idConversacion)) {
                 sesion.close();
                 return;
             }
 
-
-            // Sessions registration (Presence managed globally)
             sesionesActivas
                 .computeIfAbsent(idConversacion, k -> new ConcurrentHashMap<>())
                 .computeIfAbsent(idUsuario, k -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
                 .add(sesion);
 
-            // Notificar a otros usuarios en la conversación
             notificarConexionDesconexion(idConversacion, idUsuario, true);
 
         } catch (IOException e) {

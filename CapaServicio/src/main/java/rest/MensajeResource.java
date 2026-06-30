@@ -86,10 +86,10 @@ public class MensajeResource {
 
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorResponse(400, "Validation error", e.getMessage())).build();
+                    .entity(new ErrorResponse(400, e.getMessage())).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorResponse(500, "Error sending message", e.getMessage())).build();
+                    .entity(new ErrorResponse(500, "Error sending message")).build();
         }
     }
 
@@ -100,19 +100,32 @@ public class MensajeResource {
     @GET
     @Path("/{id: \\d+}")
     public Response getMensaje(@PathParam("id") Long id) {
+        Long usuarioId = authService.getAuthenticatedUserId(securityContext);
+        if (usuarioId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(new ErrorResponse(401, "Authentication required")).build();
+        }
+
         if (id == null || id <= 0) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(new ErrorResponse(400, "Invalid message ID")).build();
         }
 
         Optional<Mensaje> mensajeOpt = sistema.mensajeHandler().buscarPorId(id);
-        
+
         if (mensajeOpt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(new ErrorResponse(404, "Message not found")).build();
         }
 
-        DtMensaje respuesta = DtMensaje.from(mensajeOpt.get());
+        // Verificar que el usuario es participante de la conversación del mensaje.
+        Mensaje msg = mensajeOpt.get();
+        if (!sistema.usuarioEstaEnConversacion(usuarioId, msg.getConversacion().getId())) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(new ErrorResponse(403, "Access denied")).build();
+        }
+
+        DtMensaje respuesta = DtMensaje.from(msg);
         return Response.ok(respuesta).build();
     }
 
@@ -141,10 +154,8 @@ public class MensajeResource {
                     .entity(new ErrorResponse(400, "Invalid conversation ID")).build();
         }
 
-        System.out.println("DEBUG: MensajeResource.getMensajesDeConversacion - userId: " + usuarioId + ", conversacionId: " + conversacionId);
         // Validar que el usuario está en la conversación
         if (!sistema.usuarioEstaEnConversacion(usuarioId, conversacionId)) {
-            System.out.println("DEBUG: MensajeResource - Acceso denegado para usuario " + usuarioId + " en conversacion " + conversacionId);
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(new ErrorResponse(403, "You don't have access to this conversation")).build();
         }

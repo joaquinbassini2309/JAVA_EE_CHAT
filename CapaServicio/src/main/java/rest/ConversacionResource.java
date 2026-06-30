@@ -156,7 +156,7 @@ public class ConversacionResource {
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.FORBIDDEN).entity(new ErrorResponse(403, e.getMessage())).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ErrorResponse(500, "Error updating group", e.getMessage())).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ErrorResponse(500, "Error updating group")).build();
         }
     }
 
@@ -198,7 +198,7 @@ public class ConversacionResource {
             return Response.ok().build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorResponse(500, "Error adding participant", e.getMessage())).build();
+                    .entity(new ErrorResponse(500, "Error adding participant")).build();
         }
     }
 
@@ -214,7 +214,7 @@ public class ConversacionResource {
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.FORBIDDEN).entity(new ErrorResponse(403, e.getMessage())).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ErrorResponse(500, "Error removing participant", e.getMessage())).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ErrorResponse(500, "Error removing participant")).build();
         }
     }
 
@@ -230,7 +230,7 @@ public class ConversacionResource {
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.FORBIDDEN).entity(new ErrorResponse(403, e.getMessage())).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ErrorResponse(500, "Error updating role", e.getMessage())).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ErrorResponse(500, "Error updating role")).build();
         }
     }
 
@@ -329,7 +329,7 @@ public class ConversacionResource {
                     .entity(new ErrorResponse(400, e.getMessage())).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorResponse(500, "Error al fijar mensaje", e.getMessage())).build();
+                    .entity(new ErrorResponse(500, "Error al fijar mensaje")).build();
         }
     }
 
@@ -354,7 +354,7 @@ public class ConversacionResource {
                     .entity(new ErrorResponse(400, e.getMessage())).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorResponse(500, "Error al desfijar mensaje", e.getMessage())).build();
+                    .entity(new ErrorResponse(500, "Error al desfijar mensaje")).build();
         }
     }
 
@@ -375,7 +375,7 @@ public class ConversacionResource {
                     .entity(new ErrorResponse(403, e.getMessage())).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorResponse(500, "Error al eliminar conversación", e.getMessage())).build();
+                    .entity(new ErrorResponse(500, "Error al eliminar conversación")).build();
         }
     }
 

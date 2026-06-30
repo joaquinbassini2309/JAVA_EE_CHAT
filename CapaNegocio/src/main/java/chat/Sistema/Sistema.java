@@ -427,7 +427,12 @@ public class Sistema implements ISistema {
 
     @Override
     public void marcarMensajeComoLeido(Long mensajeId, Long usuarioId) {
-        // TODO: Validar que el mensaje pertenece a una conversación donde el usuario participa
+        // Validar que el mensaje pertenece a una conversación donde el usuario participa.
+        mensajeHandler().buscarPorId(mensajeId).ifPresent(msg -> {
+            if (!usuarioEstaEnConversacion(usuarioId, msg.getConversacion().getId())) {
+                throw new IllegalArgumentException("No tienes acceso a este mensaje");
+            }
+        });
         mensajeHandler().marcarMensajeLeido(mensajeId, usuarioId);
     }
 
@@ -490,16 +495,79 @@ public class Sistema implements ISistema {
         observable.eliminarObservador(observer);
     }
 
-    // Encriptado
+    // Encriptado AES-256-GCM con clave derivada por SHA-256 y IV aleatorio
+    private static final String CRYPTO_ALGORITHM = "AES/GCM/NoPadding";
+    private static final int GCM_TAG_LENGTH_BIT = 128;
+    private static final int GCM_IV_LENGTH_BYTE = 12;
+
+    private byte[] getEncryptionKey() {
+        String keyEnv = System.getenv("MESSAGE_ENCRYPTION_KEY");
+        if (keyEnv == null || keyEnv.isBlank()) {
+            keyEnv = "clave-super-secreta-32-caracteres-!";
+        }
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            return digest.digest(keyEnv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            throw new RuntimeException("Error al derivar clave de encriptación", e);
+        }
+    }
+
     @Override
     public String encriptarMensaje(String contenido) {
-        // Implementación simple con Base64; idealmente usar AES
-        return java.util.Base64.getEncoder().encodeToString(contenido.getBytes());
+        if (contenido == null) return null;
+        try {
+            byte[] key = getEncryptionKey();
+            byte[] iv = new byte[GCM_IV_LENGTH_BYTE];
+            new java.security.SecureRandom().nextBytes(iv);
+
+            javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(CRYPTO_ALGORITHM);
+            javax.crypto.spec.GCMParameterSpec parameterSpec = new javax.crypto.spec.GCMParameterSpec(GCM_TAG_LENGTH_BIT, iv);
+            javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(key, "AES");
+            cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keySpec, parameterSpec);
+
+            byte[] ciphertext = cipher.doFinal(contenido.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            byte[] encrypted = new byte[iv.length + ciphertext.length];
+            System.arraycopy(iv, 0, encrypted, 0, iv.length);
+            System.arraycopy(ciphertext, 0, encrypted, iv.length, ciphertext.length);
+
+            return java.util.Base64.getEncoder().encodeToString(encrypted);
+        } catch (Exception e) {
+            throw new RuntimeException("Error encriptando mensaje con AES-GCM", e);
+        }
     }
 
     @Override
     public String desencriptarMensaje(String contenidoEncriptado) {
-        return new String(java.util.Base64.getDecoder().decode(contenidoEncriptado));
+        if (contenidoEncriptado == null) return null;
+        try {
+            byte[] encrypted = java.util.Base64.getDecoder().decode(contenidoEncriptado);
+            if (encrypted.length < GCM_IV_LENGTH_BYTE) {
+                throw new IllegalArgumentException("Texto encriptado demasiado corto");
+            }
+            byte[] key = getEncryptionKey();
+            byte[] iv = new byte[GCM_IV_LENGTH_BYTE];
+            System.arraycopy(encrypted, 0, iv, 0, iv.length);
+
+            int ciphertextLength = encrypted.length - iv.length;
+            byte[] ciphertext = new byte[ciphertextLength];
+            System.arraycopy(encrypted, iv.length, ciphertext, 0, ciphertextLength);
+
+            javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(CRYPTO_ALGORITHM);
+            javax.crypto.spec.GCMParameterSpec parameterSpec = new javax.crypto.spec.GCMParameterSpec(GCM_TAG_LENGTH_BIT, iv);
+            javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(key, "AES");
+            cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keySpec, parameterSpec);
+
+            byte[] plaintext = cipher.doFinal(ciphertext);
+            return new String(plaintext, java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            // Fallback de compatibilidad para mensajes históricos codificados en Base64 simple
+            try {
+                return new String(java.util.Base64.getDecoder().decode(contenidoEncriptado), java.nio.charset.StandardCharsets.UTF_8);
+            } catch (Exception ignored) {
+                return contenidoEncriptado;
+            }
+        }
     }
 
     // ========== IMPLEMENTACIÓN: CANALES DE AVISOS ==========
@@ -703,14 +771,9 @@ public class Sistema implements ISistema {
         Participante p = participanteHandler().buscarParticipante(conversacionId, usuarioId)
                 .orElseThrow(() -> new IllegalArgumentException("No tienes acceso a esta conversación"));
 
-        System.out.println("DEBUG ELIMINAR CHAT: conversacionId=" + conversacionId + ", usuarioId=" + usuarioId + ", tipoConversacion=" + c.getTipo());
-        System.out.println("DEBUG ELIMINAR CHAT: participanteId=" + p.getId() + ", rol=" + p.getRol() + ", rolName=" + (p.getRol() != null ? p.getRol().name() : "null"));
-
-        // Si es de tipo GRUPO o AVISO, solo el ADMIN puede eliminarla (o el usuario global "sudo - admin")
-        boolean esGlobalAdmin = p.getUsuario() != null && "sudo - admin".equals(p.getUsuario().getUsername());
+        // Si es de tipo GRUPO o AVISO, solo el ADMIN puede eliminarla
         if ((c.getTipo() == chat.Enum.TipoConversacion.GRUPO || c.getTipo() == chat.Enum.TipoConversacion.AVISO) 
-                && p.getRol() != chat.Enum.RolParticipante.ADMIN
-                && !esGlobalAdmin) {
+                && p.getRol() != chat.Enum.RolParticipante.ADMIN) {
             throw new IllegalArgumentException("Solo el administrador del grupo puede eliminar el chat");
         }
 

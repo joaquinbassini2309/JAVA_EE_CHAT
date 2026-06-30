@@ -116,6 +116,43 @@ public final class DtUsuario {
         public void setFavoritos(String favoritos) { this.favoritos = favoritos; }
     }
 
+    // DTO público para listados (evita enumeración de emails)
+    public static class UsuarioPublicoDTO {
+        private Long id;
+        private String username;
+        private String fotoUrl;
+        private String descripcion;
+        private String imagenBanner;
+        private EstadoUsuario estado;
+
+        public UsuarioPublicoDTO() {}
+
+        public static UsuarioPublicoDTO fromEntity(Usuario usuario) {
+            if (usuario == null) return null;
+            UsuarioPublicoDTO dto = new UsuarioPublicoDTO();
+            dto.id = usuario.getId();
+            dto.username = usuario.getUsername();
+            dto.fotoUrl = usuario.getFotoUrl();
+            dto.descripcion = usuario.getDescripcion();
+            dto.imagenBanner = usuario.getImagenBanner();
+            dto.estado = usuario.getEstado();
+            return dto;
+        }
+
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+        public String getUsername() { return username; }
+        public void setUsername(String username) { this.username = username; }
+        public String getFotoUrl() { return fotoUrl; }
+        public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+        public String getDescripcion() { return descripcion; }
+        public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+        public String getImagenBanner() { return imagenBanner; }
+        public void setImagenBanner(String imagenBanner) { this.imagenBanner = imagenBanner; }
+        public EstadoUsuario getEstado() { return estado; }
+        public void setEstado(EstadoUsuario estado) { this.estado = estado; }
+    }
+
     // DTO para actualizar perfil
     public static class ActualizarUsuarioDTO {
         private String username;

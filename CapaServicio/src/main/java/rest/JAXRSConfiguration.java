@@ -18,6 +18,7 @@ public class JAXRSConfiguration extends Application {
         classes.add(TareaResource.class);
         classes.add(exceptions.GlobalExceptionMapper.class);
         classes.add(seguridad.JWTFilter.class);
+        classes.add(seguridad.CorsFilter.class);
         return classes;
     }
 }

@@ -275,20 +275,16 @@ class ServicioAPI {
   // ========== WEBSOCKET ==========
 
   conectarWebSocket(idConversacion, idUsuario, token) {
-    // Aceptar token como string o ref (Pinia)
     const rawToken = (token && token.value) ? token.value : token;
-    const encoded = rawToken ? encodeURIComponent(rawToken) : '';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const url = `${protocol}//${window.location.host}${contextPath}/ws/conversacion/${idConversacion}/usuario/${idUsuario}` + (encoded ? `?token=${encoded}` : '')
+    const url = `${protocol}//${window.location.host}${contextPath}/ws/conversacion/${idConversacion}/usuario/${idUsuario}`
     console.log('Intentando conectar WebSocket a:', url)
 
-    const ws = new WebSocket(url)
+    // Pasar el token en Sec-WebSocket-Protocol para evitar exponerlo en URLs
+    const ws = new WebSocket(url, rawToken ? [rawToken] : [])
 
-    // Configurar headers manualmente no funciona en WebSocket,
-    // así que pasamos el token en la URL (alternativa: usar socket.io)
     ws.onopen = () => {
       console.log('WebSocket conectado')
-      // Enviar token en primer mensaje si es necesario
     }
 
     ws.onerror = (error) => {
@@ -304,12 +300,11 @@ class ServicioAPI {
 
   conectarPresenciaWebSocket(idUsuario, token) {
     const rawToken = (token && token.value) ? token.value : token;
-    const encoded = rawToken ? encodeURIComponent(rawToken) : '';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const url = `${protocol}//${window.location.host}${contextPath}/ws/presencia/${idUsuario}` + (encoded ? `?token=${encoded}` : '')
+    const url = `${protocol}//${window.location.host}${contextPath}/ws/presencia/${idUsuario}`
     console.log('Intentando conectar WebSocket de Presencia a:', url)
 
-    const ws = new WebSocket(url)
+    const ws = new WebSocket(url, rawToken ? [rawToken] : [])
 
     ws.onopen = () => {
       console.log('WebSocket de Presencia conectado')

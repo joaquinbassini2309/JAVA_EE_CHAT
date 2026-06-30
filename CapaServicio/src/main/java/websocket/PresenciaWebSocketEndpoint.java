@@ -46,12 +46,17 @@ public class PresenciaWebSocketEndpoint {
     public void alAbrirConexion(Session sesion, @PathParam("usuarioId") Long idUsuario) {
         try {
             String token = (String) sesion.getUserProperties().get("token");
-            if (token == null && sesion.getRequestParameterMap().containsKey("token")) {
-                token = sesion.getRequestParameterMap().get("token").get(0);
-            }
 
             if (token == null || !servicioAutenticacion.esTokenValido(token)) {
                 sesion.close();
+                return;
+            }
+
+            Long idDelToken = servicioAutenticacion.validarTokenYExtraerIdUsuario(token);
+            if (idDelToken == null || !idDelToken.equals(idUsuario)) {
+                sesion.close(new jakarta.websocket.CloseReason(
+                    jakarta.websocket.CloseReason.CloseCodes.VIOLATED_POLICY,
+                    "Identidad inválida"));
                 return;
             }
 
