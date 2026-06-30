@@ -318,6 +318,7 @@ export const useAlmacen = defineStore('principal', () => {
     agregarConversacion,
     agregarMensaje,
     actualizarMensaje,
+    actualizarEstadoUsuario,
     actualizarInfoConversacion,
     actualizarMensajeFijado,
     actualizarRolParticipante,
