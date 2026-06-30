@@ -161,19 +161,29 @@ export const useAlmacen = defineStore('principal', () => {
   }
 
   function actualizarEstadoUsuario(idUsuario, nuevoEstado) {
-    conversaciones.value.forEach(conv => {
+    conversaciones.value = conversaciones.value.map(conv => {
       if (conv.participantes) {
-        const participante = conv.participantes.find(p => p.usuario && p.usuario.id === idUsuario)
-        if (participante && participante.usuario) {
-          participante.usuario.estado = nuevoEstado
-        }
+        const nuevosParticipantes = conv.participantes.map(p => {
+          if (p.usuario && p.usuario.id === idUsuario) {
+            return { ...p, usuario: { ...p.usuario, estado: nuevoEstado } }
+          }
+          return p
+        })
+        return { ...conv, participantes: nuevosParticipantes }
       }
+      return conv
     })
-    // Forzar actualización reactiva de la conversación actual si está abierta
+
     if (conversacionActual.value && conversacionActual.value.participantes) {
       const p = conversacionActual.value.participantes.find(p => p.usuario && p.usuario.id === idUsuario)
-      if (p && p.usuario) {
-        p.usuario.estado = nuevoEstado
+      if (p) {
+        const nuevosParticipantes = conversacionActual.value.participantes.map(part => {
+          if (part.usuario && part.usuario.id === idUsuario) {
+            return { ...part, usuario: { ...part.usuario, estado: nuevoEstado } }
+          }
+          return part
+        })
+        conversacionActual.value = { ...conversacionActual.value, participantes: nuevosParticipantes }
       }
     }
   }
