@@ -33,11 +33,28 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   // Solo cachear peticiones GET locales
   if (e.request.method === 'GET' && e.request.url.startsWith(self.location.origin)) {
-    e.respondWith(
-      caches.match(e.request).then((res) => {
-        return res || fetch(e.request);
-      })
-    );
+    const url = new URL(e.request.url);
+    
+    // Para el punto de entrada y el index, priorizar siempre la red (Network-First)
+    if (url.pathname === '/' || url.pathname === '/index.html') {
+      e.respondWith(
+        fetch(e.request)
+          .then((response) => {
+            return caches.open(CACHE_NAME).then((cache) => {
+              cache.put(e.request, response.clone());
+              return response;
+            });
+          })
+          .catch(() => caches.match(e.request))
+      );
+    } else {
+      // Estrategia Cache-First para recursos estaticos
+      e.respondWith(
+        caches.match(e.request).then((res) => {
+          return res || fetch(e.request);
+        })
+      );
+    }
   }
 });
 
