@@ -20,6 +20,7 @@
         <class>chat.clases.Participante</class>
         <class>chat.clases.Tarea</class>
         <class>chat.clases.MensajeLectura</class>
+        <class>chat.clases.TokenBlacklist</class>
 
         <properties>
             <!-- Dialecto de Hibernate para PostgreSQL -->
@@ -29,9 +30,8 @@
             <property name="hibernate.show_sql" value="false"/>
             <property name="hibernate.format_sql" value="false"/>
             
-            <!-- Estrategia: validate en producción — no modifica el esquema automáticamente.
-                 Usar Flyway o Liquibase para migraciones controladas. -->
-            <property name="hibernate.hbm2ddl.auto" value="validate"/>
+            <!-- Estrategia: update para crear nuevas tablas automáticamente -->
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
             
             <!-- Configuración de conexiones -->
             <property name="hibernate.jdbc.batch_size" value="20"/>
