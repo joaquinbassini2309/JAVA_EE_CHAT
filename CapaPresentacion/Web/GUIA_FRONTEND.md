@@ -6,24 +6,24 @@ Esta guía explica la organización de carpetas y archivos en el módulo de pres
 
 Para mantener el proyecto organizado y escalable, se utilizan las siguientes carpetas:
 
-- **`src/assets/`**: Archivos estáticos procesados por Vite (CSS global, imágenes, fuentes).
-- **`src/components/`**: Componentes de Vue reutilizables (ej. botones, tarjetas de chat, listas).
-- **`src/views/`**: Componentes que representan "páginas" completas (ej. Login, Chat Principal).
-- **`src/router/`**: Configuración de navegación entre páginas.
-- **`src/stores/`**: Gestión del estado global de la aplicación (Pinia). Aquí se guardan los datos del usuario, token y mensajes.
-- **`src/services/`**: Lógica de comunicación con el Backend (Axios).
-- **`src/plugins/`**: Configuraciones de librerías externas (ej. Vuetify).
-- **`src/utils/`**: Funciones de ayuda y constantes.
+- **`src/recursos/`**: Archivos estáticos procesados por Vite (CSS global, imágenes, fuentes).
+- **`src/componentes/`**: Componentes de Vue reutilizables (ej. botones, tarjetas de chat, listas).
+- **`src/vistas/`**: Componentes que representan "páginas" completas (ej. Login, Chat Principal).
+- **`src/rutas/`**: Configuración de navegación entre páginas.
+- **`src/almacenes/`**: Gestión del estado global de la aplicación (Pinia). Aquí se guardan los datos del usuario, token y mensajes.
+- **`src/servicios/`**: Lógica de comunicación con el Backend (Axios).
+- **`src/complementos/`**: Configuraciones de librerías externas (ej. Vuetify).
+- **`src/utilidades/`**: Funciones de ayuda y constantes.
 
 ## Flujo de Navegación (Rutas)
 
-Las rutas se administran en `src/router/index.js`. Aquí se mapea una URL a un componente en `src/views/`.
+Las rutas se administran en `src/rutas/enrutador.js`. Aquí se mapea una URL a un componente en `src/vistas/`.
 
 | URL | Componente | Carpeta |
 | :--- | :--- | :--- |
-| `/` | `LoginVista.vue` | `src/views/` |
-| `/chat` | `ChatVista.vue` | `src/views/` |
-| `/registro` | `RegistroVista.vue` | `src/views/` |
+| `/` | `LoginVista.vue` | `src/vistas/` |
+| `/chat` | `ChatVista.vue` | `src/vistas/` |
+| `/registro` | `RegistroVista.vue` | `src/vistas/` |
 
 **Ejemplo de uso:**
 Para ir a una página desde el código: `router.push('/chat')`.

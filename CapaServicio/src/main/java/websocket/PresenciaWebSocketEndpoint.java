@@ -19,6 +19,9 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Collections;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * WebSocket Endpoint global para gestionar el estado de presencia ONLINE/OFFLINE
@@ -36,7 +39,9 @@ public class PresenciaWebSocketEndpoint {
 
     private static final Map<Long, Set<Session>> sesionesPresencia = new ConcurrentHashMap<>();
     private static final ObjectMapper mapeador = new ObjectMapper();
+    private final ScheduledExecutorService programador = Executors.newSingleThreadScheduledExecutor();
 
+    // Abrir conexion WebSocket de presencia.
     @OnOpen
     public void alAbrirConexion(Session sesion, @PathParam("usuarioId") Long idUsuario) {
         try {
@@ -54,7 +59,6 @@ public class PresenciaWebSocketEndpoint {
                 .computeIfAbsent(idUsuario, k -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
                 .add(sesion);
 
-            // Actualizar estado del usuario a ONLINE
             sistema.actualizarEstadoUsuario(idUsuario, EstadoUsuario.ONLINE);
             difundirEstadoGlobal(idUsuario, true);
 
@@ -63,16 +67,21 @@ public class PresenciaWebSocketEndpoint {
         }
     }
 
+    // Cerrar conexion WebSocket de presencia.
     @OnClose
     public void alCerrarConexion(Session sesion, @PathParam("usuarioId") Long idUsuario) {
         Set<Session> sesiones = sesionesPresencia.get(idUsuario);
         if (sesiones != null) {
             sesiones.remove(sesion);
             if (sesiones.isEmpty()) {
-                sesionesPresencia.remove(idUsuario);
-                // Si no quedan sesiones de presencia activas, marcar como OFFLINE
-                sistema.actualizarEstadoUsuario(idUsuario, EstadoUsuario.OFFLINE);
-                difundirEstadoGlobal(idUsuario, false);
+                programador.schedule(() -> {
+                    Set<Session> activas = sesionesPresencia.get(idUsuario);
+                    if (activas == null || activas.isEmpty()) {
+                        sesionesPresencia.remove(idUsuario);
+                        sistema.actualizarEstadoUsuario(idUsuario, EstadoUsuario.OFFLINE);
+                        difundirEstadoGlobal(idUsuario, false);
+                    }
+                }, 5, TimeUnit.SECONDS);
             }
         }
     }
@@ -82,6 +91,7 @@ public class PresenciaWebSocketEndpoint {
         System.err.println("Error en WebSocket de presencia: " + excepcion.getMessage());
     }
 
+    // Recibir pings para mantener la conexion abierta.
     @jakarta.websocket.OnMessage
     public void alRecibirMensaje(String mensaje, Session sesion) {
         if ("ping".equals(mensaje)) {
@@ -95,6 +105,7 @@ public class PresenciaWebSocketEndpoint {
         }
     }
 
+    // Difundir estado global de presencia a todos los usuarios conectados.
     private void difundirEstadoGlobal(Long idUsuario, boolean conectado) {
         try {
             Map<String, Object> notificacion = new HashMap<>();

@@ -10,7 +10,7 @@
           </div>
 
           <div v-else-if="esModoMovil && conversacionActual" style="flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-rows: 1fr;">
-            <Chat />
+            <ChatComp />
           </div>
 
           <div v-else-if="esModoMovil" style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
@@ -23,7 +23,7 @@
               <ListaConversaciones />
             </div>
             <div style="height: 100%; overflow: hidden; display: flex; flex-direction: column; min-height: 0; position: relative;">
-              <Chat v-if="conversacionActual" />
+              <ChatComp v-if="conversacionActual" />
               <div v-else class="sin-conversacion d-flex flex-column align-center justify-center h-100">
                 <v-icon size="80" color="accent" style="opacity:0.3">mdi-message-text-outline</v-icon>
                 <p>Selecciona un chat</p>
@@ -46,7 +46,7 @@ import { useRouter } from 'vue-router'
 import { useAlmacen } from '@/almacenes/almacen'
 import { servicioApi } from '@/servicios/api'
 import { obtenerNombreVisibleConversacion } from '@/utilidades/helpers'
-import Chat from '@/componentes/Chat.vue'
+import ChatComp from '@/componentes/ChatComp.vue'
 import ListaConversaciones from '@/componentes/ListaConversaciones.vue'
 import PanelTareas from '@/componentes/PanelTareas.vue'
 
