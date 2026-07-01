@@ -123,6 +123,17 @@ public class ChatWebSocketEndpoint {
             // Enviar a todos los usuarios conectados en la conversación
             difundirMensaje(idConversacion, dtMensaje);
 
+            // Notificar globalmente a todos los participantes usando PresenciaWS para actualizar el sidebar
+            for (chat.clases.UsuarioParticipante participante : mensajeGuardado.getConversacion().getParticipantes()) {
+                if (participante.getUsuario() != null) {
+                    websocket.PresenciaWebSocketEndpoint.notificarAUsuario(
+                        participante.getUsuario().getId(), 
+                        "NUEVO_MENSAJE_GLOBAL", 
+                        dtMensaje
+                    );
+                }
+            }
+
         } catch (Exception e) {
             enviarError(sesion, "Error al procesar mensaje: " + e.getMessage());
         }

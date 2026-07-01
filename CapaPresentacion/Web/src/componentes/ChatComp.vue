@@ -171,6 +171,24 @@
     </template>
 
     <InfoGrupo v-else :conversacion="conversacionActual" @volver="mostrandoInfo = false" />
+    
+    <!-- Modal de error de subida (API REST) -->
+    <v-dialog v-model="mostrarErrorSubida" max-width="400">
+      <v-card rounded="xl">
+        <v-card-title class="d-flex align-center pa-4 pb-0" style="color: #406D73;">
+          <v-icon color="#406D73" class="mr-2">mdi-alert-circle</v-icon>
+          Error al enviar
+        </v-card-title>
+        <v-card-text class="pa-4 pt-2 text-body-1">
+          No se pudo enviar el archivo. Puede que exceda el tamaño soportado por el servidor.<br><br>
+          <small style="color: #406D73; font-weight: bold;">{{ mensajeErrorSubida }}</small>
+        </v-card-text>
+        <v-card-actions class="pa-4 pt-0">
+          <v-spacer></v-spacer>
+          <v-btn style="background-color: #406D73; color: white;" variant="flat" rounded="pill" @click="mostrarErrorSubida = false">Entendido</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -203,6 +221,8 @@ const textoPendienteContenido = ref('')
 const creandoTarea = ref(false)
 
 const subiendoArchivo = ref(false)
+const mostrarErrorSubida = ref(false)
+const mensajeErrorSubida = ref('')
 const cargandoMas = ref(false)
 const offsetMensajes = ref(0)
 const todosCargados = ref(false)
@@ -554,7 +574,8 @@ const manejarSubirArchivo = async ({ nombre, base64, tipo }) => {
     }
   } catch (err) {
     console.error('Error al subir archivo:', err)
-    alert('Error al subir el archivo. Intenta de nuevo.')
+    mensajeErrorSubida.value = err.response?.data?.message || err.message || 'Ocurrió un error inesperado al subir el archivo.'
+    mostrarErrorSubida.value = true
   } finally {
     subiendoArchivo.value = false
   }

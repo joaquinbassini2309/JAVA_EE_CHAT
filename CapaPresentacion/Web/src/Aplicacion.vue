@@ -66,6 +66,34 @@ const conectarPresencia = () => {
       const msg = JSON.parse(event.data)
       if (msg.tipo === 'PRESENCIA') {
         almacen.actualizarEstadoUsuario(msg.usuarioId, msg.estado)
+      } else if (msg.tipo === 'NUEVO_MENSAJE_GLOBAL') {
+        almacen.agregarMensaje(msg.datos)
+        
+        // Notificación de escritorio para mensajes entrantes de otros chats o cuando no hay foco
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          const m = msg.datos
+          const yoId = almacen.usuarioActual?.id
+          const esActiva = almacen.conversacionActual && almacen.conversacionActual.id === m.conversacionId
+          const chatFocado = esActiva && document.hasFocus()
+          
+          if (m.emisorId !== yoId && !chatFocado) {
+            const conv = almacen.conversaciones.find(c => c.id === m.conversacionId)
+            let nombre = 'Nuevo mensaje'
+            if (conv) {
+              if (conv.tipo === 'GRUPAL' || conv.tipo === 'AVISOS') {
+                nombre = conv.nombre
+              } else if (conv.participantes) {
+                const otro = conv.participantes.find(p => p.usuario && p.usuario.id !== yoId)
+                if (otro && otro.usuario) nombre = otro.usuario.nombre || otro.usuario.username
+              }
+            }
+            const username = almacen.usuarioActual?.username
+            const esMencion = username && (m.contenido.includes(`@${username}`) || m.contenido.includes('@todos'))
+            const titulo = esMencion ? `🔔 ¡Fuiste mencionado en ${nombre}!` : nombre
+            
+            new Notification(titulo, { body: m.contenido, icon: conv?.fotoUrl || null })
+          }
+        }
       }
     } catch (err) {
       console.error('Error procesando mensaje de presencia WS:', err)

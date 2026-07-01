@@ -101,6 +101,23 @@
       <v-icon size="18" :color="contenidoNuevo.trim() ? 'white' : '#8aa8ae'" class="mr-1">mdi-send</v-icon>
       <span :style="{ color: contenidoNuevo.trim() ? 'white' : '#8aa8ae', fontWeight: 600, textTransform: 'none', fontSize: '14px', letterSpacing: '0.02em' }">Enviar</span>
     </v-btn>
+
+    <!-- Modal de error de archivo -->
+    <v-dialog v-model="mostrarErrorArchivo" max-width="400">
+      <v-card rounded="xl">
+        <v-card-title class="d-flex align-center pa-4 pb-0" style="color: #406D73;">
+          <v-icon color="#406D73" class="mr-2">mdi-alert-circle</v-icon>
+          Archivo demasiado grande
+        </v-card-title>
+        <v-card-text class="pa-4 pt-2 text-body-1">
+          El archivo seleccionado supera el límite máximo permitido de 15 MB. Por favor, selecciona un archivo más ligero.
+        </v-card-text>
+        <v-card-actions class="pa-4 pt-0">
+          <v-spacer></v-spacer>
+          <v-btn style="background-color: #406D73; color: white;" variant="flat" rounded="pill" @click="mostrarErrorArchivo = false">Entendido</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -139,6 +156,7 @@ const emit = defineEmits(['enviar-mensaje', 'subir-archivo'])
 const contenidoNuevo = ref('')
 const fileInput = ref(null)
 const textareaMensaje = ref(null)
+const mostrarErrorArchivo = ref(false)
 
 const mostrarSugerenciasMencion = ref(false)
 const indiceSugerenciaMencion = ref(0)
@@ -206,7 +224,8 @@ const handleFileSelected = (event) => {
   const MAX_BYTES = 15 * 1024 * 1024
   if (f.size > MAX_BYTES) {
     console.error('Archivo demasiado grande')
-    alert('El archivo supera el tamaño máximo permitido (15 MB).')
+    mostrarErrorArchivo.value = true
+    if (fileInput.value) fileInput.value.value = null
     return
   }
 
