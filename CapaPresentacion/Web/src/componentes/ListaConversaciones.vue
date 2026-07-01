@@ -1315,7 +1315,9 @@ const cargarConversaciones = async () => {
 onMounted(() => {
   cargarGruposLocalStorage()
   cargarConversaciones()
-  intervaloRefresco = setInterval(cargarConversaciones, 5000)
+  // SE ELIMINÓ EL POLLING AGRESIVO. 
+  // Ahora las actualizaciones deben manejarse por WebSockets (reactividad de Pinia)
+  // intervaloRefresco = setInterval(cargarConversaciones, 5000)
 
   // Solicitar permisos de notificación nativa
   if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
