@@ -46,6 +46,6 @@ USER jboss
 EXPOSE 8080
 
 # Limitar memoria para VM de 1GB
-ENV JAVA_OPTS="-Xms64m -Xmx256m -XX:MetaspaceSize=64M -XX:MaxMetaspaceSize=128m -Djava.net.preferIPv4Stack=true"
+ENV JAVA_OPTS="-Xms64m -Xmx256m -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=256m -Djava.net.preferIPv4Stack=true"
 
 CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-Djboss.http.port=${PORT}"]
