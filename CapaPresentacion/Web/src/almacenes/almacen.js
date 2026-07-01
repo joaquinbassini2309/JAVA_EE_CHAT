@@ -106,8 +106,10 @@ export const useAlmacen = defineStore('principal', () => {
       return // No agregar si ya existe
     }
 
-    mensajes.value = [...mensajes.value, nuevoMensaje]
-    
+    // Solo actualizar la vista de mensajes si pertenece a la conversacion activa
+    if (conversacionActual.value && conversacionActual.value.id === nuevoMensaje.conversacionId) {
+      mensajes.value = [...mensajes.value, nuevoMensaje]
+    }
     // Actualizar el último mensaje en la lista de conversaciones
     const index = conversaciones.value.findIndex(c => c.id === nuevoMensaje.conversacionId)
     if (index !== -1) {
@@ -209,6 +211,47 @@ export const useAlmacen = defineStore('principal', () => {
     }
     if (conversacionActual.value?.id === conversacionId) {
       conversacionActual.value.mensajeFijado = mensajeFijado
+    }
+  }
+
+  function cambiarRol(conversacionId, userId, nuevoRol) {
+    const c = conversaciones.value.find(c => c.id === conversacionId)
+    if (c && c.participantes) {
+      const p = c.participantes.find(p => p.usuario.id === userId)
+      if (p) p.rol = nuevoRol
+    }
+  }
+
+  function actualizarInfoUsuarioGlobal(datosUsuario) {
+    // Si soy yo
+    if (usuarioActual.value?.id === datosUsuario.id) {
+      usuarioActual.value = { ...usuarioActual.value, ...datosUsuario }
+      localStorage.setItem('usuario', JSON.stringify(usuarioActual.value))
+    }
+    // Actualizar en todas las conversaciones
+    conversaciones.value.forEach(c => {
+      if (c.participantes) {
+        const p = c.participantes.find(p => p.usuario.id === datosUsuario.id)
+        if (p) {
+          p.usuario = { ...p.usuario, ...datosUsuario }
+        }
+      }
+    })
+  }
+
+  function agregarParticipante(conversacionId, nuevoParticipante) {
+    const c = conversaciones.value.find(c => c.id === conversacionId)
+    if (c && c.participantes) {
+      const existe = c.participantes.some(p => p.usuario.id === nuevoParticipante.usuario.id)
+      if (!existe) {
+        c.participantes.push(nuevoParticipante)
+      }
+    }
+    if (conversacionActual.value?.id === conversacionId && conversacionActual.value.participantes) {
+       const existe = conversacionActual.value.participantes.some(p => p.usuario.id === nuevoParticipante.usuario.id)
+       if (!existe) {
+         conversacionActual.value.participantes.push(nuevoParticipante)
+       }
     }
   }
 
@@ -331,6 +374,10 @@ export const useAlmacen = defineStore('principal', () => {
     actualizarEstadoUsuario,
     actualizarInfoConversacion,
     actualizarMensajeFijado,
+    actualizarInfoConversacion,
+    actualizarInfoUsuarioGlobal,
+    agregarParticipante,
+    cambiarRol,
     actualizarRolParticipante,
     eliminarParticipante,
     establecerCargando,

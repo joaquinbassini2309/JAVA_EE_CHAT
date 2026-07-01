@@ -82,6 +82,21 @@ public class MensajeResource {
             );
 
             DtMensaje respuesta = DtMensaje.from(mensaje);
+
+            // Difundir el mensaje por WebSocket en la conversación
+            websocket.ChatWebSocketEndpoint.difundirMensaje(mensajeDto.getConversacionId(), respuesta);
+
+            // Notificar a todos los participantes por el canal de presencia para actualizar la barra lateral
+            for (chat.clases.Participante participante : mensaje.getConversacion().getParticipantes()) {
+                if (participante.getUsuario() != null) {
+                    websocket.PresenciaWebSocketEndpoint.notificarAUsuario(
+                        participante.getUsuario().getId(), 
+                        "NUEVO_MENSAJE_GLOBAL", 
+                        respuesta
+                    );
+                }
+            }
+
             return Response.status(Response.Status.CREATED).entity(respuesta).build();
 
         } catch (IllegalArgumentException e) {

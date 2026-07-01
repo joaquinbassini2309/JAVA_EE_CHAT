@@ -246,6 +246,10 @@ public class UsuarioResource {
                     .orElseThrow(() -> new IllegalStateException("User disappeared during update"));
 
             DtUsuario.UsuarioResponseDTO usuarioDto = DtUsuario.UsuarioResponseDTO.fromEntity(usuarioActualizado);
+            
+            // Notificar a todos los usuarios que este usuario actualizó su info
+            websocket.PresenciaWebSocketEndpoint.difundirGlobalmente("NUEVA_INFO_USUARIO", usuarioDto);
+            
             return Response.ok(usuarioDto).build();
 
         }).orElse(Response.status(Response.Status.NOT_FOUND)

@@ -80,8 +80,8 @@
       <!-- Sección integrantes (grupos y canales de avisos) -->
       <div v-if="esGrupoOCanal" class="seccion">
         <div class="seccion-titulo">
-          <v-icon size="16" color="#406D73" class="mr-1">{{ esAviso ? 'mdi-bullhorn' : 'mdi-account-group' }}</v-icon>
-          {{ esAviso ? 'Miembros del Canal' : 'Integrantes' }}
+          <v-icon size="16" color="#406D73" class="mr-1">{{ esAviso ? 'mdi-bullhorn' : (esVoz ? 'mdi-microphone' : 'mdi-account-group') }}</v-icon>
+          {{ esAviso ? 'Miembros del Canal' : (esVoz ? 'En el canal' : 'Integrantes') }}
         </div>
         <div class="lista-miembros">
           <div v-for="miembro in conversacion.participantes" :key="miembro.usuario.id" class="item-miembro">
@@ -117,7 +117,7 @@
                   <v-list-item-title>Nombrar Miembro</v-list-item-title>
                 </v-list-item>
                 <v-divider />
-                <v-list-item @click="cambiarRol(miembro.usuario.id, miembro.rol === 'SILENCIADO' ? 'MIEMBRO' : 'SILENCIADO')" :class="miembro.rol === 'SILENCIADO' ? 'text-success' : 'text-warning'">
+                <v-list-item v-if="!esVoz" @click="cambiarRol(miembro.usuario.id, miembro.rol === 'SILENCIADO' ? 'MIEMBRO' : 'SILENCIADO')" :class="miembro.rol === 'SILENCIADO' ? 'text-success' : 'text-warning'">
                   <v-list-item-title>{{ miembro.rol === 'SILENCIADO' ? 'Desilenciar' : 'Silenciar' }}</v-list-item-title>
                 </v-list-item>
                 <v-list-item @click="abrirConfirmacionEliminar(miembro.usuario)" class="text-error">
@@ -156,6 +156,14 @@
           <p v-else class="descripcion-usuario">No hay grupos en común</p>
         </div>
       </div>
+      
+      <!-- Botón Salir -->
+      <div v-if="esGrupoOCanal" class="seccion px-2 mt-4 text-center">
+        <v-btn color="error" variant="flat" block rounded="lg" prepend-icon="mdi-exit-run" @click="abrirConfirmacionSalir">
+          Salir del {{ esAviso ? 'Canal' : (esVoz ? 'Canal de Voz' : 'Grupo') }}
+        </v-btn>
+      </div>
+
     </div>
 
     <!-- Modal Editar Info de Grupo -->
@@ -199,6 +207,19 @@
                 style="display: none"
                 @change="handleWallpaperSelected"
               />
+              <div class="mt-2">
+                <v-btn
+                  color="error"
+                  variant="outlined"
+                  size="small"
+                  block
+                  @click="valorEdicion = ''"
+                  class="text-none font-weight-bold"
+                  style="border-radius: 10px;"
+                >
+                  Quitar fondo / Restaurar color
+                </v-btn>
+              </div>
             </template>
           </div>
         </v-card-text>
@@ -233,6 +254,23 @@
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="mostrarModalEliminar = false">Cancelar</v-btn>
           <v-btn color="error" variant="flat" @click="confirmarEliminarMiembro" :loading="eliminandoMiembro">Aceptar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Modal Confirmar Salir -->
+    <v-dialog v-model="mostrarModalSalir" max-width="400">
+      <v-card rounded="2xl">
+        <v-card-title style="font-size: 1rem; font-weight: 700; color: #d32f2f;">
+          Abandonar {{ esAviso ? 'Canal' : (esVoz ? 'Canal de Voz' : 'Grupo') }}
+        </v-card-title>
+        <v-card-text>
+          ¿Estás seguro de que deseas salir de <strong>{{ conversacion.nombre }}</strong>?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="mostrarModalSalir = false">Cancelar</v-btn>
+          <v-btn color="error" variant="flat" @click="confirmarSalir" :loading="saliendoGrupo">Aceptar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -309,11 +347,15 @@ const mostrarModalEliminar = ref(false)
 const usuarioAEliminar = ref(null)
 const eliminandoMiembro = ref(false)
 
+const mostrarModalSalir = ref(false)
+const saliendoGrupo = ref(false)
+
 const usuarioActual = computed(() => almacen.usuarioActual)
 
 const esGrupo = computed(() => props.conversacion.tipo === 'GRUPO')
 const esAviso = computed(() => props.conversacion.tipo === 'AVISO')
-const esGrupoOCanal = computed(() => esGrupo.value || esAviso.value)
+const esVoz = computed(() => props.conversacion.tipo === 'VOZ')
+const esGrupoOCanal = computed(() => esGrupo.value || esAviso.value || esVoz.value)
 
 const otroUsuario = computed(() => {
   if (esGrupoOCanal.value) return null
@@ -412,6 +454,25 @@ const confirmarEliminarMiembro = async () => {
   } finally {
     eliminandoMiembro.value = false
     usuarioAEliminar.value = null
+  }
+}
+
+const abrirConfirmacionSalir = () => {
+  mostrarModalSalir.value = true
+}
+
+const confirmarSalir = async () => {
+  if (!usuarioActual.value) return
+  saliendoGrupo.value = true
+  try {
+    await servicioApi.eliminarParticipante(props.conversacion.id, usuarioActual.value.id)
+    almacen.eliminarParticipante(props.conversacion.id, usuarioActual.value.id)
+    mostrarModalSalir.value = false
+    emit('volver') // Go back or close info panel
+  } catch (error) {
+    console.error("Error al salir:", error)
+  } finally {
+    saliendoGrupo.value = false
   }
 }
 

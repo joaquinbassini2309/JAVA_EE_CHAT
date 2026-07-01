@@ -171,9 +171,13 @@ public class ChatWebSocketEndpoint {
         excepcion.printStackTrace();
     }
 
-    private void difundirMensaje(Long idConversacion, DtMensaje mensaje) throws IOException {
-        String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta("mensaje", mensaje));
-        difundir(idConversacion, datosJson);
+    public static void difundirMensaje(Long idConversacion, DtMensaje mensaje) {
+        try {
+            String datosJson = mapeador.writeValueAsString(new MensajeWebSocketRespuesta("mensaje", mensaje));
+            difundir(idConversacion, datosJson);
+        } catch (Exception e) {
+            System.err.println("Error al difundir mensaje: " + e.getMessage());
+        }
     }
 
     /**

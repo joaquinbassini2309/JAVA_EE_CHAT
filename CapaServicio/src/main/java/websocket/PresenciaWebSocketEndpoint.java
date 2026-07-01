@@ -153,4 +153,24 @@ public class PresenciaWebSocketEndpoint {
             System.err.println("Error al notificar a usuario en presencia: " + e.getMessage());
         }
     }
+
+    // Nuevo método para difundir eventos a todos
+    public static void difundirGlobalmente(String tipo, Object datos) {
+        try {
+            Map<String, Object> notificacion = new HashMap<>();
+            notificacion.put("tipo", tipo);
+            notificacion.put("datos", datos);
+            String msg = mapeador.writeValueAsString(notificacion);
+
+            for (Set<Session> sesiones : sesionesPresencia.values()) {
+                for (Session s : sesiones) {
+                    if (s.isOpen()) {
+                        s.getAsyncRemote().sendText(msg);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error al difundir globalmente en presencia: " + e.getMessage());
+        }
+    }
 }

@@ -82,6 +82,7 @@ public class ConversacionResource {
         // Conversacion tipo AVISO (Canal de avisos)
         if (dto.getTipo() == TipoConversacion.AVISO) {
             chat.clases.Conversacion creada = sistema.crearCanalAvisos(dto.getNombre(), userId);
+            notificarNuevaConversacion(creada);
             DtConversacion res = DtConversacion.from(creada, userId);
             return Response.status(Response.Status.CREATED).entity(res).build();
         }
@@ -96,6 +97,7 @@ public class ConversacionResource {
             }
             Long otroId = participantes.getFirst();
             chat.clases.Conversacion creada = sistema.iniciarChatPrivado(userId, otroId);
+            notificarNuevaConversacion(creada);
             DtConversacion res = DtConversacion.from(creada, userId);
             return Response.status(Response.Status.CREATED).entity(res).build();
         }
@@ -103,9 +105,23 @@ public class ConversacionResource {
         // Conversacion Grupo
         List<Long> miembros = dto.getParticipanteIds() == null ? List.of() : dto.getParticipanteIds();
         chat.clases.Conversacion creada = sistema.crearGrupo(dto.getNombre(), userId, miembros);
+        notificarNuevaConversacion(creada);
         DtConversacion res = DtConversacion.from(creada, userId);
 
         return Response.status(Response.Status.CREATED).entity(res).build();
+    }
+
+    private void notificarNuevaConversacion(chat.clases.Conversacion creada) {
+        if (creada == null || creada.getParticipantes() == null) return;
+        for (chat.clases.Participante participante : creada.getParticipantes()) {
+            if (participante.getUsuario() != null) {
+                websocket.PresenciaWebSocketEndpoint.notificarAUsuario(
+                    participante.getUsuario().getId(), 
+                    "NUEVA_CONVERSACION", 
+                    DtConversacion.from(creada, participante.getUsuario().getId())
+                );
+            }
+        }
     }
 
     @GET
@@ -195,6 +211,36 @@ public class ConversacionResource {
 
         try {
             sistema.agregarMiembroAGrupo(id, newUserId, currentUserId);
+            
+            // Obtener la info actualizada de la conversacion y el nuevo participante
+            chat.clases.Conversacion conv = sistema.obtenerConversacion(id).orElse(null);
+            if (conv != null) {
+                DtConversacion dtoConv = DtConversacion.from(conv, newUserId);
+                
+                // 1. Notificar al nuevo usuario que ha sido añadido a un grupo
+                websocket.PresenciaWebSocketEndpoint.notificarAUsuario(newUserId, "NUEVA_CONVERSACION", dtoConv);
+                
+                // 2. Notificar a los miembros existentes que hay un nuevo participante
+                java.util.Map<String, Object> payloadParticipante = new java.util.HashMap<>();
+                payloadParticipante.put("conversacionId", id);
+                
+                DtConversacion.ParticipanteDTO dtoParticipante = conv.getParticipantes().stream()
+                        .filter(p -> p.getUsuario().getId().equals(newUserId))
+                        .map(DtConversacion.ParticipanteDTO::from)
+                        .findFirst().orElse(null);
+                        
+                payloadParticipante.put("participante", dtoParticipante);
+                
+                if (dtoParticipante != null) {
+                    for (chat.clases.Participante p : conv.getParticipantes()) {
+                        Long pId = p.getUsuario().getId();
+                        if (!pId.equals(newUserId)) {
+                            websocket.PresenciaWebSocketEndpoint.notificarAUsuario(pId, "NUEVO_PARTICIPANTE", payloadParticipante);
+                        }
+                    }
+                }
+            }
+            
             return Response.ok().build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
