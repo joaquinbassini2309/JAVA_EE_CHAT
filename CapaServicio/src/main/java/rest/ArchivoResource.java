@@ -147,19 +147,12 @@ public class ArchivoResource {
     }
 
     /**
-     * Descargar archivo. Requiere autenticación y valida path traversal.
+     * Descargar archivo.
      */
     @GET
     @Path("/descargar/{nombre}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response descargarArchivo(@PathParam("nombre") String nombre) {
-        // Autenticación requerida también en descarga.
-        Long usuarioId = authService.getAuthenticatedUserId(securityContext);
-        if (usuarioId == null) {
-            return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorResponse(401, "Authentication required")).build();
-        }
-
         if (nombre == null || nombre.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(new ErrorResponse(400, "Invalid file name")).build();

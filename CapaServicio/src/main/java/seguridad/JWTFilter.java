@@ -108,8 +108,11 @@ public class JWTFilter implements ContainerRequestFilter {
     }
 
     private boolean esRutaPublica(String path) {
+        if (path != null && path.contains("archivos/descargar/")) {
+            return true;
+        }
         for (String ruta : RUTAS_PUBLICAS) {
-            if (path.endsWith(ruta)) return true;
+            if (path != null && path.endsWith(ruta)) return true;
         }
         return false;
     }
