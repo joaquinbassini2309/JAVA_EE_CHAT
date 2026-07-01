@@ -213,7 +213,7 @@ public class ConversacionResource {
             sistema.agregarMiembroAGrupo(id, newUserId, currentUserId);
             
             // Obtener la info actualizada de la conversacion y el nuevo participante
-            chat.clases.Conversacion conv = sistema.obtenerConversacion(id).orElse(null);
+            chat.clases.Conversacion conv = sistema.buscarConversacionPorId(id).orElse(null);
             if (conv != null) {
                 DtConversacion dtoConv = DtConversacion.from(conv, newUserId);
                 
@@ -224,9 +224,9 @@ public class ConversacionResource {
                 java.util.Map<String, Object> payloadParticipante = new java.util.HashMap<>();
                 payloadParticipante.put("conversacionId", id);
                 
-                DtConversacion.ParticipanteDTO dtoParticipante = conv.getParticipantes().stream()
+                chat.Datatype.DtParticipante dtoParticipante = conv.getParticipantes().stream()
                         .filter(p -> p.getUsuario().getId().equals(newUserId))
-                        .map(DtConversacion.ParticipanteDTO::from)
+                        .map(chat.Datatype.DtParticipante::from)
                         .findFirst().orElse(null);
                         
                 payloadParticipante.put("participante", dtoParticipante);
