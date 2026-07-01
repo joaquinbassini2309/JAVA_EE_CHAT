@@ -500,31 +500,43 @@ public class Sistema implements ISistema {
     private static final int GCM_TAG_LENGTH_BIT = 128;
     private static final int GCM_IV_LENGTH_BYTE = 12;
 
-    private byte[] getEncryptionKey() {
-        String keyEnv = System.getenv("MESSAGE_ENCRYPTION_KEY");
-        if (keyEnv == null || keyEnv.isBlank()) {
-            keyEnv = "clave-super-secreta-32-caracteres-!";
+    private static javax.crypto.spec.SecretKeySpec cachedSecretKeySpec = null;
+
+    private static synchronized javax.crypto.spec.SecretKeySpec getSecretKeySpec() {
+        if (cachedSecretKeySpec == null) {
+            String keyEnv = System.getenv("MESSAGE_ENCRYPTION_KEY");
+            if (keyEnv == null || keyEnv.isBlank()) {
+                keyEnv = "clave-super-secreta-32-caracteres-!";
+            }
+            try {
+                java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+                byte[] key = digest.digest(keyEnv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                cachedSecretKeySpec = new javax.crypto.spec.SecretKeySpec(key, "AES");
+            } catch (Exception e) {
+                throw new RuntimeException("Error al derivar clave de encriptación", e);
+            }
         }
-        try {
-            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-            return digest.digest(keyEnv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw new RuntimeException("Error al derivar clave de encriptación", e);
-        }
+        return cachedSecretKeySpec;
     }
+
+    private static final ThreadLocal<javax.crypto.Cipher> cipherThreadLocal = ThreadLocal.withInitial(() -> {
+        try {
+            return javax.crypto.Cipher.getInstance(CRYPTO_ALGORITHM);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    });
 
     @Override
     public String encriptarMensaje(String contenido) {
         if (contenido == null) return null;
         try {
-            byte[] key = getEncryptionKey();
             byte[] iv = new byte[GCM_IV_LENGTH_BYTE];
             new java.security.SecureRandom().nextBytes(iv);
 
-            javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(CRYPTO_ALGORITHM);
+            javax.crypto.Cipher cipher = cipherThreadLocal.get();
             javax.crypto.spec.GCMParameterSpec parameterSpec = new javax.crypto.spec.GCMParameterSpec(GCM_TAG_LENGTH_BIT, iv);
-            javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(key, "AES");
-            cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keySpec, parameterSpec);
+            cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, getSecretKeySpec(), parameterSpec);
 
             byte[] ciphertext = cipher.doFinal(contenido.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             byte[] encrypted = new byte[iv.length + ciphertext.length];
@@ -545,7 +557,6 @@ public class Sistema implements ISistema {
             if (encrypted.length < GCM_IV_LENGTH_BYTE) {
                 throw new IllegalArgumentException("Texto encriptado demasiado corto");
             }
-            byte[] key = getEncryptionKey();
             byte[] iv = new byte[GCM_IV_LENGTH_BYTE];
             System.arraycopy(encrypted, 0, iv, 0, iv.length);
 
@@ -553,10 +564,9 @@ public class Sistema implements ISistema {
             byte[] ciphertext = new byte[ciphertextLength];
             System.arraycopy(encrypted, iv.length, ciphertext, 0, ciphertextLength);
 
-            javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(CRYPTO_ALGORITHM);
+            javax.crypto.Cipher cipher = cipherThreadLocal.get();
             javax.crypto.spec.GCMParameterSpec parameterSpec = new javax.crypto.spec.GCMParameterSpec(GCM_TAG_LENGTH_BIT, iv);
-            javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(key, "AES");
-            cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keySpec, parameterSpec);
+            cipher.init(javax.crypto.Cipher.DECRYPT_MODE, getSecretKeySpec(), parameterSpec);
 
             byte[] plaintext = cipher.doFinal(ciphertext);
             return new String(plaintext, java.nio.charset.StandardCharsets.UTF_8);
