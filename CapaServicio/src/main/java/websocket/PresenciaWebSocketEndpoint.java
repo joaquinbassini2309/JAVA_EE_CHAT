@@ -38,7 +38,9 @@ public class PresenciaWebSocketEndpoint {
     private AuthService servicioAutenticacion;
 
     private static final Map<Long, Set<Session>> sesionesPresencia = new ConcurrentHashMap<>();
-    private static final ObjectMapper mapeador = new ObjectMapper();
+    private static final ObjectMapper mapeador = new ObjectMapper()
+            .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
+            .configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     private final ScheduledExecutorService programador = Executors.newSingleThreadScheduledExecutor();
 
     // Abrir conexion WebSocket de presencia.
