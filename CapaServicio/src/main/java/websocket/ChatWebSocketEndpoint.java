@@ -124,7 +124,7 @@ public class ChatWebSocketEndpoint {
             difundirMensaje(idConversacion, dtMensaje);
 
             // Notificar globalmente a todos los participantes usando PresenciaWS para actualizar el sidebar
-            for (chat.clases.UsuarioParticipante participante : mensajeGuardado.getConversacion().getParticipantes()) {
+            for (chat.clases.Participante participante : mensajeGuardado.getConversacion().getParticipantes()) {
                 if (participante.getUsuario() != null) {
                     websocket.PresenciaWebSocketEndpoint.notificarAUsuario(
                         participante.getUsuario().getId(), 
