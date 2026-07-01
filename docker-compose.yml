@@ -6,6 +6,7 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: America/Montevideo
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -30,6 +31,7 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       MESSAGE_ENCRYPTION_KEY: ${MESSAGE_ENCRYPTION_KEY}
+      TZ: America/Montevideo
       PORT: 8080
     volumes:
       - chat_uploads:/opt/jboss/chat-empresarial-uploads
@@ -48,6 +50,8 @@ services:
     restart: always
     ports:
       - "8081:80"
+    environment:
+      TZ: America/Montevideo
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
