@@ -192,7 +192,7 @@ public class ManejadorMensaje {
                 "SELECT COUNT(m) FROM Mensaje m WHERE m.conversacion.id = :cid " +
                 "AND m.emisor.id != :uid " +
                 "AND NOT EXISTS (SELECT 1 FROM MensajeLectura ml WHERE ml.mensaje.id = m.id AND ml.usuario.id = :uid) " +
-                "AND (m.contenido LIKE :mention ESCAPE '\\\\' OR m.contenido LIKE :todos)",
+                "AND (m.contenido LIKE :mention ESCAPE '\\' OR m.contenido LIKE :todos)",
                 Long.class);
         q.setParameter("cid", conversacionId);
         q.setParameter("uid", usuarioId);
